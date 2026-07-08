@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 from geoalchemy2 import Geometry
+from sqlalchemy.orm import relationship
 from src.models.base import Base
 
 class MoodEntry(Base):
@@ -27,6 +28,10 @@ class MoodEntry(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
+    # Relationships
+    emotions = relationship("MoodEmotion", back_populates="entry", cascade="all, delete-orphan")
+    context_tags = relationship("MoodContextTag", back_populates="entry", cascade="all, delete-orphan")
+
 class MoodEmotion(Base):
     __tablename__ = "mood_emotions"
 
@@ -35,6 +40,8 @@ class MoodEmotion(Base):
     primary_emotion = Column(String(30), nullable=False)
     secondary_emotion = Column(String(30), nullable=False)
     intensity = Column(SmallInteger, nullable=False)
+    
+    entry = relationship("MoodEntry", back_populates="emotions")
 
 class MoodContextTag(Base):
     __tablename__ = "mood_context_tags"
@@ -43,3 +50,5 @@ class MoodContextTag(Base):
     mood_entry_id = Column(UUID(as_uuid=True), nullable=False)
     tag = Column(String(30), nullable=False)
     is_custom = Column(Boolean, nullable=False, default=False)
+    
+    entry = relationship("MoodEntry", back_populates="context_tags")
