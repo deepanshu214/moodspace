@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
     # Database Settings
-    DATABASE_URL: Optional[str] = "postgresql://postgres:postgres@localhost:5432/moodlens"
+    DATABASE_URL: str # Enforces that this must be provided via environment variable
     
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
