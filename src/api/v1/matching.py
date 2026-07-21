@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from src.api.dependencies import get_db, get_current_user
+from src.config.database import get_db
+from src.api.deps import get_current_user
 from src.schemas.matching import UserMatchResponse, MoodReplayResponse
 from src.services.matching_service import find_emotional_matches, get_mood_replay
 from src.models.user import User

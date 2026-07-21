@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from src.api.dependencies import get_db, get_current_user
+from src.config.database import get_db
+from src.api.deps import get_current_user
 from src.schemas.map import BoundingBox, HeatmapResponse, GlobalPulseResponse
 from src.services.map_service import get_emotional_heatmap, get_global_pulse
 from src.models.user import User

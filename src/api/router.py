@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.api.v1 import auth, users, mood, feed, social, community, notification, map, matching
+from src.api.v1 import auth, users, mood, feed, social, community, notification, map, matching, support
 
 api_router = APIRouter()
 
@@ -12,3 +12,4 @@ api_router.include_router(community.router, prefix="/community", tags=["communit
 api_router.include_router(notification.router, prefix="/notification", tags=["notification"])
 api_router.include_router(map.router, prefix="/map", tags=["map"])
 api_router.include_router(matching.router, prefix="/matching", tags=["matching"])
+api_router.include_router(support.router, prefix="/support", tags=["support"])

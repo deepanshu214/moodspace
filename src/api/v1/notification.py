@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List
 
-from src.db.session import get_db
+from src.config.database import get_db
 from src.api.deps import get_current_user
 from src.models.user import User
 from src.schemas.notification import NotificationResponse
