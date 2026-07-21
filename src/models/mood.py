@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, SmallInteger, DateTime, Text, text
+from sqlalchemy import Column, String, Boolean, SmallInteger, DateTime, Text, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
@@ -36,7 +36,7 @@ class MoodEmotion(Base):
     __tablename__ = "mood_emotions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
-    mood_entry_id = Column(UUID(as_uuid=True), nullable=False)
+    mood_entry_id = Column(UUID(as_uuid=True), ForeignKey("mood_entries.id"), nullable=False)
     primary_emotion = Column(String(30), nullable=False)
     secondary_emotion = Column(String(30), nullable=False)
     intensity = Column(SmallInteger, nullable=False)
@@ -47,7 +47,7 @@ class MoodContextTag(Base):
     __tablename__ = "mood_context_tags"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
-    mood_entry_id = Column(UUID(as_uuid=True), nullable=False)
+    mood_entry_id = Column(UUID(as_uuid=True), ForeignKey("mood_entries.id"), nullable=False)
     tag = Column(String(30), nullable=False)
     is_custom = Column(Boolean, nullable=False, default=False)
     
