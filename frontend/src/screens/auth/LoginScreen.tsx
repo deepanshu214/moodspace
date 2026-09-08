@@ -7,8 +7,11 @@ import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { IconButton } from '@/components/common/IconButton';
+import { Toast } from '@/components/common/Toast';
+import { Modal } from '@/components/common/Modal';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
-import { useAuthStore } from '@/stores/authStore';
+import { useLogin } from '@/hooks/useAuth';
+import { validation } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -16,24 +19,46 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuthStore();
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [forgotModalVisible, setForgotModalVisible] = useState(false);
 
-  const handleLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      login('mock-jwt-token', {
-        id: 'usr-1',
-        email: email || 'user@moodspace.app',
-        displayName: 'Elena Rostova',
-        auraScore: 340,
+  const loginMutation = useLogin();
+
+  const handleLogin = async () => {
+    // 1. Validate inputs
+    const eErr = validation.validateEmail(email);
+    const pErr = validation.validatePassword(password);
+    setEmailError(eErr);
+    setPasswordError(pErr);
+
+    if (eErr || pErr) {
+      return;
+    }
+
+    try {
+      await loginMutation.mutateAsync({
+        email: email.trim(),
+        password,
       });
-      setLoading(false);
-    }, 800);
+      // On success, authStore.login() updates state, automatically navigating to Main
+    } catch (err: any) {
+      setToastMessage(err?.message || 'Login failed. Please check your credentials.');
+      setShowToast(true);
+    }
   };
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
+      <Toast
+        visible={showToast}
+        type="error"
+        message={toastMessage}
+        onDismiss={() => setShowToast(false)}
+      />
+
       <IconButton
         icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
         variant="ghost"
@@ -52,10 +77,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.form}>
         <Input
-          label="Email"
+          label="Email Address"
           placeholder="your@email.com"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(val) => {
+            setEmail(val);
+            if (emailError) setEmailError(null);
+          }}
+          error={emailError || undefined}
           autoCapitalize="none"
           keyboardType="email-address"
           leftIcon={<Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />}
@@ -65,12 +94,20 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           label="Password"
           placeholder="••••••••"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(val) => {
+            setPassword(val);
+            if (passwordError) setPasswordError(null);
+          }}
+          error={passwordError || undefined}
           isPassword
           leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.colors.textMuted} />}
         />
 
-        <TouchableOpacity style={styles.forgotBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.forgotBtn}
+          activeOpacity={0.7}
+          onPress={() => setForgotModalVisible(true)}
+        >
           <Typography variant="caption" color={theme.colors.primaryLight} weight="semibold">
             Forgot Password?
           </Typography>
@@ -81,7 +118,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           variant="primary"
           fullWidth
           size="lg"
-          loading={loading}
+          loading={loginMutation.isPending}
           onPress={handleLogin}
           style={styles.submitBtn}
         />
@@ -97,6 +134,26 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           </Typography>
         </TouchableOpacity>
       </View>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={forgotModalVisible}
+        title="Password Reset"
+        onClose={() => setForgotModalVisible(false)}
+        footer={
+          <Button
+            title="Understood"
+            variant="primary"
+            fullWidth
+            onPress={() => setForgotModalVisible(false)}
+          />
+        }
+      >
+        <Typography variant="body" color={theme.colors.textSecondary}>
+          A password reset link will be dispatched to {email || 'your registered email'} with secure
+          instructions to regain access to your emotional space.
+        </Typography>
+      </Modal>
     </ScreenWrapper>
   );
 };

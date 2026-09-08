@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
@@ -9,16 +9,24 @@ import { Input } from '@/components/common/Input';
 import { Avatar } from '@/components/common/Avatar';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useAuthStore } from '@/stores/authStore';
-import { Ionicons } from '@expo/vector-icons';
+import { validation } from '@/utils/validation';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingProfile'>;
 
+const avatarPresets = ['calm', 'joy', 'anxiety', 'love', 'excitement', 'neutral'];
+
 export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, setUser } = useAuthStore();
-  const [bio, setBio] = useState('');
+  const [selectedEmotion, setSelectedEmotion] = useState('calm');
+  const [bio, setBio] = useState(user?.bio || '');
+  const [bioError, setBioError] = useState<string | null>(null);
 
-  const handleNext = () => {
-    setUser({ bio });
+  const handleNext = async () => {
+    const bErr = validation.validateBio(bio);
+    setBioError(bErr);
+    if (bErr) return;
+
+    await setUser({ bio: bio.trim() });
     navigation.navigate('OnboardingDOB');
   };
 
@@ -32,29 +40,57 @@ export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
           Set Up Your Aura
         </Typography>
         <Typography variant="body" color={theme.colors.textSecondary}>
-          Choose an avatar or leave it as an emotional aura ring.
+          Choose your starting aura tone and share a few words about your emotional philosophy.
         </Typography>
       </View>
 
+      {/* Main Avatar Preview */}
       <View style={styles.avatarSection}>
-        <Avatar name={user?.displayName || 'Soul'} size="xl" emotion="calm" />
-        <TouchableOpacity style={styles.uploadBtn} activeOpacity={0.8}>
-          <Ionicons name="camera-reverse" size={16} color="#FFFFFF" />
-          <Typography variant="caption" color="#FFFFFF" weight="semibold" style={{ marginLeft: 6 }}>
-            Upload Picture
-          </Typography>
-        </TouchableOpacity>
+        <Avatar
+          name={user?.displayName || 'Soul'}
+          size="xl"
+          emotion={selectedEmotion}
+        />
+        <Typography variant="bodySmall" weight="bold" color={theme.colors.primaryLight} style={styles.auraLabel}>
+          {theme.colors.emotions[selectedEmotion]?.label || 'Calm'} Aura
+        </Typography>
+
+        {/* Emotion Preset Chips */}
+        <Typography variant="caption" color={theme.colors.textMuted} style={styles.presetHeading}>
+          Choose Tone
+        </Typography>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetRow}>
+          {avatarPresets.map((emo) => (
+            <TouchableOpacity
+              key={emo}
+              activeOpacity={0.8}
+              onPress={() => setSelectedEmotion(emo)}
+              style={[
+                styles.presetPill,
+                selectedEmotion === emo && styles.presetPillActive,
+                { borderColor: theme.colors.emotions[emo]?.border || theme.colors.border },
+              ]}
+            >
+              <Typography variant="body">{theme.colors.emotions[emo]?.emoji}</Typography>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
+      {/* Bio Field with Character Counter */}
       <View style={styles.formSection}>
         <Input
-          label="Your Bio / Emotional Philosophy"
+          label="Your Emotional Philosophy / Bio"
           placeholder="e.g. Navigating calm waters, seeking mindful connection."
           value={bio}
-          onChangeText={setBio}
+          onChangeText={(val) => {
+            setBio(val);
+            if (bioError) setBioError(null);
+          }}
+          error={bioError || undefined}
           multiline
           numberOfLines={3}
-          helperText="Max 160 characters"
+          helperText={`${bio.length}/160 characters`}
           style={styles.bioInput}
         />
       </View>
@@ -79,7 +115,7 @@ const styles = StyleSheet.create({
   },
   topProgress: {
     marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xxl,
+    marginBottom: theme.spacing.xl,
   },
   title: {
     marginTop: 6,
@@ -87,18 +123,35 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: 'center',
-    marginVertical: theme.spacing.xl,
+    marginVertical: theme.spacing.lg,
   },
-  uploadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  auraLabel: {
     marginTop: theme.spacing.md,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  presetHeading: {
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.xs,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  presetPill: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surfaceElevated,
+    borderWidth: 1.5,
+    marginHorizontal: 6,
+  },
+  presetPillActive: {
+    borderColor: theme.colors.primary,
     backgroundColor: theme.colors.surfaceHighlight,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    transform: [{ scale: 1.1 }],
   },
   formSection: {
     width: '100%',

@@ -7,8 +7,11 @@ import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { IconButton } from '@/components/common/IconButton';
+import { Toast } from '@/components/common/Toast';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { useRegister } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/authStore';
+import { validation } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
@@ -17,23 +20,65 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState('2000-01-15');
+
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [dobError, setDobError] = useState<string | null>(null);
+
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const registerMutation = useRegister();
   const { setUser } = useAuthStore();
 
-  const handleRegister = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setUser({
-        displayName: displayName || 'New Explorer',
-        email: email || 'user@moodspace.app',
+  const handleRegister = async () => {
+    const nErr = validation.validateDisplayName(displayName);
+    const eErr = validation.validateEmail(email);
+    const pErr = validation.validatePassword(password);
+    const dErr = validation.validateDOB(dateOfBirth);
+
+    setNameError(nErr);
+    setEmailError(eErr);
+    setPasswordError(pErr);
+    setDobError(dErr);
+
+    if (nErr || eErr || pErr || dErr) {
+      return;
+    }
+
+    try {
+      const response = await registerMutation.mutateAsync({
+        display_name: displayName.trim(),
+        email: email.trim(),
+        password,
+        date_of_birth: dateOfBirth.trim(),
       });
-      setLoading(false);
+
+      await setUser({
+        id: response.id,
+        email: response.email,
+        displayName: response.display_name,
+        dateOfBirth: response.date_of_birth,
+      });
+
       navigation.navigate('Onboarding', { screen: 'OnboardingProfile' });
-    }, 600);
+    } catch (err: any) {
+      setToastMessage(err?.message || 'Registration failed. Please verify your details.');
+      setShowToast(true);
+    }
   };
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
+      <Toast
+        visible={showToast}
+        type="error"
+        message={toastMessage}
+        onDismiss={() => setShowToast(false)}
+      />
+
       <IconButton
         icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
         variant="ghost"
@@ -55,8 +100,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           label="Display Name / Pseudonym"
           placeholder="e.g. LunarTraveler"
           value={displayName}
-          onChangeText={setDisplayName}
-          helperText="You can use a pseudonym for privacy"
+          onChangeText={(val) => {
+            setDisplayName(val);
+            if (nameError) setNameError(null);
+          }}
+          error={nameError || undefined}
+          helperText="You can use an anonymous pseudonym for privacy"
           leftIcon={<Ionicons name="person-outline" size={18} color={theme.colors.textMuted} />}
         />
 
@@ -64,7 +113,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           label="Email Address"
           placeholder="your@email.com"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(val) => {
+            setEmail(val);
+            if (emailError) setEmailError(null);
+          }}
+          error={emailError || undefined}
           autoCapitalize="none"
           keyboardType="email-address"
           leftIcon={<Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />}
@@ -74,18 +127,35 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           label="Password"
           placeholder="••••••••"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(val) => {
+            setPassword(val);
+            if (passwordError) setPasswordError(null);
+          }}
+          error={passwordError || undefined}
           isPassword
           helperText="Must be at least 8 characters"
           leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.colors.textMuted} />}
         />
 
+        <Input
+          label="Date of Birth"
+          placeholder="YYYY-MM-DD"
+          value={dateOfBirth}
+          onChangeText={(val) => {
+            setDateOfBirth(val);
+            if (dobError) setDobError(null);
+          }}
+          error={dobError || undefined}
+          helperText="Must be 18+ to join community"
+          leftIcon={<Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />}
+        />
+
         <Button
-          title="Continue to Profile"
+          title="Continue to Onboarding"
           variant="primary"
           fullWidth
           size="lg"
-          loading={loading}
+          loading={registerMutation.isPending}
           onPress={handleRegister}
           style={styles.submitBtn}
         />
@@ -116,7 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   header: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   subtitle: {
     marginTop: 6,
