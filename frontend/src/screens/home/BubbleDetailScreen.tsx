@@ -13,26 +13,46 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<HomeStackParamList, 'BubbleDetails'>;
 
 export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { emotion = 'calm', authorName = 'Elena Rostova' } = route.params;
+  const {
+    bubbleId = 'bubble-main',
+    emotion = 'calm',
+    authorName = 'Elena Rostova',
+  } = route.params;
+
   const [commentText, setCommentText] = useState('');
+  const [likesCount, setLikesCount] = useState(24);
+  const [isLiked, setIsLiked] = useState(false);
+
   const [comments, setComments] = useState([
     {
       id: 'c-1',
-      author: 'Kai T.',
+      author: 'Kai Tanaka',
       aura: 450,
       text: 'Taking deep breaths with you today. Beautiful perspective.',
       time: '18m ago',
-      likes: 2,
+      likes: 4,
     },
     {
       id: 'c-2',
-      author: 'Marcus A.',
+      author: 'Marcus Aurel',
       aura: 610,
-      text: 'Needed this reminder so badly. Grateful you shared this.',
+      text: 'Needed this reminder so badly. Grateful you shared this quiet space.',
       time: '5m ago',
-      likes: 4,
+      likes: 6,
     },
   ]);
+
+  const emotionConfig = theme.getEmotionConfig(emotion);
+
+  const handleToggleLike = () => {
+    if (isLiked) {
+      setIsLiked(false);
+      setLikesCount((prev) => Math.max(0, prev - 1));
+    } else {
+      setIsLiked(true);
+      setLikesCount((prev) => prev + 1);
+    }
+  };
 
   const handleSendComment = () => {
     if (!commentText.trim()) return;
@@ -52,20 +72,35 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
+      {/* Dynamic Emotion Background Glow */}
+      <View
+        style={[
+          styles.ambientAura,
+          { backgroundColor: emotionConfig.glow },
+        ]}
+      />
+
+      {/* Header Bar */}
       <View style={styles.header}>
         <IconButton
           icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
-        <Typography variant="title" weight="semibold">
-          Emotional Check-In
-        </Typography>
+        <View style={styles.headerTitleBox}>
+          <Typography variant="title" weight="bold">
+            Emotional Resonance
+          </Typography>
+          <Typography variant="caption" color={theme.colors.textMuted}>
+            Echoing across space
+          </Typography>
+        </View>
         <View style={{ width: 44 }} />
       </View>
 
+      {/* Primary Detail Card */}
       <BubbleDetailCard
-        id="bubble-main"
+        id={bubbleId}
         authorName={authorName}
         auraScore={420}
         emotion={emotion}
@@ -76,14 +111,22 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         weatherTemp={18}
         timestamp="Just now"
         content="Listening to the rain outside while reflecting on how much growth happened this past year. Grateful for this gentle moment."
-        likesCount={18}
+        likesCount={likesCount}
+        isLiked={isLiked}
+        onLikePress={handleToggleLike}
         commentsCount={comments.length}
       />
 
+      {/* Supportive Echoes Thread */}
       <View style={styles.commentsSection}>
-        <Typography variant="title" weight="semibold" style={styles.commentsTitle}>
-          Supportive Echoes ({comments.length})
-        </Typography>
+        <View style={styles.echoesHeaderRow}>
+          <Typography variant="title" weight="bold">
+            Supportive Echoes ({comments.length})
+          </Typography>
+          <Typography variant="caption" color={theme.colors.primaryLight}>
+            Safe & Empathetic
+          </Typography>
+        </View>
 
         {comments.map((item) => (
           <CommentCard
@@ -110,9 +153,13 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         <TouchableOpacity
           onPress={handleSendComment}
           activeOpacity={0.7}
-          style={styles.sendBtn}
+          disabled={!commentText.trim()}
+          style={[
+            styles.sendBtn,
+            !commentText.trim() && { opacity: 0.4 },
+          ]}
         >
-          <Ionicons name="arrow-up-circle" size={32} color={theme.colors.primaryLight} />
+          <Ionicons name="arrow-up-circle" size={34} color={emotionConfig.primary} />
         </TouchableOpacity>
       </View>
     </ScreenWrapper>
@@ -123,6 +170,17 @@ const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
     paddingBottom: 80,
+    backgroundColor: '#07080D',
+  },
+  ambientAura: {
+    position: 'absolute',
+    top: -120,
+    left: -60,
+    right: -60,
+    height: 380,
+    borderRadius: 200,
+    opacity: 0.15,
+    pointerEvents: 'none',
   },
   header: {
     flexDirection: 'row',
@@ -130,23 +188,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: theme.spacing.md,
   },
+  headerTitleBox: {
+    alignItems: 'center',
+  },
   commentsSection: {
     marginTop: theme.spacing.xl,
   },
-  commentsTitle: {
+  echoesHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: theme.spacing.md,
   },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surfaceElevated,
+    backgroundColor: 'rgba(17, 20, 34, 0.9)',
     borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     paddingLeft: theme.spacing.lg,
-    paddingRight: theme.spacing.xs,
+    paddingRight: 6,
     paddingVertical: 4,
     marginTop: theme.spacing.xl,
+    ...theme.shadows.card,
   },
   commentInput: {
     flex: 1,
@@ -155,6 +220,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily,
   },
   sendBtn: {
-    padding: 4,
+    padding: 2,
   },
 });

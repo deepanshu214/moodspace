@@ -2,6 +2,7 @@ import { colors, getEmotionConfig, EmotionColorConfig } from './colors';
 import { typography, TypographyVariant } from './typography';
 import { spacing, radius, layout } from './spacing';
 import { shadows } from './shadows';
+import { darkMapStyle } from './mapStyle';
 
 export const theme = {
   colors,
@@ -11,6 +12,7 @@ export const theme = {
   layout,
   shadows,
   getEmotionConfig,
+  darkMapStyle,
 };
 
 export type Theme = typeof theme;
@@ -23,6 +25,7 @@ export {
   layout,
   shadows,
   getEmotionConfig,
+  darkMapStyle,
   EmotionColorConfig,
   TypographyVariant,
 };
