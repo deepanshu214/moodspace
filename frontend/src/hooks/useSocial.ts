@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { socialApi } from '@/api/social';
-import { CommentPayload, ConnectionPayload, ReactionPayload } from '@/api/types';
+import { usersApi } from '@/api/users';
+import { CommentPayload, ConnectionPayload, ReactionPayload, UserResponse } from '@/api/types';
 
 export const useReact = () => {
   const queryClient = useQueryClient();
@@ -15,8 +16,13 @@ export const useReact = () => {
 };
 
 export const useSendConnection = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (payload: ConnectionPayload) => socialApi.sendConnectionRequest(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
   });
 };
 
@@ -34,6 +40,7 @@ export const useRespondConnection = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['followers'] });
     },
   });
 };
@@ -47,5 +54,19 @@ export const useAddComment = () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       queryClient.invalidateQueries({ queryKey: ['mood'] });
     },
+  });
+};
+
+export const useFollowers = (userId?: string) => {
+  return useQuery<UserResponse[]>({
+    queryKey: ['followers', userId],
+    queryFn: () => usersApi.getFollowers(userId),
+  });
+};
+
+export const useFollowing = (userId?: string) => {
+  return useQuery<UserResponse[]>({
+    queryKey: ['following', userId],
+    queryFn: () => usersApi.getFollowing(userId),
   });
 };

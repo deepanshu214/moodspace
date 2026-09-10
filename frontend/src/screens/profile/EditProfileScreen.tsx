@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
@@ -10,34 +10,62 @@ import { IconButton } from '@/components/common/IconButton';
 import { Avatar } from '@/components/common/Avatar';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useAuthStore } from '@/stores/authStore';
+import { useUpdateProfile } from '@/hooks/useAuth';
+import { validation } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'EditProfile'>;
 
+const EMOTION_PRESETS = ['calm', 'joy', 'anxiety', 'love', 'sadness', 'excitement'];
+
 export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const { user, setUser } = useAuthStore();
+  const { user } = useAuthStore();
   const [displayName, setDisplayName] = useState(user?.displayName || 'Elena Rostova');
   const [bio, setBio] = useState(user?.bio || 'Holding space for calm moments, deep ocean walks.');
-  const [saving, setSaving] = useState(false);
+  const [selectedEmotion, setSelectedEmotion] = useState('calm');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
 
   const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => {
-      setUser({ displayName, bio });
-      setSaving(false);
-      navigation.goBack();
-    }, 600);
+    const nameError = validation.validateDisplayName(displayName);
+    if (nameError) {
+      setErrorMsg(nameError);
+      return;
+    }
+    const bioError = validation.validateBio(bio);
+    if (bioError) {
+      setErrorMsg(bioError);
+      return;
+    }
+
+    setErrorMsg('');
+    updateProfile(
+      {
+        display_name: displayName.trim(),
+        bio: bio.trim(),
+      },
+      {
+        onSuccess: () => {
+          navigation.goBack();
+        },
+        onError: () => {
+          navigation.goBack();
+        },
+      }
+    );
   };
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
+      {/* Top Bar Header */}
       <View style={styles.topBar}>
         <IconButton
           icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
-        <Typography variant="title" weight="semibold">
+        <Typography variant="title" weight="bold">
           Edit Profile
         </Typography>
         <Button
@@ -49,30 +77,69 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
+      {/* Avatar & Emotion Tone Picker */}
       <View style={styles.avatarSection}>
-        <Avatar name={displayName} size="xl" emotion="calm" />
-        <TouchableOpacity style={styles.changePicBtn} activeOpacity={0.8}>
-          <Typography variant="caption" color={theme.colors.primaryLight} weight="bold">
-            Change Aura Avatar
-          </Typography>
-        </TouchableOpacity>
+        <Avatar name={displayName} size="xl" emotion={selectedEmotion} />
+        <Typography variant="caption" color={theme.colors.textMuted} style={styles.toneLabel}>
+          Select your ambient aura hue:
+        </Typography>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
+          {EMOTION_PRESETS.map((emo) => {
+            const config = theme.getEmotionConfig(emo);
+            const isSelected = selectedEmotion === emo;
+            return (
+              <TouchableOpacity
+                key={emo}
+                activeOpacity={0.8}
+                onPress={() => setSelectedEmotion(emo)}
+                style={[
+                  styles.presetChip,
+                  { borderColor: isSelected ? config.primary : 'rgba(255, 255, 255, 0.1)' },
+                  isSelected && { backgroundColor: config.background },
+                ]}
+              >
+                <Typography variant="caption">{config.emoji}</Typography>
+                <Typography
+                  variant="caption"
+                  weight={isSelected ? 'bold' : 'medium'}
+                  color={isSelected ? config.primary : theme.colors.textSecondary}
+                >
+                  {config.label}
+                </Typography>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
+      {/* Form Fields */}
       <View style={styles.form}>
         <Input
           label="Display Name"
           value={displayName}
-          onChangeText={setDisplayName}
+          onChangeText={(text) => {
+            setDisplayName(text);
+            setErrorMsg('');
+          }}
+          placeholder="Your name or moniker"
+          error={errorMsg}
         />
 
-        <Input
-          label="Emotional Philosophy / Bio"
-          value={bio}
-          onChangeText={setBio}
-          multiline
-          numberOfLines={4}
-          style={styles.bioInput}
-        />
+        <View style={styles.bioContainer}>
+          <Input
+            label="Emotional Philosophy / Bio"
+            value={bio}
+            onChangeText={setBio}
+            placeholder="What grounds you?"
+            multiline
+            numberOfLines={4}
+            maxLength={160}
+            style={styles.bioInput}
+          />
+          <Typography variant="caption" color={theme.colors.textMuted} style={styles.bioCounter}>
+            {bio.length}/160 characters
+          </Typography>
+        </View>
       </View>
     </ScreenWrapper>
   );
@@ -81,6 +148,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
+    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',
@@ -90,16 +158,38 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xxl,
+    marginBottom: theme.spacing.xl,
   },
-  changePicBtn: {
-    marginTop: theme.spacing.md,
+  toneLabel: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  presetScroll: {
+    flexDirection: 'row',
+  },
+  presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    marginHorizontal: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
   form: {
-    gap: 12,
+    gap: 14,
+  },
+  bioContainer: {
+    position: 'relative',
   },
   bioInput: {
-    minHeight: 100,
+    minHeight: 110,
     textAlignVertical: 'top',
+  },
+  bioCounter: {
+    textAlign: 'right',
+    marginTop: 4,
   },
 });

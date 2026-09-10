@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/api/auth';
 import { usersApi } from '@/api/users';
-import { LoginPayload, RegisterPayload, UserResponse } from '@/api/types';
+import { LoginPayload, RegisterPayload, UpdateUserPayload, UserResponse } from '@/api/types';
 import { useAuthStore } from '@/stores/authStore';
 
 export const useLogin = () => {
@@ -40,6 +40,47 @@ export const useCurrentUser = (enabled = true) => {
     queryKey: ['currentUser'],
     queryFn: () => usersApi.getMe(),
     enabled: isAuthenticated && enabled,
+  });
+};
+
+export const useUserProfile = (userId: string) => {
+  return useQuery<UserResponse>({
+    queryKey: ['userProfile', userId],
+    queryFn: () => usersApi.getUserProfile(userId),
+    enabled: !!userId,
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  const { setUser } = useAuthStore();
+
+  return useMutation({
+    mutationFn: (payload: UpdateUserPayload) => usersApi.updateMe(payload),
+    onSuccess: (updated) => {
+      setUser({
+        displayName: updated.display_name,
+        bio: updated.bio || undefined,
+        avatarUrl: updated.avatar_url || undefined,
+        auraScore: updated.aura_score,
+      });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    },
+  });
+};
+
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+  const { logout } = useAuthStore();
+
+  return useMutation({
+    mutationFn: async () => {
+      await usersApi.deleteAccount();
+      await logout();
+    },
+    onSuccess: () => {
+      queryClient.clear();
+    },
   });
 };
 

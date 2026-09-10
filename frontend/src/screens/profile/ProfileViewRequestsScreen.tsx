@@ -34,7 +34,7 @@ export const ProfileViewRequestsScreen: React.FC<Props> = ({ navigation }) => {
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
-        <Typography variant="title" weight="semibold">
+        <Typography variant="title" weight="bold">
           Profile Reveal Requests ({requests.length})
         </Typography>
         <View style={{ width: 44 }} />
@@ -73,6 +73,7 @@ export const ProfileViewRequestsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
+    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',

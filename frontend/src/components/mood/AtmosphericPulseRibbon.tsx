@@ -19,6 +19,7 @@ export interface AtmosphericPulseRibbonProps {
   selectedFilter: string | null;
   onSelectFilter: (filter: string | null) => void;
   onRecenterPress?: () => void;
+  onStreamPress?: () => void;
 }
 
 const emotionFilters = [
@@ -38,6 +39,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
   selectedFilter,
   onSelectFilter,
   onRecenterPress,
+  onStreamPress,
 }) => {
   const emotionConfig = theme.getEmotionConfig(dominantEmotion);
   const pulseScale = useSharedValue(1);
@@ -105,15 +107,27 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
           </View>
         </View>
 
-        {onRecenterPress && (
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={onRecenterPress}
-            style={styles.recenterBtn}
-          >
-            <Ionicons name="locate" size={18} color={theme.colors.primaryLight} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.rightActionsRow}>
+          {onStreamPress && (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={onStreamPress}
+              style={styles.recenterBtn}
+            >
+              <Ionicons name="list" size={18} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+          )}
+
+          {onRecenterPress && (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={onRecenterPress}
+              style={styles.recenterBtn}
+            >
+              <Ionicons name="locate" size={18} color={theme.colors.primaryLight} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Emotion Filter Ribbon */}
@@ -223,6 +237,11 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  rightActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   recenterBtn: {
     width: 36,

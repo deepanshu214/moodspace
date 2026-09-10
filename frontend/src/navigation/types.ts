@@ -21,6 +21,7 @@ export type AuthStackParamList = {
 export type HomeStackParamList = {
   HomeScreen: undefined;
   BubbleDetails: { bubbleId: string; emotion?: string; authorName?: string };
+  FeedStream: undefined;
 };
 
 // Chats Flow
@@ -41,6 +42,7 @@ export type ProfileStackParamList = {
   Settings: undefined;
   FollowRequests: undefined;
   ProfileViewRequests: undefined;
+  FollowersList: { type: 'followers' | 'following' };
 };
 
 // Main Bottom Tabs

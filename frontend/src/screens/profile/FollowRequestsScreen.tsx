@@ -8,6 +8,7 @@ import { IconButton } from '@/components/common/IconButton';
 import { RequestCard } from '@/components/social/RequestCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { useRespondConnection } from '@/hooks/useSocial';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'FollowRequests'>;
@@ -15,22 +16,25 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'FollowRequests'>;
 export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
   const [requests, setRequests] = useState([
     {
-      id: 'r-1',
+      id: 'req-1',
       name: 'Kai Takahashi',
-      bio: 'Navigating quiet paths & daily meditations',
+      bio: 'Navigating quiet paths & daily meditations.',
       mutuals: 3,
       time: '2h ago',
     },
     {
-      id: 'r-2',
+      id: 'req-2',
       name: 'Maya Lin',
-      bio: 'Expressive painter & ambient sound explorer',
+      bio: 'Expressive painter & ambient sound explorer.',
       mutuals: 1,
       time: 'Yesterday',
     },
   ]);
 
-  const handleAction = (id: string) => {
+  const { mutate: respondConnection } = useRespondConnection();
+
+  const handleAction = (id: string, action: 'accept' | 'decline') => {
+    respondConnection({ connectionId: id, action });
     setRequests(requests.filter((r) => r.id !== id));
   };
 
@@ -42,7 +46,7 @@ export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
-        <Typography variant="title" weight="semibold">
+        <Typography variant="title" weight="bold">
           Follow Requests ({requests.length})
         </Typography>
         <View style={{ width: 44 }} />
@@ -58,8 +62,8 @@ export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
               bio={item.bio}
               mutualCount={item.mutuals}
               timestamp={item.time}
-              onAccept={() => handleAction(item.id)}
-              onDecline={() => handleAction(item.id)}
+              onAccept={() => handleAction(item.id, 'accept')}
+              onDecline={() => handleAction(item.id, 'decline')}
             />
           ))}
         </View>
@@ -67,7 +71,7 @@ export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
         <EmptyState
           emoji="🤝"
           title="No Pending Requests"
-          description="All connection requests have been reviewed."
+          description="All connection requests have been accepted or settled."
         />
       )}
     </ScreenWrapper>
@@ -77,6 +81,7 @@ export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
+    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',

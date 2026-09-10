@@ -8,19 +8,24 @@ import { IconButton } from '@/components/common/IconButton';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
-import { useAuthStore } from '@/stores/authStore';
+import { useLogout, useDeleteAccount } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Settings'>;
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
-  const { logout } = useAuthStore();
+  const { mutate: logoutUser, isPending: loggingOut } = useLogout();
+  const { mutate: deleteUserAccount, isPending: deletingAccount } = useDeleteAccount();
+
   const [incognitoByDefault, setIncognitoByDefault] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationFuzzing, setLocationFuzzing] = useState(true);
 
   const handleLogout = () => {
-    logout();
+    Alert.alert('Sign Out', 'Are you sure you wish to disconnect from MoodSpace?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: () => logoutUser() },
+    ]);
   };
 
   const handleDeleteAccount = () => {
@@ -29,8 +34,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       'Are you sure you want to permanently erase your emotional journey? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: logout },
-      ],
+        { text: 'Delete Permanently', style: 'destructive', onPress: () => deleteUserAccount() },
+      ]
     );
   };
 
@@ -42,7 +47,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
-        <Typography variant="title" weight="semibold">
+        <Typography variant="title" weight="bold">
           Settings & Privacy
         </Typography>
         <View style={{ width: 44 }} />
@@ -102,36 +107,34 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </Card>
       </View>
 
-      {/* 3. ACCOUNT ACTIONS */}
+      {/* 3. SESSION & ACCOUNT ACTIONS */}
       <View style={styles.section}>
         <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
-          ACCOUNT
+          ACCOUNT ACTIONS
         </Typography>
 
-        <Card variant="elevated" style={styles.card}>
-          <TouchableOpacity
-            style={styles.clickableRow}
-            activeOpacity={0.7}
+        <View style={styles.btnStack}>
+          <Button
+            title="Sign Out"
+            variant="secondary"
+            loading={loggingOut}
             onPress={handleLogout}
-          >
-            <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
-            <Typography variant="body" color={theme.colors.error} weight="semibold" style={styles.logoutText}>
-              Log Out
-            </Typography>
-          </TouchableOpacity>
+            leftIcon={<Ionicons name="log-out-outline" size={18} color={theme.colors.textPrimary} />}
+          />
 
-          <TouchableOpacity
-            style={[styles.clickableRow, styles.dividerRow]}
-            activeOpacity={0.7}
+          <Button
+            title="Delete Account"
+            variant="danger"
+            loading={deletingAccount}
             onPress={handleDeleteAccount}
-          >
-            <Ionicons name="trash-outline" size={20} color={theme.colors.textMuted} />
-            <Typography variant="body" color={theme.colors.textMuted} style={styles.logoutText}>
-              Permanently Delete Account
-            </Typography>
-          </TouchableOpacity>
-        </Card>
+            leftIcon={<Ionicons name="trash-outline" size={18} color="#FFFFFF" />}
+          />
+        </View>
       </View>
+
+      <Typography variant="caption" color={theme.colors.textMuted} style={styles.versionText}>
+        MoodSpace v1.0.0 • Atmospheric Emotional Network
+      </Typography>
     </ScreenWrapper>
   );
 };
@@ -139,7 +142,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    paddingBottom: 60,
+    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',
@@ -156,6 +159,10 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: theme.spacing.lg,
+    backgroundColor: 'rgba(17, 20, 34, 0.85)',
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   row: {
     flexDirection: 'row',
@@ -164,20 +171,19 @@ const styles = StyleSheet.create({
   },
   dividerRow: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: theme.spacing.md,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
     marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
   },
   rowText: {
     flex: 1,
     marginRight: theme.spacing.md,
   },
-  clickableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
+  btnStack: {
+    gap: 12,
   },
-  logoutText: {
-    marginLeft: theme.spacing.md,
+  versionText: {
+    textAlign: 'center',
+    marginTop: theme.spacing.xl,
   },
 });

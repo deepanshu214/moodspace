@@ -7,6 +7,7 @@ import { EditProfileScreen } from '@/screens/profile/EditProfileScreen';
 import { SettingsScreen } from '@/screens/profile/SettingsScreen';
 import { FollowRequestsScreen } from '@/screens/profile/FollowRequestsScreen';
 import { ProfileViewRequestsScreen } from '@/screens/profile/ProfileViewRequestsScreen';
+import { FollowersListScreen } from '@/screens/profile/FollowersListScreen';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
@@ -24,6 +25,7 @@ export const ProfileNavigator: React.FC = () => {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="FollowRequests" component={FollowRequestsScreen} />
       <Stack.Screen name="ProfileViewRequests" component={ProfileViewRequestsScreen} />
+      <Stack.Screen name="FollowersList" component={FollowersListScreen} />
     </Stack.Navigator>
   );
 };

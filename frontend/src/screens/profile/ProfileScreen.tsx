@@ -11,12 +11,21 @@ import { AuraDisplay } from '@/components/social/AuraDisplay';
 import { MoodTag } from '@/components/mood/MoodTag';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useAuthStore } from '@/stores/authStore';
+import { useCurrentUser } from '@/hooks/useAuth';
+import { useMoodHistory } from '@/hooks/useMood';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'MyProfile'>;
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const { user } = useAuthStore();
+  const { user: storeUser } = useAuthStore();
+  const { data: apiUser } = useCurrentUser();
+  const { data: moodHistory } = useMoodHistory(10, 0);
+
+  const displayName = apiUser?.display_name || storeUser?.displayName || 'Elena Rostova';
+  const bio = apiUser?.bio || storeUser?.bio || 'Holding space for calm moments, deep ocean walks, and mindful connection.';
+  const auraScore = apiUser?.aura_score || storeUser?.auraScore || 340;
+  const avatarUrl = apiUser?.avatar_url || storeUser?.avatarUrl;
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
@@ -32,49 +41,60 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
-      {/* Profile Info */}
+      {/* Profile Header & Avatar */}
       <View style={styles.profileHeader}>
         <Avatar
-          name={user?.displayName || 'Elena Rostova'}
+          name={displayName}
+          source={avatarUrl}
           size="xl"
           emotion="calm"
         />
 
         <Typography variant="h2" weight="bold" style={styles.name}>
-          {user?.displayName || 'Elena Rostova'}
+          {displayName}
         </Typography>
 
         <Typography variant="bodySmall" color={theme.colors.textSecondary} style={styles.bio}>
-          {user?.bio || 'Holding space for calm moments, deep ocean walks, and mindful connection.'}
+          {bio}
         </Typography>
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Typography variant="h3" weight="bold">24</Typography>
-            <Typography variant="caption" color={theme.colors.textMuted}>Bubbles</Typography>
+            <Typography variant="h3" weight="bold">
+              {moodHistory?.length || 24}
+            </Typography>
+            <Typography variant="caption" color={theme.colors.textMuted}>
+              Bubbles
+            </Typography>
           </View>
+
           <TouchableOpacity
             style={styles.statBox}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('FollowRequests')}
+            onPress={() => navigation.navigate('FollowersList', { type: 'followers' })}
           >
             <Typography variant="h3" weight="bold">148</Typography>
             <Typography variant="caption" color={theme.colors.textMuted}>Followers</Typography>
           </TouchableOpacity>
-          <View style={styles.statBox}>
+
+          <TouchableOpacity
+            style={styles.statBox}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('FollowersList', { type: 'following' })}
+          >
             <Typography variant="h3" weight="bold">92</Typography>
             <Typography variant="caption" color={theme.colors.textMuted}>Following</Typography>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Aura Card */}
+      {/* Aura Card Section */}
       <View style={styles.section}>
-        <AuraDisplay score={user?.auraScore || 340} variant="card" />
+        <AuraDisplay score={auraScore} variant="card" />
       </View>
 
-      {/* Quick Action Navigation Buttons */}
+      {/* Quick Action Navigation Grid */}
       <View style={styles.actionsGrid}>
         <Button
           title="Edit Profile"
@@ -93,7 +113,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.actionBtn}
         />
         <Button
-          title="View Requests"
+          title="Reveal Requests"
           variant="secondary"
           size="md"
           onPress={() => navigation.navigate('ProfileViewRequests')}
@@ -102,16 +122,29 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
-      {/* Mood History Section */}
+      {/* Recent Emotional Footprint */}
       <View style={styles.section}>
         <Typography variant="title" weight="bold" style={styles.sectionTitle}>
           Recent Emotional Footprint
         </Typography>
 
         <View style={styles.historyPills}>
-          <MoodTag emotion="calm" secondaryEmotion="Peaceful" intensity={7} />
-          <MoodTag emotion="joy" secondaryEmotion="Grateful" intensity={9} />
-          <MoodTag emotion="love" secondaryEmotion="Warm" intensity={8} />
+          {moodHistory && moodHistory.length > 0 ? (
+            moodHistory.map((h, i) => (
+              <MoodTag
+                key={h.id || i}
+                emotion={h.primary_emotion}
+                secondaryEmotion={h.secondary_emotion}
+                intensity={h.intensity}
+              />
+            ))
+          ) : (
+            <>
+              <MoodTag emotion="calm" secondaryEmotion="Peaceful" intensity={7} />
+              <MoodTag emotion="joy" secondaryEmotion="Grateful" intensity={9} />
+              <MoodTag emotion="love" secondaryEmotion="Warm" intensity={8} />
+            </>
+          )}
         </View>
       </View>
     </ScreenWrapper>
@@ -122,6 +155,7 @@ const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
     paddingBottom: 60,
+    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',
@@ -149,10 +183,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: 'rgba(17, 20, 34, 0.85)',
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   statBox: {
     alignItems: 'center',
