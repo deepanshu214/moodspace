@@ -166,32 +166,60 @@ export interface NotificationResponse {
 }
 
 // Community Types
+export interface CommunityCreatePayload {
+  name: string;
+  description: string;
+  category: string;
+  privacy?: 'public' | 'restricted' | 'private';
+  rules?: string;
+  welcome_message?: string;
+}
+
 export interface CommunityResponse {
   id: string;
   name: string;
   description: string;
   member_count: number;
-  topic: string;
+  topic?: string;
+  category?: string;
+  privacy?: string;
+  status?: string;
+  rules?: string;
+  welcome_message?: string;
+  dominant_emotion?: string;
+  group_mood_score?: number;
+  created_at?: string;
 }
 
 export interface PostResponse {
   id: string;
   community_id: string;
-  author_id: string;
-  author_name: string;
+  user_id?: string;
+  author_id?: string;
+  author_name?: string;
   author_avatar?: string | null;
-  title: string;
+  title?: string;
   content: string;
   emotion?: string;
-  likes_count: number;
-  comments_count: number;
+  post_type?: string;
+  is_anonymous?: boolean;
+  has_content_warning?: boolean;
+  is_pinned?: boolean;
+  likes_count?: number;
+  reaction_count?: number;
+  comments_count?: number;
+  comment_count?: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface CreatePostPayload {
-  title: string;
+  title?: string;
   content: string;
   emotion?: string;
+  post_type?: string;
+  is_anonymous?: boolean;
+  has_content_warning?: boolean;
 }
 
 // Matching Types

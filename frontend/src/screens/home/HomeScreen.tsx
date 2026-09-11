@@ -231,6 +231,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onSelectFilter={setSelectedFilter}
         onRecenterPress={handleRecenter}
         onStreamPress={() => navigation.navigate('FeedStream')}
+        onCirclesPress={() => navigation.navigate('CommunityFlow')}
       />
 
       {/* Main Map or Cosmic Canvas Area */}

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { communityApi } from '@/api/community';
-import { CommunityResponse, CreatePostPayload, PostResponse } from '@/api/types';
+import { CommunityCreatePayload, CommunityResponse, CreatePostPayload, PostResponse } from '@/api/types';
 
 export const useCommunities = () => {
   return useQuery<CommunityResponse[]>({
@@ -24,6 +24,39 @@ export const useCreateCommunityPost = (communityId: string) => {
     mutationFn: (payload: CreatePostPayload) => communityApi.createPost(communityId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['community', communityId, 'posts'] });
+    },
+  });
+};
+
+export const useCreateCommunity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CommunityCreatePayload) => communityApi.createCommunity(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+    },
+  });
+};
+
+export const useJoinCommunity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (communityId: string) => communityApi.joinCommunity(communityId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+    },
+  });
+};
+
+export const useLeaveCommunity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (communityId: string) => communityApi.leaveCommunity(communityId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
     },
   });
 };

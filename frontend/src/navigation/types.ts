@@ -17,11 +17,28 @@ export type AuthStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
 };
 
+// Community Flow
+export type CommunityStackParamList = {
+  CommunityList: undefined;
+  CommunityDetail: {
+    communityId: string;
+    communityName: string;
+    category?: string;
+    dominantEmotion?: string;
+  };
+  CreateCommunity: undefined;
+  CreateCommunityPost: {
+    communityId: string;
+    communityName: string;
+  };
+};
+
 // Home Flow
 export type HomeStackParamList = {
   HomeScreen: undefined;
   BubbleDetails: { bubbleId: string; emotion?: string; authorName?: string };
   FeedStream: undefined;
+  CommunityFlow: NavigatorScreenParams<CommunityStackParamList> | undefined;
 };
 
 // Chats Flow
@@ -59,4 +76,5 @@ export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   CreateBubbleModal: undefined;
+  CommunityFlow: NavigatorScreenParams<CommunityStackParamList> | undefined;
 };

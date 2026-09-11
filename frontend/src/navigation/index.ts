@@ -6,3 +6,4 @@ export * from './MainTabNavigator';
 export * from './HomeNavigator';
 export * from './ChatNavigator';
 export * from './ProfileNavigator';
+export * from './CommunityNavigator';

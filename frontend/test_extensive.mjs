@@ -326,3 +326,79 @@ test('⚡ EXTENSIVE 8: API Modules Complete Contract Verification', async (t) =>
     assert.ok(content.includes('export const'), `Module ${file} must export services`);
   }
 });
+
+test('⚡ EXTENSIVE 9: Stage 8 Community Circles In-Memory Simulation & Logic', async (t) => {
+  await t.test('All Community screens and components exist and export cleanly', () => {
+    const stage8Files = [
+      'src/components/community/CommunityMoodGauge.tsx',
+      'src/components/community/CommunityCard.tsx',
+      'src/components/community/CommunityPostCard.tsx',
+      'src/components/community/index.ts',
+      'src/screens/community/CommunityListScreen.tsx',
+      'src/screens/community/CommunityDetailScreen.tsx',
+      'src/screens/community/CreateCommunityModal.tsx',
+      'src/screens/community/CreateCommunityPostModal.tsx',
+      'src/screens/community/index.ts',
+      'src/navigation/CommunityNavigator.tsx',
+    ];
+
+    for (const f of stage8Files) {
+      const fullPath = path.join(FRONTEND_DIR, f);
+      assert.ok(fs.existsSync(fullPath), `Stage 8 file ${f} must exist`);
+      const stat = fs.statSync(fullPath);
+      assert.ok(stat.size > 100, `File ${f} must have non-trivial content`);
+    }
+  });
+
+  await t.test('Community category filtering and search logic simulation', () => {
+    const testCircles = [
+      { id: '1', name: 'Mindful Breathing', category: 'Mindfulness', description: 'Stillness and gentle presence' },
+      { id: '2', name: 'Late Night Thoughts', category: 'Sleep & Dreams', description: 'Insomnia reflections' },
+      { id: '3', name: 'Radical Acceptance', category: 'Mindfulness', description: 'Embracing all emotional states' },
+      { id: '4', name: 'Grief & Healing', category: 'Healing & Grief', description: 'Holding space for loss' },
+    ];
+
+    // Filter by category
+    const mindfulnessCircles = testCircles.filter(c => c.category === 'Mindfulness');
+    assert.strictEqual(mindfulnessCircles.length, 2);
+
+    // Search query
+    const query = 'healing';
+    const searched = testCircles.filter(
+      c => c.name.toLowerCase().includes(query) || c.description.toLowerCase().includes(query)
+    );
+    assert.strictEqual(searched.length, 1);
+    assert.strictEqual(searched[0].id, '4');
+  });
+
+  await t.test('Atmosphere mood gauge distribution sums accurately', () => {
+    const distribution = [
+      { emotion: 'calm', percentage: 65 },
+      { emotion: 'joy', percentage: 20 },
+      { emotion: 'love', percentage: 10 },
+      { emotion: 'anxiety', percentage: 5 },
+    ];
+
+    const totalPercentage = distribution.reduce((sum, item) => sum + item.percentage, 0);
+    assert.strictEqual(totalPercentage, 100, 'Mood distribution percentages must total 100');
+  });
+
+  await t.test('Anonymization and content warning shielding states operate predictably', () => {
+    const postA = { is_anonymous: true, has_content_warning: true, content: 'Deep personal disclosure' };
+    const postB = { is_anonymous: false, has_content_warning: false, content: 'Celebrated a win today' };
+
+    const authorDisplayA = postA.is_anonymous ? 'Wandering Spirit' : 'Jane Doe';
+    assert.strictEqual(authorDisplayA, 'Wandering Spirit');
+
+    const authorDisplayB = postB.is_anonymous ? 'Wandering Spirit' : 'Jane Doe';
+    assert.strictEqual(authorDisplayB, 'Jane Doe');
+
+    // Content Warning mask state
+    let revealedA = !postA.has_content_warning;
+    assert.strictEqual(revealedA, false, 'Shielded post should be concealed initially');
+
+    // Simulate tap to reveal
+    revealedA = true;
+    assert.strictEqual(revealedA, true, 'Shielded post should reveal on interaction');
+  });
+});

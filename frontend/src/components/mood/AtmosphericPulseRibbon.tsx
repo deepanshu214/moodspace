@@ -20,6 +20,7 @@ export interface AtmosphericPulseRibbonProps {
   onSelectFilter: (filter: string | null) => void;
   onRecenterPress?: () => void;
   onStreamPress?: () => void;
+  onCirclesPress?: () => void;
 }
 
 const emotionFilters = [
@@ -40,6 +41,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
   onSelectFilter,
   onRecenterPress,
   onStreamPress,
+  onCirclesPress,
 }) => {
   const emotionConfig = theme.getEmotionConfig(dominantEmotion);
   const pulseScale = useSharedValue(1);
@@ -58,14 +60,14 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
     pulseOpacity.value = withRepeat(
       withSequence(
         withTiming(0.8, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.3, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.4, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
       true,
     );
   }, []);
 
-  const animatedPulseStyle = useAnimatedStyle(() => ({
+  const animatedPulse = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
     opacity: pulseOpacity.value,
   }));
@@ -81,7 +83,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={[
                 styles.pulseRing,
                 { backgroundColor: emotionConfig.glow },
-                animatedPulseStyle,
+                animatedPulse,
               ]}
             />
             <View style={[styles.pulseDot, { backgroundColor: emotionConfig.primary }]}>
@@ -108,11 +110,23 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
         </View>
 
         <View style={styles.rightActionsRow}>
+          {onCirclesPress && (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={onCirclesPress}
+              style={styles.recenterBtn}
+              accessibilityLabel="Community Circles"
+            >
+              <Ionicons name="planet-outline" size={18} color={theme.colors.primaryLight} />
+            </TouchableOpacity>
+          )}
+
           {onStreamPress && (
             <TouchableOpacity
               activeOpacity={0.75}
               onPress={onStreamPress}
               style={styles.recenterBtn}
+              accessibilityLabel="Feed Stream"
             >
               <Ionicons name="list" size={18} color={theme.colors.textPrimary} />
             </TouchableOpacity>
@@ -123,6 +137,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               activeOpacity={0.75}
               onPress={onRecenterPress}
               style={styles.recenterBtn}
+              accessibilityLabel="Recenter Map"
             >
               <Ionicons name="locate" size={18} color={theme.colors.primaryLight} />
             </TouchableOpacity>
