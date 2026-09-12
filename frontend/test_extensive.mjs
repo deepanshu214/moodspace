@@ -402,3 +402,96 @@ test('⚡ EXTENSIVE 9: Stage 8 Community Circles In-Memory Simulation & Logic', 
     assert.strictEqual(revealedA, true, 'Shielded post should reveal on interaction');
   });
 });
+
+test('EXTENSIVE 10: Stage 9 Direct Messaging, Echo Resonance & Icebreaker Behavioral Verification', async (t) => {
+  await t.test('Conversation sorting and unread accumulation logic', () => {
+    const conversations = [
+      { id: 'c1', updated_at: '2026-09-12T10:00:00Z', unread_count: 2 },
+      { id: 'c2', updated_at: '2026-09-12T12:30:00Z', unread_count: 0 },
+      { id: 'c3', updated_at: '2026-09-12T11:15:00Z', unread_count: 3 },
+    ];
+
+    // Recency sort (newest first)
+    const sorted = [...conversations].sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+
+    assert.strictEqual(sorted[0].id, 'c2', 'Most recently updated conversation is first');
+    assert.strictEqual(sorted[1].id, 'c3', 'Second most recent is c3');
+    assert.strictEqual(sorted[2].id, 'c1', 'Oldest is last');
+
+    const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
+    assert.strictEqual(totalUnread, 5, 'Total unreads should sum accurately to 5');
+  });
+
+  await t.test('Message emoji reaction grouping and aggregation', () => {
+    const rawReactions = [
+      { id: 'r1', message_id: 'm1', user_id: 'u1', emoji: '❤️' },
+      { id: 'r2', message_id: 'm1', user_id: 'u2', emoji: '❤️' },
+      { id: 'r3', message_id: 'm1', user_id: 'u3', emoji: '✨' },
+      { id: 'r4', message_id: 'm1', user_id: 'u4', emoji: '🤗' },
+      { id: 'r5', message_id: 'm1', user_id: 'u5', emoji: '✨' },
+      { id: 'r6', message_id: 'm1', user_id: 'u6', emoji: '❤️' },
+    ];
+
+    const grouped = rawReactions.reduce((acc, r) => {
+      acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+      return acc;
+    }, {});
+
+    assert.strictEqual(grouped['❤️'], 3, 'Heart reaction should count 3');
+    assert.strictEqual(grouped['✨'], 2, 'Sparkle reaction should count 2');
+    assert.strictEqual(grouped['🤗'], 1, 'Hug reaction should count 1');
+  });
+
+  await t.test('Resonance algorithm scoring with weighted emotional and spatial affinities', () => {
+    function computeResonanceScore({
+      isSharedEmotion,
+      isLocationNear,
+      mutualCommunitiesCount,
+      hasMoodPatternAlignment,
+    }) {
+      let score = 0;
+      if (isSharedEmotion) score += 40;
+      if (isLocationNear) score += 20;
+      score += Math.min(mutualCommunitiesCount * 10, 20);
+      if (hasMoodPatternAlignment) score += 20;
+      return Math.min(100, Math.max(0, score));
+    }
+
+    const matchA = computeResonanceScore({
+      isSharedEmotion: true,
+      isLocationNear: true,
+      mutualCommunitiesCount: 2,
+      hasMoodPatternAlignment: true,
+    });
+    assert.strictEqual(matchA, 100, 'Perfect resonance produces 100%');
+
+    const matchB = computeResonanceScore({
+      isSharedEmotion: true,
+      isLocationNear: false,
+      mutualCommunitiesCount: 0,
+      hasMoodPatternAlignment: true,
+    });
+    assert.strictEqual(matchB, 60, 'Emotional affinity without location produces 60%');
+  });
+
+  await t.test('Icebreaker spark filtering by emotion tags and categories', () => {
+    const bank = [
+      { id: '1', category: 'gratitude', emotion_tags: ['joy', 'gratitude'] },
+      { id: '2', category: 'empathy', emotion_tags: ['sadness', 'anxiety'] },
+      { id: '3', category: 'presence', emotion_tags: ['calm'] },
+      { id: '4', category: 'reflection', emotion_tags: ['calm', 'anxiety'] },
+    ];
+
+    // Filter by emotion 'calm'
+    const calmSparks = bank.filter((b) => b.emotion_tags.includes('calm'));
+    assert.strictEqual(calmSparks.length, 2, 'Found 2 calm sparks');
+
+    // Filter by category 'empathy'
+    const empathySparks = bank.filter((b) => b.category === 'empathy');
+    assert.strictEqual(empathySparks.length, 1, 'Found 1 empathy spark');
+    assert.strictEqual(empathySparks[0].id, '2');
+  });
+});
+

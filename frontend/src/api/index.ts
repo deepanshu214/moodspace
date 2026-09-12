@@ -9,4 +9,5 @@ export * from './feed';
 export * from './social';
 export * from './notification';
 export * from './community';
+export * from './messaging';
 export * from './matching';

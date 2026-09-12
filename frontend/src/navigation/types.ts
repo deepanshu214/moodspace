@@ -48,8 +48,16 @@ export type ChatStackParamList = {
     chatId: string;
     recipientName: string;
     recipientAvatar?: string | null;
+    recipientEmotion?: string;
+    isEchoMatch?: boolean;
+  };
+  EchoMatch: undefined;
+  IcebreakerPicker: {
+    conversationId: string;
+    emotion?: string;
   };
 };
+
 
 // Profile Flow
 export type ProfileStackParamList = {

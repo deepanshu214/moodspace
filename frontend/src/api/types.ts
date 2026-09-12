@@ -231,3 +231,129 @@ export interface MoodMatchResponse {
   resonance_score: number; // 0 - 100
   city?: string;
 }
+
+// ---------- Stage 9: Direct Messaging / Echoes & Matching ----------
+
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+export type MessageType = 'text' | 'icebreaker' | 'mood_share' | 'reaction_echo';
+
+export interface DirectMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  message_type: MessageType;
+  status: MessageStatus;
+  emotion_tag?: string;
+  icebreaker_id?: string;
+  is_deleted?: boolean;
+  reactions?: MessageReactionResponse[];
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface SendMessagePayload {
+  recipient_id: string;
+  content: string;
+  message_type?: MessageType;
+  emotion_tag?: string;
+  icebreaker_id?: string;
+}
+
+export interface MessageReactionResponse {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+}
+
+export interface AddMessageReactionPayload {
+  message_id: string;
+  emoji: string;
+}
+
+export interface Conversation {
+  id: string;
+  participant_ids: string[];
+  other_participant: {
+    user_id: string;
+    display_name: string;
+    avatar_url?: string | null;
+    current_emotion?: string;
+    is_online?: boolean;
+    last_seen_at?: string;
+  };
+  last_message?: DirectMessage;
+  unread_count: number;
+  resonance_score?: number;
+  is_echo_match?: boolean;   // matched via resonance system
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationMessagesResponse {
+  messages: DirectMessage[];
+  next_cursor?: string | null;
+  has_more: boolean;
+}
+
+export interface MarkReadPayload {
+  conversation_id: string;
+  up_to_message_id?: string;
+}
+
+// Icebreaker types
+export type IcebreakerCategory =
+  | 'curiosity'
+  | 'gratitude'
+  | 'empathy'
+  | 'growth'
+  | 'presence'
+  | 'reflection';
+
+export interface Icebreaker {
+  id: string;
+  prompt: string;
+  category: IcebreakerCategory;
+  emotion_tags: string[];
+  follow_up?: string;
+}
+
+// Echo Matching (Resonance system)
+export type EchoMatchReason =
+  | 'shared_emotion'
+  | 'complementary_emotion'
+  | 'location_proximity'
+  | 'community_overlap'
+  | 'mood_pattern';
+
+export interface EchoMatchResponse {
+  match_id: string;           // unique ID for this match suggestion
+  user_id: string;
+  display_name: string;
+  avatar_url?: string | null;
+  current_emotion: string;
+  resonance_score: number;    // 0–100
+  match_reasons: EchoMatchReason[];
+  shared_emotion?: string;
+  city?: string;
+  mutual_communities?: number;
+  icebreaker?: Icebreaker;    // pre-loaded icebreaker for this match
+  expires_at?: string;        // match window expires
+  is_anonymous?: boolean;     // other user in wandering spirit mode
+}
+
+export interface EchoMatchDecisionPayload {
+  match_id: string;
+  decision: 'connect' | 'pass';
+}
+
+export interface EchoMatchDecisionResponse {
+  match_id: string;
+  decision: 'connect' | 'pass';
+  conversation_id?: string;   // set when both parties connect
+  is_mutual?: boolean;
+}
+

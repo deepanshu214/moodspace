@@ -5,3 +5,6 @@ export * from './useFeed';
 export * from './useSocial';
 export * from './useNotifications';
 export * from './useCommunity';
+export * from './useMessaging';
+export * from './useMatching';
+
