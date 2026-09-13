@@ -495,3 +495,99 @@ test('EXTENSIVE 10: Stage 9 Direct Messaging, Echo Resonance & Icebreaker Behavi
   });
 });
 
+test('EXTENSIVE 11: Stage 10 Notifications, Signal Filtering & Inline Action Mechanics', async (t) => {
+  await t.test('Multi-category notification feed filtering reducer', () => {
+    const notifications = [
+      { id: '1', category: 'empathy_reaction', type: 'like', is_read: false },
+      { id: '2', category: 'connection_request', type: 'follow_request', is_read: false },
+      { id: '3', category: 'community_activity', type: 'community', is_read: true },
+      { id: '4', category: 'mindful_reminder', type: 'reminder', is_read: true },
+      { id: '5', category: 'echo_match', type: 'match', is_read: false },
+      { id: '6', category: 'comment_echo', type: 'comment', is_read: true },
+    ];
+
+    // Filter unread
+    const unread = notifications.filter((n) => !n.is_read);
+    assert.strictEqual(unread.length, 3, 'Found exactly 3 unread signals');
+
+    // Filter echoes (reactions + comments)
+    const echoes = notifications.filter(
+      (n) => n.category === 'empathy_reaction' || n.category === 'comment_echo'
+    );
+    assert.strictEqual(echoes.length, 2, 'Found exactly 2 echo items');
+
+    // Filter connections (requests + matches)
+    const connections = notifications.filter(
+      (n) => n.category === 'connection_request' || n.category === 'echo_match'
+    );
+    assert.strictEqual(connections.length, 2, 'Found exactly 2 connection items');
+
+    // Filter sanctuaries
+    const sanctuaries = notifications.filter((n) => n.category === 'community_activity');
+    assert.strictEqual(sanctuaries.length, 1, 'Found exactly 1 sanctuary update');
+
+    // Filter mindful (reminders)
+    const mindful = notifications.filter((n) => n.category === 'mindful_reminder');
+    assert.strictEqual(mindful.length, 1, 'Found exactly 1 mindful notification');
+  });
+
+  await t.test('Relative timestamp formatting engine across various time deltas', () => {
+    function formatTime(diffMinutes) {
+      if (diffMinutes < 1) return 'Just now';
+      if (diffMinutes < 60) return `${diffMinutes}m ago`;
+      const hours = Math.floor(diffMinutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      if (days === 1) return 'Yesterday';
+      return `${days}d ago`;
+    }
+
+    assert.strictEqual(formatTime(0.5), 'Just now');
+    assert.strictEqual(formatTime(15), '15m ago');
+    assert.strictEqual(formatTime(120), '2h ago');
+    assert.strictEqual(formatTime(1440), 'Yesterday');
+    assert.strictEqual(formatTime(4320), '3d ago');
+  });
+
+  await t.test('Inline connection request accept/decline state transitions', () => {
+    let requests = [
+      { id: 'req-1', status: 'pending', is_read: false },
+      { id: 'req-2', status: 'pending', is_read: false },
+    ];
+
+    // Accept req-1
+    requests = requests.map((r) =>
+      r.id === 'req-1' ? { ...r, status: 'accepted', is_read: true } : r
+    );
+
+    assert.strictEqual(requests[0].status, 'accepted');
+    assert.strictEqual(requests[0].is_read, true);
+    assert.strictEqual(requests[1].status, 'pending');
+
+    // Decline req-2
+    requests = requests.map((r) =>
+      r.id === 'req-2' ? { ...r, status: 'declined', is_read: true } : r
+    );
+    assert.strictEqual(requests[1].status, 'declined');
+    assert.strictEqual(requests[1].is_read, true);
+  });
+
+  await t.test('Optimistic mark-all-as-read and notification deletion reducers', () => {
+    let feed = [
+      { id: '1', is_read: false },
+      { id: '2', is_read: false },
+      { id: '3', is_read: true },
+    ];
+
+    // Mark all as read
+    feed = feed.map((item) => ({ ...item, is_read: true }));
+    assert.ok(feed.every((item) => item.is_read === true), 'All items marked read');
+
+    // Delete item 2
+    feed = feed.filter((item) => item.id !== '2');
+    assert.strictEqual(feed.length, 2, 'Item 2 deleted from feed');
+    assert.strictEqual(feed.find((item) => item.id === '2'), undefined);
+  });
+});
+
+

@@ -154,16 +154,47 @@ export interface CommentResponse {
 }
 
 // Notification Types
+export type NotificationCategory =
+  | 'empathy_reaction'
+  | 'comment_echo'
+  | 'echo_match'
+  | 'connection_request'
+  | 'connection_accepted'
+  | 'community_activity'
+  | 'mindful_reminder'
+  | 'streak_milestone'
+  | 'system';
+
+export interface NotificationData {
+  actor_id?: string;
+  actor_name?: string;
+  actor_avatar?: string | null;
+  target_id?: string;
+  target_type?: 'checkin' | 'post' | 'comment' | 'community' | 'chat';
+  emotion?: string;
+  reaction_type?: ReactionType | string;
+  community_id?: string;
+  community_name?: string;
+  connection_id?: string;
+  resonance_score?: number;
+  milestone_count?: number;
+  [key: string]: any;
+}
+
 export interface NotificationResponse {
   id: string;
   user_id: string;
   type: string;
+  category?: NotificationCategory;
   title: string;
-  message: string;
+  body?: string;
+  message?: string;
   is_read: boolean;
-  data?: Record<string, any>;
+  read_at?: string | null;
+  data?: NotificationData;
   created_at: string;
 }
+
 
 // Community Types
 export interface CommunityCreatePayload {
