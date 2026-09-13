@@ -19,7 +19,7 @@ import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
 import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
 import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import { MapContainer, Marker, PROVIDER_DEFAULT } from '@/components/map';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -158,7 +158,7 @@ const INITIAL_REGION = {
 };
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<any>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -213,7 +213,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleRecenter = () => {
-    mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
+    mapRef.current?.animateToRegion?.(INITIAL_REGION, 1000);
   };
 
   const dominantEmotion = pulseData?.dominant_emotion || 'calm';
@@ -237,7 +237,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       {/* Main Map or Cosmic Canvas Area */}
       <View style={styles.canvasContainer}>
         {Platform.OS !== 'web' ? (
-          <MapView
+          <MapContainer
             ref={mapRef}
             style={StyleSheet.absoluteFill}
             provider={PROVIDER_DEFAULT}
@@ -267,7 +267,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 />
               </Marker>
             ))}
-          </MapView>
+          </MapContainer>
         ) : (
           /* Cosmic Celestial Canvas Fallback for Web/Simulator */
           <View style={styles.cosmicGridCanvas}>
