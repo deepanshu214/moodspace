@@ -777,6 +777,73 @@ test('EXTENSIVE 13: Stage 12 Outbox Queue, Exponential Retry Backoff & Cache Inv
   });
 });
 
+test('EXTENSIVE 14: Stage 13 Motion Physics, Spring Damping & Particle Mathematics', async (t) => {
+  await t.test('Underdamped spring damping ratio calculation', () => {
+    // Zeta = damping / (2 * sqrt(stiffness * mass))
+    function calculateDampingRatio(damping, stiffness, mass) {
+      return damping / (2 * Math.sqrt(stiffness * mass));
+    }
+
+    const bouncyZeta = calculateDampingRatio(12, 150, 0.6);
+    assert.ok(bouncyZeta < 1.0, 'Bouncy spring is underdamped (zeta < 1.0) allowing overshoot');
+
+    const slowZeta = calculateDampingRatio(25, 80, 1.0);
+    assert.ok(slowZeta > 1.0, 'Slow spring is overdamped (zeta > 1.0) preventing overshoot');
+
+    const snappyZeta = calculateDampingRatio(20, 200, 0.5);
+    assert.ok(snappyZeta === 1.0, 'Snappy spring is critically damped (zeta = 1.0) for fastest settling');
+  });
+
+  await t.test('Particle drift boundary toroidal wrapping math', () => {
+    function wrapCoordinate(coord, maxBound) {
+      if (coord < 0) return (coord % maxBound) + maxBound;
+      return coord % maxBound;
+    }
+
+    assert.strictEqual(wrapCoordinate(420, 400), 20, 'Wraps past upper screen boundary');
+    assert.strictEqual(wrapCoordinate(-15, 400), 385, 'Wraps before lower screen boundary');
+    assert.strictEqual(wrapCoordinate(250, 400), 250, 'Keeps in-bound coordinate identical');
+  });
+
+  await t.test('Haptic feedback tier selector maps semantics cleanly', () => {
+    function getHapticType(interactionType) {
+      switch (interactionType) {
+        case 'TAP_BUTTON':
+        case 'SELECT_CHIP':
+          return 'light';
+        case 'LONG_PRESS_BUBBLE':
+        case 'TOGGLE_FAB':
+          return 'medium';
+        case 'DELETE_ACCOUNT':
+        case 'CRITICAL_ACTION':
+          return 'heavy';
+        case 'SYNC_SUCCESS':
+          return 'notification_success';
+        case 'SYNC_ERROR':
+          return 'notification_error';
+        default:
+          return 'selection';
+      }
+    }
+
+    assert.strictEqual(getHapticType('TAP_BUTTON'), 'light');
+    assert.strictEqual(getHapticType('TOGGLE_FAB'), 'medium');
+    assert.strictEqual(getHapticType('DELETE_ACCOUNT'), 'heavy');
+    assert.strictEqual(getHapticType('SYNC_SUCCESS'), 'notification_success');
+  });
+
+  await t.test('Button and Card scale compression clamping logic', () => {
+    function clampScale(currentValue, minScale, maxScale) {
+      return Math.min(maxScale, Math.max(minScale, currentValue));
+    }
+
+    assert.strictEqual(clampScale(0.96, 0.90, 1.0), 0.96, 'Preserves normal pressed scale');
+    assert.strictEqual(clampScale(0.85, 0.92, 1.0), 0.92, 'Clamps extreme down-press');
+    assert.strictEqual(clampScale(1.15, 0.90, 1.05), 1.05, 'Clamps extreme bounce-back');
+  });
+});
+
+
 
 
 

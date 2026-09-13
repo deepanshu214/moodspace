@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { theme } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -246,8 +247,10 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      {/* Main Feed Scroll List */}
-      <ScrollView
+      {/* Main Feed FlashList for 60fps virtualization */}
+      <FlashList
+        data={filteredPosts}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.feedScroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -257,58 +260,56 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
             tintColor={theme.colors.primaryLight}
           />
         }
-      >
-        {filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => (
-            <FeedCard
-              key={post.id}
-              id={post.id}
-              authorId={post.authorId}
-              authorName={post.authorName}
-              auraScore={post.auraScore}
-              emotion={post.emotion}
-              secondaryEmotion={post.secondaryEmotion}
-              intensity={post.intensity}
-              content={post.content}
-              locationCity={post.locationCity}
-              weatherCondition={post.weatherCondition}
-              weatherTemp={post.weatherTemp}
-              timestamp={post.timestamp}
-              reactionsCount={post.reactionsCount}
-              commentsCount={post.commentsCount}
-              isAnonymous={post.isAnonymous}
-              onPress={() => {
-                navigation.navigate('BubbleDetails', {
-                  bubbleId: post.id,
-                  emotion: post.emotion,
-                  authorName: post.authorName,
+        renderItem={({ item: post }) => (
+          <FeedCard
+            key={post.id}
+            id={post.id}
+            authorId={post.authorId}
+            authorName={post.authorName}
+            auraScore={post.auraScore}
+            emotion={post.emotion}
+            secondaryEmotion={post.secondaryEmotion}
+            intensity={post.intensity}
+            content={post.content}
+            locationCity={post.locationCity}
+            weatherCondition={post.weatherCondition}
+            weatherTemp={post.weatherTemp}
+            timestamp={post.timestamp}
+            reactionsCount={post.reactionsCount}
+            commentsCount={post.commentsCount}
+            isAnonymous={post.isAnonymous}
+            onPress={() => {
+              navigation.navigate('BubbleDetails', {
+                bubbleId: post.id,
+                emotion: post.emotion,
+                authorName: post.authorName,
+              });
+            }}
+            onAuthorPress={() => {
+              if (post.authorId) {
+                navigation.navigate('UserProfile', {
+                  userId: post.authorId,
+                  username: post.authorName,
                 });
-              }}
-              onAuthorPress={() => {
-                if (post.authorId) {
-                  navigation.navigate('UserProfile', {
-                    userId: post.authorId,
-                    username: post.authorName,
-                  });
-                }
-              }}
-              onCommentPress={() => {
-                navigation.navigate('BubbleDetails', {
-                  bubbleId: post.id,
-                  emotion: post.emotion,
-                  authorName: post.authorName,
-                });
-              }}
-            />
-          ))
-        ) : (
+              }
+            }}
+            onCommentPress={() => {
+              navigation.navigate('BubbleDetails', {
+                bubbleId: post.id,
+                emotion: post.emotion,
+                authorName: post.authorName,
+              });
+            }}
+          />
+        )}
+        ListEmptyComponent={
           <EmptyState
             emoji="🍃"
             title="A Quiet Moment"
             description="No reflections found for this emotion filter. Be the first to share."
           />
-        )}
-      </ScrollView>
+        }
+      />
     </ScreenWrapper>
   );
 };

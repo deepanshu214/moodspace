@@ -136,7 +136,8 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
   }));
 
   const handlePressIn = () => {
-    pressScale.value = withSpring(0.92, { damping: 12, stiffness: 200 });
+    pressScale.value = withSpring(0.92, theme.springs.bouncy);
+    theme.haptics.medium();
   };
 
   const handlePressOut = () => {

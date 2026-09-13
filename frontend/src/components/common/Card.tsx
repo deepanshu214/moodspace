@@ -1,19 +1,29 @@
 import React from 'react';
 import {
   View,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   ViewStyle,
-  TouchableOpacityProps,
+  StyleProp,
+  GestureResponderEvent,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { haptics } from '@/theme/haptics';
 
 export type CardVariant = 'elevated' | 'flat' | 'outlined' | 'glass';
 
-export interface CardProps extends TouchableOpacityProps {
+export interface CardProps {
   variant?: CardVariant;
-  emotion?: string; // Optional emotion theme highlighting
+  emotion?: string;
   padding?: keyof typeof theme.spacing;
+  showAccentStrip?: boolean;
+  onPress?: (event: GestureResponderEvent) => void;
+  style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
 }
 
@@ -21,17 +31,37 @@ export const Card: React.FC<CardProps> = ({
   variant = 'elevated',
   emotion,
   padding = 'lg',
+  showAccentStrip = false,
   onPress,
   style,
   children,
-  ...rest
 }) => {
   const emotionConfig = emotion ? theme.getEmotionConfig(emotion) : null;
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    if (onPress) {
+      scale.value = withSpring(0.98, theme.springs.snappy);
+      haptics.light();
+    }
+  };
+
+  const handlePressOut = () => {
+    if (onPress) {
+      scale.value = withSpring(1, theme.springs.bouncy);
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const getCardStyle = (): ViewStyle => {
     let base: ViewStyle = {
       borderRadius: theme.radius.lg,
       padding: theme.spacing[padding],
+      position: 'relative',
+      overflow: 'hidden',
     };
 
     switch (variant) {
@@ -44,9 +74,9 @@ export const Card: React.FC<CardProps> = ({
         base.borderColor = theme.colors.border;
         break;
       case 'glass':
-        base.backgroundColor = theme.colors.surfaceGlass;
+        base.backgroundColor = 'rgba(23, 24, 34, 0.75)';
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = 'rgba(255, 255, 255, 0.08)';
         break;
       case 'elevated':
       default:
@@ -57,7 +87,6 @@ export const Card: React.FC<CardProps> = ({
         break;
     }
 
-    // Emotion glow accent
     if (emotionConfig) {
       base.borderColor = emotionConfig.border;
       base.backgroundColor = emotionConfig.background;
@@ -66,18 +95,44 @@ export const Card: React.FC<CardProps> = ({
     return base;
   };
 
+  const content = (
+    <>
+      {(showAccentStrip || emotion) && emotionConfig && (
+        <View
+          style={[
+            styles.accentStrip,
+            { backgroundColor: emotionConfig.primary },
+          ]}
+        />
+      )}
+      {children}
+    </>
+  );
+
   if (onPress) {
     return (
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={onPress}
-        style={[getCardStyle(), style]}
-        {...rest}
-      >
-        {children}
-      </TouchableOpacity>
+      <Animated.View style={animatedStyle}>
+        <Pressable
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          style={[getCardStyle(), style as any]}
+        >
+          {content}
+        </Pressable>
+      </Animated.View>
     );
   }
 
-  return <View style={[getCardStyle(), style]}>{children}</View>;
+  return <View style={[getCardStyle(), style]}>{content}</View>;
 };
+
+const styles = StyleSheet.create({
+  accentStrip: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+});

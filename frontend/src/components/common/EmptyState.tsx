@@ -1,5 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { Typography } from './Typography';
 import { Button } from './Button';
@@ -24,15 +32,32 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
   style,
 }) => {
+  const floatY = useSharedValue(0);
+
+  useEffect(() => {
+    floatY.value = withRepeat(
+      withSequence(
+        withTiming(-6, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(6, { duration: 1800, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedFloatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatY.value }],
+  }));
+
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.iconCircle}>
+      <Animated.View style={[styles.iconCircle, animatedFloatStyle]}>
         {emoji ? (
           <Typography variant="display">{emoji}</Typography>
         ) : (
           <Ionicons name={iconName} size={42} color={theme.colors.primaryLight} />
         )}
-      </View>
+      </Animated.View>
 
       <Typography variant="h3" weight="semibold" align="center" style={styles.title}>
         {title}
@@ -74,10 +99,15 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 4,
   },
   title: {
     marginBottom: theme.spacing.xs,

@@ -1,6 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { MainTabParamList } from './types';
 import { HomeNavigator } from './HomeNavigator';
 import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
@@ -8,10 +14,45 @@ import { ChatNavigator } from './ChatNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
 import { theme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { haptics } from '@/theme/haptics';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const EmptyScreen = () => <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+
+interface CenterFabButtonProps {
+  onPress: () => void;
+}
+
+const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.9, theme.springs.snappy);
+    haptics.medium();
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, theme.springs.bouncy);
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={styles.centerBtnContainer}
+    >
+      <Animated.View style={[styles.centerFab, animatedStyle]}>
+        <Ionicons name="add" size={28} color="#FFFFFF" />
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 export const MainTabNavigator: React.FC = () => {
   return (
@@ -22,14 +63,23 @@ export const MainTabNavigator: React.FC = () => {
         tabBarActiveTintColor: theme.colors.primaryLight,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(22, 17, 34, 0.94)',
+          borderTopColor: 'rgba(255, 255, 255, 0.08)',
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 88 : 68,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          ...theme.shadows.elevated,
+          position: 'absolute',
+          elevation: 8,
         },
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <BlurView
+              tint="dark"
+              intensity={45}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
@@ -76,16 +126,10 @@ export const MainTabNavigator: React.FC = () => {
         component={EmptyScreen}
         options={({ navigation }) => ({
           tabBarLabel: '',
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              activeOpacity={0.85}
+          tabBarButton: () => (
+            <CenterFabButton
               onPress={() => (navigation as any).navigate('CreateBubbleModal')}
-              style={styles.centerBtnContainer}
-            >
-              <View style={styles.centerFab}>
-                <Ionicons name="add" size={28} color="#FFFFFF" />
-              </View>
-            </TouchableOpacity>
+            />
           ),
         })}
       />
@@ -128,13 +172,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   centerFab: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.glow(theme.colors.primary, 0.45),
+    ...theme.shadows.glow(theme.colors.primary, 0.5),
     borderWidth: 2.5,
     borderColor: theme.colors.background,
   },

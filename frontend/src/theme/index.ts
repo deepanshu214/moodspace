@@ -3,6 +3,8 @@ import { typography, TypographyVariant } from './typography';
 import { spacing, radius, layout } from './spacing';
 import { shadows } from './shadows';
 import { darkMapStyle } from './mapStyle';
+import { springs, timing, easings } from './animations';
+import { haptics } from './haptics';
 
 export const theme = {
   colors,
@@ -11,6 +13,10 @@ export const theme = {
   radius,
   layout,
   shadows,
+  springs,
+  timing,
+  easings,
+  haptics,
   getEmotionConfig,
   darkMapStyle,
 };
@@ -24,6 +30,10 @@ export {
   radius,
   layout,
   shadows,
+  springs,
+  timing,
+  easings,
+  haptics,
   getEmotionConfig,
   darkMapStyle,
   EmotionColorConfig,
@@ -31,3 +41,4 @@ export {
 };
 
 export default theme;
+

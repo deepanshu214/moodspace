@@ -1,20 +1,26 @@
 import React from 'react';
 import {
-  TouchableOpacity,
-  TouchableOpacityProps,
+  Pressable,
   ActivityIndicator,
   StyleSheet,
   View,
   ViewStyle,
-  TextStyle,
+  StyleProp,
+  GestureResponderEvent,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { Typography } from './Typography';
+import { haptics } from '@/theme/haptics';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends TouchableOpacityProps {
+export interface ButtonProps {
   title: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -23,7 +29,10 @@ export interface ButtonProps extends TouchableOpacityProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
+  pill?: boolean;
   customColor?: string;
+  onPress?: (event: GestureResponderEvent) => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -35,22 +44,40 @@ export const Button: React.FC<ButtonProps> = ({
   leftIcon,
   rightIcon,
   fullWidth = false,
+  pill = true,
   customColor,
+  onPress,
   style,
-  ...rest
 }) => {
   const isDisabled = disabled || loading;
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    if (!isDisabled) {
+      scale.value = withSpring(0.96, theme.springs.snappy);
+      haptics.light();
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!isDisabled) {
+      scale.value = withSpring(1, theme.springs.bouncy);
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const getContainerStyle = (): ViewStyle => {
     let base: ViewStyle = {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: theme.radius.md,
+      borderRadius: pill ? theme.radius.round : theme.radius.md,
       alignSelf: fullWidth ? 'stretch' : 'flex-start',
     };
 
-    // Size padding
     switch (size) {
       case 'sm':
         base.paddingVertical = theme.spacing.xs + 2;
@@ -70,7 +97,6 @@ export const Button: React.FC<ButtonProps> = ({
         break;
     }
 
-    // Variant colors
     if (customColor) {
       base.backgroundColor = variant === 'outline' ? 'transparent' : customColor;
       if (variant === 'outline') {
@@ -118,11 +144,9 @@ export const Button: React.FC<ButtonProps> = ({
       case 'secondary':
         return theme.colors.textPrimary;
       case 'outline':
-        return theme.colors.primaryLight;
       case 'ghost':
         return theme.colors.primaryLight;
       case 'danger':
-        return '#FFFFFF';
       case 'primary':
       default:
         return '#FFFFFF';
@@ -142,32 +166,38 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.75}
-      disabled={isDisabled}
-      style={[getContainerStyle(), style]}
-      {...rest}
-    >
-      {loading ? (
-        <ActivityIndicator size="small" color={getTextColor()} />
-      ) : (
-        <View style={styles.contentRow}>
-          {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
-          <Typography
-            variant={getTextVariant()}
-            weight="semibold"
-            color={getTextColor()}
-          >
-            {title}
-          </Typography>
-          {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
-        </View>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={[animatedStyle, fullWidth && styles.fullWidth]}>
+      <Pressable
+        disabled={isDisabled}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[getContainerStyle(), style as any]}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={getTextColor()} />
+        ) : (
+          <View style={styles.contentRow}>
+            {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+            <Typography
+              variant={getTextVariant()}
+              weight="semibold"
+              color={getTextColor()}
+            >
+              {title}
+            </Typography>
+            {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
+  fullWidth: {
+    width: '100%',
+  },
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',

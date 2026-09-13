@@ -1,22 +1,31 @@
 import React from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   View,
   StyleSheet,
   ViewStyle,
-  TouchableOpacityProps,
+  StyleProp,
+  GestureResponderEvent,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
+import { haptics } from '@/theme/haptics';
 
-export interface ChipProps extends TouchableOpacityProps {
+export interface ChipProps {
   label: string;
   selected?: boolean;
   icon?: React.ReactNode;
   emoji?: string;
   onRemove?: () => void;
-  emotion?: string; // Optional emotion theme styling
+  emotion?: string;
+  onPress?: (event: GestureResponderEvent) => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Chip: React.FC<ChipProps> = ({
@@ -28,9 +37,26 @@ export const Chip: React.FC<ChipProps> = ({
   emotion,
   style,
   onPress,
-  ...rest
 }) => {
   const emotionConfig = emotion ? theme.getEmotionConfig(emotion) : null;
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    if (onPress) {
+      scale.value = withSpring(0.95, theme.springs.snappy);
+      haptics.selection();
+    }
+  };
+
+  const handlePressOut = () => {
+    if (onPress) {
+      scale.value = withSpring(1, theme.springs.bouncy);
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const getContainerStyle = (): ViewStyle => {
     let base: ViewStyle = {
@@ -82,7 +108,7 @@ export const Chip: React.FC<ChipProps> = ({
         {label}
       </Typography>
       {onRemove && (
-        <TouchableOpacity
+        <Pressable
           onPress={onRemove}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={styles.removeBtn}
@@ -92,21 +118,23 @@ export const Chip: React.FC<ChipProps> = ({
             size={14}
             color={selected ? '#FFFFFF' : theme.colors.textMuted}
           />
-        </TouchableOpacity>
+        </Pressable>
       )}
     </>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity
-        activeOpacity={0.75}
-        onPress={onPress}
-        style={[getContainerStyle(), style]}
-        {...rest}
-      >
-        {content}
-      </TouchableOpacity>
+      <Animated.View style={animatedStyle}>
+        <Pressable
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          style={[getContainerStyle(), style as any]}
+        >
+          {content}
+        </Pressable>
+      </Animated.View>
     );
   }
 

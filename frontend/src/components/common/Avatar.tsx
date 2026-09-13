@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,9 +19,10 @@ export interface AvatarProps {
   source?: string | null;
   name?: string;
   size?: AvatarSize;
-  emotion?: string; // Optional emotion aura ring
+  emotion?: string;
   showPresence?: boolean;
   isOnline?: boolean;
+  isAnonymous?: boolean;
   style?: ViewStyle;
 }
 
@@ -24,8 +33,28 @@ export const Avatar: React.FC<AvatarProps> = ({
   emotion,
   showPresence = false,
   isOnline = false,
+  isAnonymous = false,
   style,
 }) => {
+  const pulseScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (showPresence && isOnline) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.25, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 1200, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [showPresence, isOnline]);
+
+  const animatedDotStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
   const getDimensions = (): number => {
     switch (size) {
       case 'xs':
@@ -66,10 +95,17 @@ export const Avatar: React.FC<AvatarProps> = ({
             borderRadius: radius,
             borderColor: emotionConfig ? emotionConfig.primary : theme.colors.border,
             borderWidth: emotionConfig ? 2 : 1,
+            backgroundColor: isAnonymous ? '#201A30' : theme.colors.surfaceElevated,
           },
         ]}
       >
-        {source ? (
+        {isAnonymous ? (
+          <Ionicons
+            name="planet-outline"
+            size={dimension * 0.52}
+            color={theme.colors.primaryLight}
+          />
+        ) : source ? (
           <Image
             source={{ uri: source }}
             style={{ width: dimension, height: dimension, borderRadius: radius }}
@@ -94,7 +130,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       </View>
 
       {showPresence && (
-        <View
+        <Animated.View
           style={[
             styles.presenceDot,
             {
@@ -103,6 +139,7 @@ export const Avatar: React.FC<AvatarProps> = ({
               height: Math.max(8, dimension * 0.22),
               borderRadius: dimension * 0.11,
             },
+            isOnline ? animatedDotStyle : null,
           ]}
         />
       )}
@@ -117,7 +154,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarWrapper: {
-    backgroundColor: theme.colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
