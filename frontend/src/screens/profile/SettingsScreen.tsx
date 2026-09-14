@@ -10,6 +10,7 @@ import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useLogout, useDeleteAccount } from '@/hooks/useAuth';
 import { usePrivacySettings, useUpdatePrivacySettings, MOCK_PRIVACY_SETTINGS } from '@/hooks/useUserStats';
+import { AppWalkthroughModal } from '@/components/tutorial';
 import { Ionicons } from '@expo/vector-icons';
 import { PrivacySettingsPayload } from '@/api/types';
 
@@ -26,6 +27,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   const [incognitoByDefault, setIncognitoByDefault] = useState(settings.incognito_by_default);
   const [locationFuzzing, setLocationFuzzing] = useState(settings.location_fuzzing);
+  const [showTourModal, setShowTourModal] = useState(false);
 
   const [visibility, setVisibility] = useState<'public' | 'connections_only' | 'private'>(
     settings.profile_visibility || 'public'
@@ -127,9 +129,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={[styles.row, styles.dividerRow]}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Allow Resonance Matching</Typography>
+              <Typography variant="body" weight="semibold">Allow 1-on-1 Matching</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Surface my wavelength in the Echo resonance matching pool
+                Let people feeling similar emotions connect with you in private chats
               </Typography>
             </View>
             <Switch
@@ -145,7 +147,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           {/* Profile Visibility Selector */}
           <View style={styles.dividerRow}>
             <Typography variant="body" weight="semibold" style={{ marginBottom: 6 }}>
-              Profile Sanctuary Visibility
+              Profile Visibility
             </Typography>
             <View style={styles.visibilityPills}>
               {(['public', 'connections_only', 'private'] as const).map((opt) => (
@@ -175,15 +177,15 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       {/* ── 2. NOTIFICATIONS & REMINDERS ── */}
       <View style={styles.section}>
         <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
-          NOTIFICATIONS & MINDFUL REMINDERS
+          NOTIFICATIONS & REMINDERS
         </Typography>
 
         <Card variant="elevated" style={styles.card}>
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Empathy Echoes & Reactions</Typography>
+              <Typography variant="body" weight="semibold">Friendly Reactions</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Alerts when someone resonates with your reflection
+                Alert me when someone sends hugs, smiles, or comments
               </Typography>
             </View>
             <Switch
@@ -195,9 +197,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={[styles.row, styles.dividerRow]}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Evening Mindful Check-in</Typography>
+              <Typography variant="body" weight="semibold">Daily Check-in Reminder</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Daily breath reminder at 8:00 PM
+                Gentle reminder at 8:00 PM to record your day's mood
               </Typography>
             </View>
             <Switch
@@ -212,15 +214,15 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       {/* ── 3. SENSORY EXPERIENCE ── */}
       <View style={styles.section}>
         <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
-          SENSORY FEEDBACK
+          SOUND & VIBRATION
         </Typography>
 
         <Card variant="elevated" style={styles.card}>
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Haptic Resonance</Typography>
+              <Typography variant="body" weight="semibold">Vibration Feedback</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Gentle vibrations on bubble taps and emotional reactions
+                Vibrate gently when tapping buttons, reactions, and mood bubbles
               </Typography>
             </View>
             <Switch
@@ -235,9 +237,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={[styles.row, styles.dividerRow]}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Atmospheric Chimes</Typography>
+              <Typography variant="body" weight="semibold">Sound Effects</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Subtle auditory chimes on bubble release
+                Play subtle sound chime when posting a mood
               </Typography>
             </View>
             <Switch
@@ -252,10 +254,33 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </Card>
       </View>
 
-      {/* ── 4. DATA SOVEREIGNTY & EXPORT ── */}
+      {/* ── 4. APP TOUR & FEATURE GUIDE ── */}
       <View style={styles.section}>
         <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
-          DATA SOVEREIGNTY
+          APP TOUR & GUIDES
+        </Typography>
+
+        <Card variant="elevated" style={styles.card}>
+          <TouchableOpacity
+            style={styles.exportRow}
+            activeOpacity={0.75}
+            onPress={() => setShowTourModal(true)}
+          >
+            <View style={styles.rowText}>
+              <Typography variant="body" weight="semibold">View Feature Walkthrough</Typography>
+              <Typography variant="caption" color={theme.colors.textMuted}>
+                Review how to use the Mood Map, Check-ins, Circles, and Chats
+              </Typography>
+            </View>
+            <Ionicons name="help-circle-outline" size={22} color={theme.colors.primaryLight} />
+          </TouchableOpacity>
+        </Card>
+      </View>
+
+      {/* ── 5. DATA EXPORT ── */}
+      <View style={styles.section}>
+        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+          DOWNLOAD YOUR DATA
         </Typography>
 
         <Card variant="elevated" style={styles.card}>
@@ -265,9 +290,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onPress={handleExportData}
           >
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Export Emotional Journey</Typography>
+              <Typography variant="body" weight="semibold">Export My Mood History</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Download a complete encrypted copy of your mood data & reflections
+                Download a copy of your mood check-ins and reflections
               </Typography>
             </View>
             <Ionicons name="download-outline" size={20} color={theme.colors.primaryLight} />
@@ -275,7 +300,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </Card>
       </View>
 
-      {/* ── 5. ACCOUNT ACTIONS ── */}
+      {/* ── 6. ACCOUNT ACTIONS ── */}
       <View style={styles.section}>
         <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
           ACCOUNT ACTIONS
@@ -301,8 +326,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <Typography variant="caption" color={theme.colors.textMuted} style={styles.versionText}>
-        MoodSpace v1.0.0 • Atmospheric Emotional Network
+        MoodSpace v1.0.0 • Emotional Wellness Network
       </Typography>
+
+      {/* Feature Walkthrough Modal */}
+      <AppWalkthroughModal
+        visible={showTourModal}
+        onClose={() => setShowTourModal(false)}
+      />
     </ScreenWrapper>
   );
 };

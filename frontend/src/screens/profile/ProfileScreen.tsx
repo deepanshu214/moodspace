@@ -97,10 +97,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           />
           <View style={styles.cloakTexts}>
             <Typography variant="bodySmall" weight="semibold" color={isIncognito ? '#FD79A8' : theme.colors.textPrimary}>
-              {isIncognito ? 'Wandering Spirit Mode Active' : 'Public Emotional Presence'}
+              {isIncognito ? 'Ghost / Incognito Mode' : 'Public Profile'}
             </Typography>
             <Typography variant="caption" color={theme.colors.textMuted}>
-              {isIncognito ? 'Identity cloaked on map & reflection feeds' : 'Your name and aura visible to others'}
+              {isIncognito ? 'Your name is hidden on map & posts' : 'Your name and avatar are visible'}
             </Typography>
           </View>
         </View>
@@ -122,7 +122,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         <Typography variant="h2" weight="bold" style={styles.name}>
-          {isIncognito ? '🌀 Wandering Spirit' : displayName}
+          {isIncognito ? '👻 Anonymous User' : displayName}
         </Typography>
 
         <Typography variant="bodySmall" color={theme.colors.textSecondary} style={styles.bio}>
@@ -136,7 +136,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               {streak.total_checkins || moodHistory?.length || 24}
             </Typography>
             <Typography variant="caption" color={theme.colors.textMuted}>
-              Releases
+              Check-ins
             </Typography>
           </View>
 

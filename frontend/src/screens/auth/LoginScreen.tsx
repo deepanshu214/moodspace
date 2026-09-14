@@ -11,6 +11,7 @@ import { Toast } from '@/components/common/Toast';
 import { Modal } from '@/components/common/Modal';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useLogin } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/authStore';
 import { validation } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,9 +27,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
 
   const loginMutation = useLogin();
+  const authLogin = useAuthStore((s) => s.login);
 
   const handleLogin = async () => {
-    // 1. Validate inputs
     const eErr = validation.validateEmail(email);
     const pErr = validation.validatePassword(password);
     setEmailError(eErr);
@@ -43,11 +44,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         email: email.trim(),
         password,
       });
-      // On success, authStore.login() updates state, automatically navigating to Main
     } catch (err: any) {
-      setToastMessage(err?.message || 'Login failed. Please check your credentials.');
+      setToastMessage(err?.message || 'Login failed. Please check your email and password.');
       setShowToast(true);
     }
+  };
+
+  const handleGuestLogin = async () => {
+    await authLogin('demo-guest-token', {
+      id: 'usr-guest-1',
+      email: 'guest@moodspace.app',
+      displayName: 'Mindful Friend',
+      auraScore: 320,
+    });
   };
 
   return (
@@ -71,7 +80,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           Welcome Back
         </Typography>
         <Typography variant="body" color={theme.colors.textSecondary} style={styles.subtitle}>
-          Sign in to check in with your emotions and your community.
+          Sign in to share how you're feeling and see how friends are doing.
         </Typography>
       </View>
 
@@ -122,6 +131,23 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           onPress={handleLogin}
           style={styles.submitBtn}
         />
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Typography variant="caption" color={theme.colors.textMuted} style={styles.dividerText}>
+            OR
+          </Typography>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <Button
+          title="Explore as Guest (No Login Needed)"
+          variant="outline"
+          fullWidth
+          size="lg"
+          onPress={handleGuestLogin}
+          style={styles.guestBtn}
+        />
       </View>
 
       <View style={styles.footer}>
@@ -138,11 +164,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       {/* Forgot Password Modal */}
       <Modal
         visible={forgotModalVisible}
-        title="Password Reset"
+        title="Reset Password"
         onClose={() => setForgotModalVisible(false)}
         footer={
           <Button
-            title="Understood"
+            title="Got it"
             variant="primary"
             fullWidth
             onPress={() => setForgotModalVisible(false)}
@@ -150,8 +176,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         }
       >
         <Typography variant="body" color={theme.colors.textSecondary}>
-          A password reset link will be dispatched to {email || 'your registered email'} with secure
-          instructions to regain access to your emotional space.
+          We sent a password reset link to {email || 'your registered email'}. Follow the instructions in the email to set a new password.
         </Typography>
       </Modal>
     </ScreenWrapper>
@@ -169,7 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   header: {
-    marginBottom: theme.spacing.xxl,
+    marginBottom: theme.spacing.xl,
   },
   subtitle: {
     marginTop: 6,
@@ -180,10 +205,26 @@ const styles = StyleSheet.create({
   },
   forgotBtn: {
     alignSelf: 'flex-end',
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   submitBtn: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: theme.spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.border,
+  },
+  dividerText: {
+    marginHorizontal: theme.spacing.md,
+  },
+  guestBtn: {
+    borderColor: theme.colors.borderLight,
   },
   footer: {
     flexDirection: 'row',

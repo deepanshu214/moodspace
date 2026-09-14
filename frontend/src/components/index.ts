@@ -6,5 +6,5 @@ export * from './chat';
 export * from './profile';
 export * from './effects';
 export * from './map';
-
-
+export * from './tutorial';
+export * from './location';

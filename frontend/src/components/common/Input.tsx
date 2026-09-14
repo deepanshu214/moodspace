@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   TextInput,
   TextInputProps,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   ViewStyle,
 } from 'react-native';
 import { theme } from '@/theme';
@@ -21,7 +22,7 @@ export interface InputProps extends TextInputProps {
   isPassword?: boolean;
 }
 
-export const Input: React.FC<InputProps> = ({
+export const Input = forwardRef<TextInput, InputProps>(({
   label,
   error,
   helperText,
@@ -35,9 +36,18 @@ export const Input: React.FC<InputProps> = ({
   onBlur,
   editable = true,
   ...rest
-}) => {
+}, ref) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const internalInputRef = useRef<TextInput>(null);
+
+  useImperativeHandle(ref, () => internalInputRef.current as TextInput);
+
+  const handleContainerPress = () => {
+    if (editable) {
+      internalInputRef.current?.focus();
+    }
+  };
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
@@ -70,7 +80,8 @@ export const Input: React.FC<InputProps> = ({
         </Typography>
       )}
 
-      <View
+      <Pressable
+        onPress={handleContainerPress}
         style={[
           styles.inputWrapper,
           {
@@ -80,9 +91,14 @@ export const Input: React.FC<InputProps> = ({
           isFocused && styles.focusedGlow,
         ]}
       >
-        {leftIcon && <View style={styles.iconSlotLeft}>{leftIcon}</View>}
+        {leftIcon && (
+          <View pointerEvents="none" style={styles.iconSlotLeft}>
+            {leftIcon}
+          </View>
+        )}
 
         <TextInput
+          ref={internalInputRef}
           style={[
             styles.textInput,
             {
@@ -104,6 +120,7 @@ export const Input: React.FC<InputProps> = ({
             activeOpacity={0.7}
             onPress={() => setShowPassword(!showPassword)}
             style={styles.iconSlotRight}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -114,7 +131,7 @@ export const Input: React.FC<InputProps> = ({
         ) : (
           rightIcon && <View style={styles.iconSlotRight}>{rightIcon}</View>
         )}
-      </View>
+      </Pressable>
 
       {error ? (
         <Typography variant="caption" color={theme.colors.error} style={styles.feedbackText}>
@@ -127,7 +144,9 @@ export const Input: React.FC<InputProps> = ({
       ) : null}
     </View>
   );
-};
+});
+
+Input.displayName = 'Input';
 
 const styles = StyleSheet.create({
   container: {
@@ -142,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: theme.radius.md,
-    minHeight: 50,
+    minHeight: 52,
     paddingHorizontal: theme.spacing.md,
   },
   focusedGlow: {
@@ -154,8 +173,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 15,
-    paddingVertical: theme.spacing.sm,
+    fontSize: 16,
+    paddingVertical: 12,
   },
   iconSlotLeft: {
     marginRight: theme.spacing.sm,

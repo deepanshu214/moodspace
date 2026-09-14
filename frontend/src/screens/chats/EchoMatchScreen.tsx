@@ -129,7 +129,7 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
             // Fallback navigation in demo/offline mode
             navigation.navigate('ChatDetail', {
               chatId: `conv-${match.user_id}`,
-              recipientName: match.is_anonymous ? '🌀 Wandering Spirit' : match.display_name,
+              recipientName: match.is_anonymous ? '👻 Anonymous Friend' : match.display_name,
               recipientAvatar: match.avatar_url,
               recipientEmotion: match.current_emotion,
               isEchoMatch: true,
@@ -173,10 +173,10 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
         />
         <View style={styles.headerTitles}>
           <Typography variant="h2" weight="bold">
-            Resonance Echoes
+            1-on-1 Matches
           </Typography>
           <Typography variant="caption" color={theme.colors.textSecondary}>
-            Matched by shared wavelengths and emotional currents
+            Connect with people experiencing similar feelings
           </Typography>
         </View>
         <IconButton
@@ -198,7 +198,7 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
               weight={filter === 'all' ? 'bold' : 'medium'}
               color={filter === 'all' ? '#FFFFFF' : theme.colors.textSecondary}
             >
-              All Signals ({rawMatches.length})
+              All Matches ({rawMatches.length})
             </Typography>
           </TouchableOpacity>
 
@@ -211,7 +211,7 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
               weight={filter === 'high' ? 'bold' : 'medium'}
               color={filter === 'high' ? '#FFFFFF' : theme.colors.textSecondary}
             >
-              ⚡ High Resonance (≥85%)
+              ⚡ Close Match (≥85%)
             </Typography>
           </TouchableOpacity>
 

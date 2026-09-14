@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -17,9 +17,12 @@ import { FloatingActionButton } from '@/components/mood/FloatingActionButton';
 import { AtmosphericPulseRibbon } from '@/components/mood/AtmosphericPulseRibbon';
 import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
 import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
+import { AppWalkthroughModal } from '@/components/tutorial';
 import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
 import { MapContainer, Marker, PROVIDER_DEFAULT } from '@/components/map';
+import { storage } from '@/utils/storage';
+import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -54,107 +57,107 @@ export interface DisplayBubble {
 const DEFAULT_BUBBLES: DisplayBubble[] = [
   {
     id: 'b-1',
-    authorName: 'Elena Rostova',
+    authorName: 'Aarav Sharma',
     auraScore: 420,
     emotion: 'calm',
-    secondaryEmotion: 'Grateful',
+    secondaryEmotion: 'Peaceful',
     intensity: 7,
-    content: 'Watching dusk settle over the misty hills. A quiet reminder that rest is also progress.',
-    locationCity: 'San Francisco',
-    weatherCondition: 'Misty Dusk',
-    weatherTemp: 17,
-    timestamp: '12m ago',
-    likesCount: 24,
-    commentsCount: 6,
-    latitude: 37.7749,
-    longitude: -122.4194,
+    content: 'Morning breeze on the balcony with warm chai. A quiet moment before the day begins.',
+    locationCity: 'New Delhi, India',
+    weatherCondition: 'Clear Morning',
+    weatherTemp: 26,
+    timestamp: '8m ago',
+    likesCount: 34,
+    commentsCount: 8,
+    latitude: 28.6139,
+    longitude: 77.209,
     canvasX: SCREEN_WIDTH * 0.28,
     canvasY: SCREEN_HEIGHT * 0.32,
   },
   {
     id: 'b-2',
-    authorName: 'Marcus Aurel',
+    authorName: 'Elena Rostova',
     auraScore: 680,
     emotion: 'joy',
-    secondaryEmotion: 'Euphoric',
+    secondaryEmotion: 'Radiant',
     intensity: 9,
-    content: 'Just finished our first community project! The collective energy is electrifying.',
-    locationCity: 'Oakland',
-    weatherCondition: 'Clear Starlight',
-    weatherTemp: 21,
-    timestamp: '25m ago',
-    likesCount: 58,
-    commentsCount: 14,
-    latitude: 37.7849,
-    longitude: -122.4094,
+    content: 'Walking through Shibuya under the city lights. Energy in the air is incredible!',
+    locationCity: 'Tokyo, Japan',
+    weatherCondition: 'Crisp Starlight',
+    weatherTemp: 18,
+    timestamp: '15m ago',
+    likesCount: 78,
+    commentsCount: 22,
+    latitude: 35.6762,
+    longitude: 139.6503,
     canvasX: SCREEN_WIDTH * 0.68,
     canvasY: SCREEN_HEIGHT * 0.45,
   },
   {
     id: 'b-3',
-    authorName: 'Kai Tanaka',
-    auraScore: 310,
-    emotion: 'anxiety',
-    secondaryEmotion: 'Restless',
+    authorName: 'Marcus Aurel',
+    auraScore: 510,
+    emotion: 'excitement',
+    secondaryEmotion: 'Inspired',
     intensity: 8,
-    content: 'Big interview tomorrow morning. Heart is racing a bit, but grounding myself through breath.',
-    locationCity: 'Mission District',
-    weatherCondition: 'Breezy Fog',
-    weatherTemp: 15,
-    timestamp: '4m ago',
-    likesCount: 19,
-    commentsCount: 9,
-    latitude: 37.7649,
-    longitude: -122.4294,
-    canvasX: SCREEN_WIDTH * 0.2,
+    content: 'Finished launching our project from a cozy cafe by the Thames! Excited for what is ahead.',
+    locationCity: 'London, UK',
+    weatherCondition: 'Mild Rain',
+    weatherTemp: 16,
+    timestamp: '25m ago',
+    likesCount: 52,
+    commentsCount: 14,
+    latitude: 51.5074,
+    longitude: -0.1278,
+    canvasX: SCREEN_WIDTH * 0.22,
     canvasY: SCREEN_HEIGHT * 0.62,
   },
   {
     id: 'b-4',
-    authorName: 'Sarah Lin',
-    auraScore: 540,
+    authorName: 'Sophie Dubois',
+    auraScore: 390,
     emotion: 'love',
-    secondaryEmotion: 'Affectionate',
-    intensity: 10,
-    content: 'Reunited with my childhood friend after four years apart. Love knows no distance.',
-    locationCity: 'Berkeley',
-    weatherCondition: 'Warm Sunset',
-    weatherTemp: 22,
-    timestamp: '1h ago',
-    likesCount: 72,
-    commentsCount: 18,
-    latitude: 37.7949,
-    longitude: -122.4394,
+    secondaryEmotion: 'Grateful',
+    intensity: 9,
+    content: 'Sitting in Luxembourg Gardens listening to soft acoustic music. Grateful for today.',
+    locationCity: 'Paris, France',
+    weatherCondition: 'Sunny Afternoon',
+    weatherTemp: 21,
+    timestamp: '45m ago',
+    likesCount: 65,
+    commentsCount: 17,
+    latitude: 48.8566,
+    longitude: 2.3522,
     canvasX: SCREEN_WIDTH * 0.62,
     canvasY: SCREEN_HEIGHT * 0.22,
   },
   {
     id: 'b-5',
     authorName: 'Ghost Echo',
-    auraScore: 190,
+    auraScore: 210,
     emotion: 'sadness',
-    secondaryEmotion: 'Pensive',
+    secondaryEmotion: 'Reflective',
     intensity: 6,
-    content: 'Some days feel heavier than others. Letting myself feel it without judgment.',
-    locationCity: 'Pacific Heights',
-    weatherCondition: 'Drizzle',
-    weatherTemp: 14,
-    timestamp: '32m ago',
-    likesCount: 31,
-    commentsCount: 11,
+    content: 'Some days feel heavier than others. Letting myself slow down without judgment.',
+    locationCity: 'New York, USA',
+    weatherCondition: 'Cloudy Evening',
+    weatherTemp: 19,
+    timestamp: '52m ago',
+    likesCount: 41,
+    commentsCount: 19,
     isAnonymous: true,
-    latitude: 37.7889,
-    longitude: -122.4334,
+    latitude: 40.7128,
+    longitude: -74.006,
     canvasX: SCREEN_WIDTH * 0.78,
     canvasY: SCREEN_HEIGHT * 0.68,
   },
 ];
 
 const INITIAL_REGION = {
-  latitude: 37.7749,
-  longitude: -122.4194,
-  latitudeDelta: 0.08,
-  longitudeDelta: 0.08,
+  latitude: 28.6139,
+  longitude: 77.209,
+  latitudeDelta: 0.15,
+  longitudeDelta: 0.15,
 };
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
@@ -162,6 +165,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [showTourModal, setShowTourModal] = useState(false);
 
   // TanStack queries
   const { data: pulseData } = useAtmosphericPulse();
@@ -207,6 +211,39 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     );
   }, [allBubbles, selectedFilter]);
 
+  // Auto-prompt walkthrough for new users
+  useEffect(() => {
+    const checkTour = async () => {
+      try {
+        const hasSeen = await storage.getItem('hasSeenAppTour_v1');
+        if (!hasSeen) {
+          setShowTourModal(true);
+          await storage.setItem('hasSeenAppTour_v1', 'true');
+        }
+      } catch {}
+    };
+    checkTour();
+  }, []);
+
+  // Request location permission on mount to center map near user if available
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      try {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          mapRef.current?.animateToRegion?.({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude,
+            latitudeDelta: 0.12,
+            longitudeDelta: 0.12,
+          }, 1200);
+        }
+      } catch {}
+    };
+    fetchUserLocation();
+  }, []);
+
   const handleBubblePress = (bubble: DisplayBubble) => {
     setActiveBubble(bubble);
     setIsDetailOpen(true);
@@ -232,6 +269,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onRecenterPress={handleRecenter}
         onStreamPress={() => navigation.navigate('FeedStream')}
         onCirclesPress={() => navigation.navigate('CommunityFlow')}
+        onTourPress={() => setShowTourModal(true)}
       />
 
       {/* Main Map or Cosmic Canvas Area */}
@@ -278,7 +316,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             {/* Grid Coordinate Markers */}
             <View style={styles.gridOverlay}>
               <Typography variant="caption" color="rgba(255, 255, 255, 0.15)">
-                LAT: 37.7749° N • LNG: 122.4194° W • RESONANCE GRID
+                LAT: 28.6139° N • LNG: 77.2090° E • WORLD MOOD CANVAS
               </Typography>
             </View>
 
@@ -328,6 +366,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onPress={() => (navigation as any).navigate('CreateBubbleModal')}
         label="Check In"
         iconName="sparkles"
+      />
+
+      {/* App Tour Walkthrough for New Users */}
+      <AppWalkthroughModal
+        visible={showTourModal}
+        onClose={() => setShowTourModal(false)}
       />
     </ScreenWrapper>
   );

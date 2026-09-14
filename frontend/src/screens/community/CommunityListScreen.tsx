@@ -138,16 +138,16 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.appBar}>
         <View style={styles.titleColumn}>
           <View style={styles.headerBadge}>
-            <Ionicons name="planet" size={14} color={theme.colors.primaryLight} />
+            <Ionicons name="people" size={14} color={theme.colors.primaryLight} />
             <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.badgeText}>
-              Sanctuaries
+              Communities
             </Typography>
           </View>
           <Typography variant="h2" weight="bold" color={theme.colors.textPrimary}>
-            Community Circles
+            Groups & Circles
           </Typography>
           <Typography variant="bodySmall" color={theme.colors.textMuted}>
-            Shared emotional sanctuaries for collective resonance
+            Join spaces to talk, share feelings, and support each other
           </Typography>
         </View>
 
@@ -158,7 +158,7 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
         >
           <Ionicons name="add" size={20} color="#FFFFFF" />
           <Typography variant="caption" weight="bold" color="#FFFFFF" style={styles.createBtnText}>
-            Form Circle
+            New Group
           </Typography>
         </TouchableOpacity>
       </View>
@@ -169,7 +169,7 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder="Search by name, feeling, or intention..."
+          placeholder="Search groups by name or topic..."
           placeholderTextColor={theme.colors.textMuted}
           style={styles.searchInput}
         />

@@ -43,11 +43,11 @@ export const OfflineBanner: React.FC = () => {
         <Typography variant="caption" weight="semibold" color={theme.colors.textPrimary} style={styles.text}>
           {!isOnline
             ? pendingCount > 0
-              ? `Holding offline whispers • ${pendingCount} pending sync`
-              : 'Offline Mode • Reflections saved on device'
+              ? `Working Offline • ${pendingCount} post${pendingCount !== 1 ? 's' : ''} saved on device`
+              : 'You are offline • New posts will save on your phone'
             : isSyncing
-            ? `Synchronizing ${pendingCount} reflection${pendingCount !== 1 ? 's' : ''}…`
-            : `${pendingCount} offline reflection${pendingCount !== 1 ? 's' : ''} waiting to sync`}
+            ? `Saving ${pendingCount} post${pendingCount !== 1 ? 's' : ''} to server…`
+            : `${pendingCount} offline post${pendingCount !== 1 ? 's' : ''} waiting to save`}
         </Typography>
       </View>
 

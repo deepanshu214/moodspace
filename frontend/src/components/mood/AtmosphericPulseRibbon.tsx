@@ -21,10 +21,11 @@ export interface AtmosphericPulseRibbonProps {
   onRecenterPress?: () => void;
   onStreamPress?: () => void;
   onCirclesPress?: () => void;
+  onTourPress?: () => void;
 }
 
 const emotionFilters = [
-  { id: null, label: 'All Resonance', emoji: '🌌' },
+  { id: null, label: 'All Feelings', emoji: '🌍' },
   { id: 'joy', label: 'Joy', emoji: '✨' },
   { id: 'calm', label: 'Calm', emoji: '🌊' },
   { id: 'anxiety', label: 'Anxiety', emoji: '⚡' },
@@ -42,6 +43,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
   onRecenterPress,
   onStreamPress,
   onCirclesPress,
+  onTourPress,
 }) => {
   const emotionConfig = theme.getEmotionConfig(dominantEmotion);
   const pulseScale = useSharedValue(1);
@@ -94,22 +96,33 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
           <View style={styles.titleColumn}>
             <View style={styles.titleRow}>
               <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
-                Atmosphere: {emotionConfig.label}
+                Today's Mood: {emotionConfig.label}
               </Typography>
               <View style={styles.badgePill}>
                 <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
-                  {intensityAverage} intensity
+                  {intensityAverage} / 10
                 </Typography>
               </View>
             </View>
 
             <Typography variant="caption" color={theme.colors.textMuted}>
-              {activeBubblesCount} emotional echoes active nearby
+              {activeBubblesCount} check-ins around the world
             </Typography>
           </View>
         </View>
 
         <View style={styles.rightActionsRow}>
+          {onTourPress && (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={onTourPress}
+              style={styles.recenterBtn}
+              accessibilityLabel="App Tour Guide"
+            >
+              <Ionicons name="help-circle-outline" size={19} color={theme.colors.primaryLight} />
+            </TouchableOpacity>
+          )}
+
           {onCirclesPress && (
             <TouchableOpacity
               activeOpacity={0.75}

@@ -47,6 +47,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
       >
         {content}
       </KeyboardAvoidingView>

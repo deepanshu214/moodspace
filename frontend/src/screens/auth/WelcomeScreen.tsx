@@ -29,7 +29,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
             align="center"
             style={styles.subtitle}
           >
-            A safe emotional atmosphere where feelings become shared landscapes.
+            A friendly place to share how you're feeling, track your daily moods, and connect with people who understand.
           </Typography>
         </View>
 
@@ -52,7 +52,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <Button
-            title="⚡ Quick Preview Demo"
+            title="Explore as Guest (No Sign-Up Needed)"
             variant="ghost"
             fullWidth
             size="sm"

@@ -17,6 +17,7 @@ import { IconButton } from '@/components/common/IconButton';
 import { MoodTag } from '@/components/mood/MoodTag';
 import { Chip } from '@/components/common/Chip';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { LocationPickerModal, LocationData } from '@/components/location';
 import { useMoodCheckin } from '@/hooks/useMood';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -34,16 +35,16 @@ const EMOTIONS = [
 ];
 
 const INTENSITY_DESCRIPTORS: Record<number, string> = {
-  1: 'Faint Whisper',
-  2: 'Soft Murmur',
-  3: 'Gentle Ripple',
-  4: 'Subtle Current',
-  5: 'Grounded Presence',
-  6: 'Steady Resonance',
-  7: 'Vivid Pulse',
-  8: 'Electric Surge',
-  9: 'Torrential Wave',
-  10: 'Cosmic Eclipse',
+  1: 'Very Mild (1/10)',
+  2: 'Mild (2/10)',
+  3: 'Light (3/10)',
+  4: 'Noticeable (4/10)',
+  5: 'Moderate (5/10)',
+  6: 'Fairly Strong (6/10)',
+  7: 'Strong (7/10)',
+  8: 'Very Strong (8/10)',
+  9: 'Intense (9/10)',
+  10: 'Overwhelming (10/10)',
 };
 
 export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
@@ -51,9 +52,12 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedEmotion, setSelectedEmotion] = useState('calm');
   const [intensity, setIntensity] = useState(7);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [locationName] = useState('San Francisco, CA');
-  const [weatherCondition] = useState('Starlight Calm');
-  const [weatherTemp] = useState(18);
+  const [locationName, setLocationName] = useState('New Delhi, India');
+  const [latitude, setLatitude] = useState(28.6139);
+  const [longitude, setLongitude] = useState(77.209);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [weatherCondition] = useState('Clear Sky');
+  const [weatherTemp] = useState(24);
 
   const emotionConfig = theme.getEmotionConfig(selectedEmotion);
   const { mutate: submitCheckin, isPending } = useMoodCheckin();
@@ -63,19 +67,19 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
     const text = content.toLowerCase();
     if (!text.trim() || text.length < 6) return null;
     if (text.includes('happy') || text.includes('excited') || text.includes('grateful') || text.includes('smile')) {
-      return { emotion: 'joy', reason: 'High warmth & radiance detected' };
+      return { emotion: 'joy', reason: 'Sounds happy and positive' };
     }
     if (text.includes('peace') || text.includes('quiet') || text.includes('breathe') || text.includes('rest') || text.includes('still')) {
-      return { emotion: 'calm', reason: 'Grounded tranquility detected' };
+      return { emotion: 'calm', reason: 'Sounds calm and peaceful' };
     }
     if (text.includes('worry') || text.includes('panic') || text.includes('nervous') || text.includes('stress') || text.includes('racing')) {
-      return { emotion: 'anxiety', reason: 'Heightened tension detected' };
+      return { emotion: 'anxiety', reason: 'Sounds like stress or anxiety' };
     }
     if (text.includes('love') || text.includes('tender') || text.includes('heart') || text.includes('miss') || text.includes('cherish')) {
-      return { emotion: 'love', reason: 'Affectionate resonance detected' };
+      return { emotion: 'love', reason: 'Sounds warm and caring' };
     }
     if (text.includes('sad') || text.includes('cry') || text.includes('lonely') || text.includes('tired') || text.includes('heavy')) {
-      return { emotion: 'sadness', reason: 'Gentle melancholy detected' };
+      return { emotion: 'sadness', reason: 'Sounds gentle and low' };
     }
     return null;
   }, [content]);
@@ -92,8 +96,8 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         city: locationName,
         weather_condition: weatherCondition,
         weather_temp: weatherTemp,
-        latitude: 37.7749 + (Math.random() - 0.5) * 0.02,
-        longitude: -122.4194 + (Math.random() - 0.5) * 0.02,
+        latitude: latitude + (Math.random() - 0.5) * 0.005,
+        longitude: longitude + (Math.random() - 0.5) * 0.005,
       },
       {
         onSuccess: () => {
@@ -105,6 +109,12 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         },
       }
     );
+  };
+
+  const handleLocationSelect = (data: LocationData) => {
+    setLocationName(data.cityName);
+    setLatitude(data.latitude);
+    setLongitude(data.longitude);
   };
 
   return (
@@ -130,14 +140,14 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
           />
           <View style={styles.headerTitleBox}>
             <Typography variant="title" weight="bold">
-              Plant a Mood Bubble
+              Share Your Mood
             </Typography>
             <Typography variant="caption" color={theme.colors.textMuted}>
-              Anchor your emotion in space & time
+              Pick your feeling and drop a bubble on the map
             </Typography>
           </View>
           <Button
-            title="Release"
+            title="Post Mood"
             variant="primary"
             size="sm"
             loading={isPending}
@@ -152,12 +162,16 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Ambient Context Capsule (Location & Climate) */}
         <View style={styles.contextPillRow}>
-          <View style={styles.contextPill}>
+          <TouchableOpacity
+            style={[styles.contextPill, styles.locationPillInteractive]}
+            onPress={() => setShowLocationPicker(true)}
+            activeOpacity={0.7}
+          >
             <Ionicons name="location-outline" size={13} color={emotionConfig.primary} />
-            <Typography variant="caption" color={theme.colors.textSecondary}>
-              {locationName}
+            <Typography variant="caption" weight="semibold" color={theme.colors.textPrimary}>
+              {locationName} ▾
             </Typography>
-          </View>
+          </TouchableOpacity>
           <View style={styles.contextPill}>
             <Ionicons name="cloudy-night-outline" size={13} color={theme.colors.accent} />
             <Typography variant="caption" color={theme.colors.textSecondary}>
@@ -174,7 +188,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
           ]}
         >
           <TextInput
-            placeholder="What is rippling through your mind right now? Share without fear..."
+            placeholder="How are you feeling right now? Share your thoughts..."
             placeholderTextColor={theme.colors.textMuted}
             value={content}
             onChangeText={setContent}
@@ -215,7 +229,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
-              Choose Your Signature Emotion
+              How does it feel?
             </Typography>
             <Typography variant="caption" color={emotionConfig.primary} weight="bold">
               {emotionConfig.label} {emotionConfig.emoji}
@@ -243,7 +257,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
-              Resonance Intensity
+              How strong is this feeling?
             </Typography>
             <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
               Level {intensity}: {INTENSITY_DESCRIPTORS[intensity]}
@@ -286,7 +300,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         {/* Privacy & Incognito Cloak */}
         <View style={styles.section}>
           <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary} style={styles.sectionLabel}>
-            Visibility & Cloak
+            Who can see this?
           </Typography>
 
           <View style={styles.privacyOptionGrid}>
@@ -309,11 +323,11 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
                   weight="semibold"
                   color={!isAnonymous ? '#FFFFFF' : theme.colors.textSecondary}
                 >
-                  Public Echo
+                  Public (With your name)
                 </Typography>
               </View>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Visible with your Aura avatar and username to cultivate connection.
+                Your name and avatar are visible to the community.
               </Typography>
             </TouchableOpacity>
 
@@ -332,16 +346,23 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
                   weight="semibold"
                   color={isAnonymous ? '#A29BFE' : theme.colors.textSecondary}
                 >
-                  Incognito Spirit
+                  Anonymous
                 </Typography>
               </View>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Your identity dissolves into starlight. Your feeling still comforts the world.
+                Your name and profile are hidden. Safe and private.
               </Typography>
             </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <LocationPickerModal
+        visible={showLocationPicker}
+        currentLocationName={locationName}
+        onSelectLocation={handleLocationSelect}
+        onClose={() => setShowLocationPicker(false)}
+      />
     </ScreenWrapper>
   );
 };
@@ -395,6 +416,10 @@ const styles = StyleSheet.create({
     gap: 5,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  locationPillInteractive: {
+    borderColor: 'rgba(108, 92, 231, 0.4)',
+    backgroundColor: 'rgba(108, 92, 231, 0.12)',
   },
   inputCard: {
     backgroundColor: 'rgba(17, 20, 34, 0.85)',
