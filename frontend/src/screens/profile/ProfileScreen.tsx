@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
@@ -7,13 +7,27 @@ import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { IconButton } from '@/components/common/IconButton';
 import { Avatar } from '@/components/common/Avatar';
-import { AuraDisplay } from '@/components/social/AuraDisplay';
 import { MoodTag } from '@/components/mood/MoodTag';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { AuraDisplay } from '@/components/social/AuraDisplay';
+import { MoodStreakTracker } from '@/components/profile/MoodStreakTracker';
+import { MoodHistoryHeatmap } from '@/components/profile/MoodHistoryHeatmap';
+import { AuraScoreCard } from '@/components/profile/AuraScoreCard';
+
 import { useAuthStore } from '@/stores/authStore';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { useMoodHistory } from '@/hooks/useMood';
+import {
+  useMoodStreak,
+  useAuraBreakdown,
+  useMoodHeatmap,
+  usePrivacySettings,
+  useUpdatePrivacySettings,
+  MOCK_STREAK_INFO,
+  MOCK_AURA_BREAKDOWN,
+} from '@/hooks/useUserStats';
 import { Ionicons } from '@expo/vector-icons';
+import { StreakBadge } from '@/api/types';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'MyProfile'>;
 
@@ -22,36 +36,93 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { data: apiUser } = useCurrentUser();
   const { data: moodHistory } = useMoodHistory(10, 0);
 
+  // Stage 11 Stats Hooks
+  const { data: streakData } = useMoodStreak();
+  const { data: auraData } = useAuraBreakdown();
+  const { data: heatmapDays } = useMoodHeatmap(35);
+  const { data: privacyData } = usePrivacySettings();
+  const updatePrivacyMutation = useUpdatePrivacySettings();
+
+  const [incognitoLocal, setIncognitoLocal] = useState<boolean | null>(null);
+
   const displayName = apiUser?.display_name || storeUser?.displayName || 'Elena Rostova';
   const bio = apiUser?.bio || storeUser?.bio || 'Holding space for calm moments, deep ocean walks, and mindful connection.';
-  const auraScore = apiUser?.aura_score || storeUser?.auraScore || 340;
   const avatarUrl = apiUser?.avatar_url || storeUser?.avatarUrl;
+
+  const streak = streakData || MOCK_STREAK_INFO;
+  const aura = auraData || MOCK_AURA_BREAKDOWN;
+  const heatmap = heatmapDays || [];
+  const isIncognito = incognitoLocal !== null
+    ? incognitoLocal
+    : (privacyData?.incognito_by_default ?? false);
+
+  const handleToggleIncognito = (value: boolean) => {
+    setIncognitoLocal(value);
+    updatePrivacyMutation.mutate({ incognito_by_default: value });
+  };
+
+  const handleBadgePress = (badge: StreakBadge) => {
+    Alert.alert(
+      badge.title,
+      `${badge.description}\n\nStatus: ${badge.unlocked ? '✨ Unlocked' : `🔒 Reach a ${badge.days_required}-day streak`}`
+    );
+  };
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
-      {/* Header Actions */}
+      {/* ── Top Bar: Title & Settings ── */}
       <View style={styles.topBar}>
-        <Typography variant="h3" weight="bold">
-          My Aura & Profile
-        </Typography>
-        <IconButton
-          icon={<Ionicons name="settings-outline" size={22} color={theme.colors.textPrimary} />}
-          variant="ghost"
-          onPress={() => navigation.navigate('Settings')}
+        <View style={styles.topBarTitleRow}>
+          <Typography variant="h2" weight="bold">
+            Emotional Soul
+          </Typography>
+        </View>
+
+        <View style={styles.topBarActions}>
+          <IconButton
+            icon={<Ionicons name="settings-outline" size={22} color={theme.colors.textPrimary} />}
+            variant="ghost"
+            onPress={() => navigation.navigate('Settings')}
+          />
+        </View>
+      </View>
+
+      {/* ── Wandering Spirit Quick-Cloak Banner ── */}
+      <View style={[styles.cloakBanner, isIncognito && styles.cloakBannerActive]}>
+        <View style={styles.cloakInfo}>
+          <Ionicons
+            name={isIncognito ? 'eye-off' : 'eye-outline'}
+            size={18}
+            color={isIncognito ? '#FD79A8' : theme.colors.textMuted}
+          />
+          <View style={styles.cloakTexts}>
+            <Typography variant="bodySmall" weight="semibold" color={isIncognito ? '#FD79A8' : theme.colors.textPrimary}>
+              {isIncognito ? 'Wandering Spirit Mode Active' : 'Public Emotional Presence'}
+            </Typography>
+            <Typography variant="caption" color={theme.colors.textMuted}>
+              {isIncognito ? 'Identity cloaked on map & reflection feeds' : 'Your name and aura visible to others'}
+            </Typography>
+          </View>
+        </View>
+
+        <Switch
+          value={isIncognito}
+          onValueChange={handleToggleIncognito}
+          trackColor={{ false: theme.colors.border, true: '#FD79A8' }}
         />
       </View>
 
-      {/* Profile Header & Avatar */}
+      {/* ── Profile Header ── */}
       <View style={styles.profileHeader}>
         <Avatar
           name={displayName}
           source={avatarUrl}
           size="xl"
-          emotion="calm"
+          emotion={isIncognito ? undefined : 'calm'}
         />
 
         <Typography variant="h2" weight="bold" style={styles.name}>
-          {displayName}
+          {isIncognito ? '🌀 Wandering Spirit' : displayName}
         </Typography>
 
         <Typography variant="bodySmall" color={theme.colors.textSecondary} style={styles.bio}>
@@ -62,10 +133,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
             <Typography variant="h3" weight="bold">
-              {moodHistory?.length || 24}
+              {streak.total_checkins || moodHistory?.length || 24}
             </Typography>
             <Typography variant="caption" color={theme.colors.textMuted}>
-              Bubbles
+              Releases
             </Typography>
           </View>
 
@@ -89,12 +160,19 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Aura Card Section */}
-      <View style={styles.section}>
-        <AuraDisplay score={auraScore} variant="card" />
-      </View>
+      {/* ── Mood Streak Tracker ── */}
+      <MoodStreakTracker
+        streakInfo={streak}
+        onBadgePress={handleBadgePress}
+      />
 
-      {/* Quick Action Navigation Grid */}
+      {/* ── Aura Score Card ── */}
+      <AuraScoreCard aura={aura} />
+
+      {/* ── Mood History Heatmap (35 Days) ── */}
+      <MoodHistoryHeatmap days={heatmap} />
+
+      {/* ── Quick Action Navigation Grid ── */}
       <View style={styles.actionsGrid}>
         <Button
           title="Edit Profile"
@@ -122,10 +200,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
-      {/* Recent Emotional Footprint */}
+      {/* ── Recent Emotional Footprint ── */}
       <View style={styles.section}>
         <Typography variant="title" weight="bold" style={styles.sectionTitle}>
-          Recent Emotional Footprint
+          Recent Emotional Waves
         </Typography>
 
         <View style={styles.historyPills}>
@@ -155,13 +233,46 @@ const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
     paddingBottom: 60,
-    backgroundColor: '#07080D',
+    backgroundColor: theme.colors.background,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: theme.spacing.md,
+  },
+  topBarTitleRow: {
+    flex: 1,
+  },
+  topBarActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cloakBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     marginBottom: theme.spacing.lg,
+  },
+  cloakBannerActive: {
+    backgroundColor: 'rgba(253, 121, 168, 0.08)',
+    borderColor: 'rgba(253, 121, 168, 0.3)',
+  },
+  cloakInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: theme.spacing.sm,
+    gap: 10,
+  },
+  cloakTexts: {
+    flex: 1,
   },
   profileHeader: {
     alignItems: 'center',
@@ -183,10 +294,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     paddingVertical: theme.spacing.md,
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: theme.colors.border,
   },
   statBox: {
     alignItems: 'center',

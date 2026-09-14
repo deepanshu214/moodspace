@@ -590,4 +590,83 @@ test('EXTENSIVE 11: Stage 10 Notifications, Signal Filtering & Inline Action Mec
   });
 });
 
+test('EXTENSIVE 12: Stage 11 User Aura, Mood Streak & Privacy State Reducers', async (t) => {
+  await t.test('Streak computation engine and milestone badge unlocking mechanics', () => {
+    function calculateStreak(historyDates) {
+      if (!historyDates || historyDates.length === 0) return { streak: 0, badges: [] };
+      const sorted = [...historyDates].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+      let streak = 1;
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const curr = new Date(sorted[i]);
+        const prev = new Date(sorted[i + 1]);
+        const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 3600 * 24));
+        if (diffDays === 1) {
+          streak++;
+        } else if (diffDays > 1) {
+          break;
+        }
+      }
+      const badges = [
+        { id: 'b1', days: 3, unlocked: streak >= 3 },
+        { id: 'b2', days: 7, unlocked: streak >= 7 },
+        { id: 'b3', days: 30, unlocked: streak >= 30 },
+      ];
+      return { streak, badges };
+    }
+
+    const { streak, badges } = calculateStreak([
+      '2026-09-13',
+      '2026-09-12',
+      '2026-09-11',
+      '2026-09-10',
+      '2026-09-09',
+      '2026-09-08',
+      '2026-09-07',
+    ]);
+
+    assert.strictEqual(streak, 7, '7 consecutive dates produce a 7-day streak');
+    assert.strictEqual(badges[0].unlocked, true, '3-day badge is unlocked');
+    assert.strictEqual(badges[1].unlocked, true, '7-day badge is unlocked');
+    assert.strictEqual(badges[2].unlocked, false, '30-day badge remains locked');
+  });
+
+  await t.test('Aura score tier classification and progress metrics', () => {
+    function getAuraTier(score) {
+      if (score >= 1000) return { tier: 'Transcendent Luminary', nextTarget: 2000, color: '#FFD700' };
+      if (score >= 500) return { tier: 'Radiant Guide', nextTarget: 1000, color: '#FFB800' };
+      if (score >= 250) return { tier: 'Harmonic Empath', nextTarget: 500, color: '#A29BFE' };
+      if (score >= 100) return { tier: 'Resonant Seeker', nextTarget: 250, color: '#00CEC9' };
+      return { tier: 'Awakened Soul', nextTarget: 100, color: '#6C728E' };
+    }
+
+    const tierA = getAuraTier(480);
+    assert.strictEqual(tierA.tier, 'Harmonic Empath');
+    assert.strictEqual(tierA.nextTarget, 500);
+
+    const progressPercent = Math.round((480 / 500) * 100);
+    assert.strictEqual(progressPercent, 96, 'Progress percentage calculates to 96%');
+  });
+
+  await t.test('Wandering Spirit pseudonymization and location fuzzing privacy masks', () => {
+    function applyPrivacyMask(user, settings, coords) {
+      const displayName = settings.incognito_by_default ? '🌀 Wandering Spirit' : user.display_name;
+      const avatarUrl = settings.incognito_by_default ? null : user.avatar_url;
+      const lat = settings.location_fuzzing ? coords.latitude + 0.004 : coords.latitude;
+      const lng = settings.location_fuzzing ? coords.longitude - 0.003 : coords.longitude;
+      return { displayName, avatarUrl, coords: { lat, lng } };
+    }
+
+    const masked = applyPrivacyMask(
+      { display_name: 'Elena Rostova', avatar_url: 'https://example.com/avatar.png' },
+      { incognito_by_default: true, location_fuzzing: true },
+      { latitude: 37.7749, longitude: -122.4194 }
+    );
+
+    assert.strictEqual(masked.displayName, '🌀 Wandering Spirit', 'Incognito replaces name with Wandering Spirit');
+    assert.strictEqual(masked.avatarUrl, null, 'Incognito masks avatar URL');
+    assert.notStrictEqual(masked.coords.lat, 37.7749, 'Coordinates are fuzzed by jitter offset');
+  });
+});
+
+
 

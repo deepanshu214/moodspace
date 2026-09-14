@@ -7,4 +7,6 @@ export * from './useNotifications';
 export * from './useCommunity';
 export * from './useMessaging';
 export * from './useMatching';
+export * from './useUserStats';
+
 

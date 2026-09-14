@@ -388,3 +388,69 @@ export interface EchoMatchDecisionResponse {
   is_mutual?: boolean;
 }
 
+// ---------- Stage 11: Profile Deepening & Milestones ----------
+
+export interface StreakBadge {
+  id: string;
+  days_required: number;
+  title: string;
+  description: string;
+  icon: string;
+  unlocked: boolean;
+  unlocked_at?: string;
+}
+
+export interface MoodStreakInfo {
+  current_streak: number;
+  longest_streak: number;
+  total_checkins: number;
+  last_checkin_date?: string;
+  has_checked_in_today: boolean;
+  streak_milestone_badges: StreakBadge[];
+  weekly_activity: boolean[]; // 7 booleans for Monday..Sunday
+}
+
+export interface AuraScoreBreakdown {
+  total_score: number;
+  tier: string;
+  tier_color: string;
+  tier_emoji: string;
+  next_tier: string;
+  points_to_next_tier: number;
+  progress_percentage: number;
+  breakdown: {
+    checkin_consistency: number;
+    empathy_reactions_given: number;
+    supportive_comments: number;
+    sanctuary_participation: number;
+    resonance_connections: number;
+  };
+}
+
+export interface MoodHeatmapDay {
+  date: string; // 'YYYY-MM-DD'
+  count: number;
+  dominant_emotion?: string;
+  intensity_average?: number;
+}
+
+export interface PrivacySettingsPayload {
+  incognito_by_default: boolean;
+  location_fuzzing: boolean;
+  profile_visibility: 'public' | 'connections_only' | 'private';
+  allow_echo_matching: boolean;
+  show_streak_on_profile: boolean;
+  show_aura_on_profile: boolean;
+  sound_effects_enabled?: boolean;
+  haptics_enabled?: boolean;
+  daily_reminder_hour?: number; // 0-23
+}
+
+export interface UserStatsResponse {
+  streak: MoodStreakInfo;
+  aura: AuraScoreBreakdown;
+  heatmap: MoodHeatmapDay[];
+  privacy: PrivacySettingsPayload;
+}
+
+
