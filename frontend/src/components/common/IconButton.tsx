@@ -9,7 +9,7 @@ import {
 import { theme } from '@/theme';
 import { Typography } from './Typography';
 
-export type IconButtonVariant = 'default' | 'filled' | 'outlined' | 'ghost';
+export type IconButtonVariant = 'default' | 'filled' | 'outlined' | 'ghost' | 'glass';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
 
 export interface IconButtonProps extends TouchableOpacityProps {
@@ -71,6 +71,11 @@ export const IconButton: React.FC<IconButtonProps> = ({
         break;
       case 'ghost':
         base.backgroundColor = 'transparent';
+        break;
+      case 'glass':
+        base.backgroundColor = theme.colors.glass.surface;
+        base.borderWidth = 1;
+        base.borderColor = theme.colors.glass.border;
         break;
       case 'default':
       default:

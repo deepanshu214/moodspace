@@ -271,7 +271,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 15, 0.88)',
+    backgroundColor: 'rgba(5, 7, 15, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.lg,
@@ -279,15 +279,15 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#161922',
-    borderRadius: theme.radius.xl,
+    backgroundColor: 'rgba(20, 22, 35, 0.90)',
+    borderRadius: 24,
     padding: theme.spacing.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000000',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    shadowColor: '#6C5CE7',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
+    shadowOpacity: 0.3,
+    shadowRadius: 28,
     elevation: 20,
   },
   header: {

@@ -5,14 +5,20 @@ import {
   Dimensions,
   Platform,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+
 import { HomeStackParamList, MainTabParamList } from '@/navigation/types';
-import { theme } from '@/theme';
+import { theme, colors, getEmotionConfig } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { GlassCard } from '@/components/common/GlassCard';
 import { FloatingActionButton } from '@/components/mood/FloatingActionButton';
 import { AtmosphericPulseRibbon } from '@/components/mood/AtmosphericPulseRibbon';
 import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
@@ -22,8 +28,15 @@ import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
 import { MapContainer, Marker, PROVIDER_DEFAULT } from '@/components/map';
 import { storage } from '@/utils/storage';
-import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons';
+import { haptics } from '@/theme/haptics';
+
+import {
+  BentoGrid,
+  MoodPulseCard,
+  TrendingMoodsTicker,
+  StreakWidget,
+  CommunitySpotlight,
+} from '@/components/home';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -160,12 +173,29 @@ const INITIAL_REGION = {
   longitudeDelta: 0.15,
 };
 
+const SAMPLE_TRENDS = [
+  { emotion: 'calm', changePercent: 18 },
+  { emotion: 'joy', changePercent: 12 },
+  { emotion: 'excitement', changePercent: 7 },
+  { emotion: 'love', changePercent: 5 },
+  { emotion: 'anxiety', changePercent: -8 },
+];
+
+const SAMPLE_PULSE_DATA = [
+  { emotion: 'calm', percentage: 38 },
+  { emotion: 'joy', percentage: 26 },
+  { emotion: 'anxiety', percentage: 18 },
+  { emotion: 'sadness', percentage: 12 },
+  { emotion: 'anger', percentage: 6 },
+];
+
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const mapRef = useRef<any>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [showTourModal, setShowTourModal] = useState(false);
+  const [isFullMap, setIsFullMap] = useState(false);
 
   // TanStack queries
   const { data: pulseData } = useAtmosphericPulse();
@@ -186,7 +216,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         secondaryEmotion: item.secondary_emotion,
         intensity: item.intensity || 7,
         content: item.notes || '',
-        locationCity: item.city || 'San Francisco',
+        locationCity: item.city || 'Worldwide',
         weatherCondition: item.weather_condition || 'Starry Sky',
         weatherTemp: item.weather_temp || 18,
         timestamp: 'Recent',
@@ -251,6 +281,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleRecenter = () => {
     mapRef.current?.animateToRegion?.(INITIAL_REGION, 1000);
+    haptics.light();
   };
 
   const dominantEmotion = pulseData?.dominant_emotion || 'calm';
@@ -272,78 +303,216 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onTourPress={() => setShowTourModal(true)}
       />
 
-      {/* Main Map or Cosmic Canvas Area */}
-      <View style={styles.canvasContainer}>
-        {Platform.OS !== 'web' ? (
-          <MapContainer
-            ref={mapRef}
-            style={StyleSheet.absoluteFill}
-            provider={PROVIDER_DEFAULT}
-            initialRegion={INITIAL_REGION}
-            customMapStyle={theme.darkMapStyle}
-            userInterfaceStyle="dark"
-            showsCompass={false}
-            showsUserLocation
-          >
-            {filteredBubbles.map((bubble) => (
-              <Marker
-                key={bubble.id}
-                coordinate={{
-                  latitude: bubble.latitude,
-                  longitude: bubble.longitude,
-                }}
-                onPress={() => handleBubblePress(bubble)}
-              >
-                <LuminousMoodBubble
-                  id={bubble.id}
-                  emotion={bubble.emotion}
-                  intensity={bubble.intensity}
-                  authorName={bubble.authorName}
-                  isAnonymous={bubble.isAnonymous}
-                  size="md"
-                  isFloating
-                />
-              </Marker>
-            ))}
-          </MapContainer>
-        ) : (
-          /* Cosmic Celestial Canvas Fallback for Web/Simulator */
-          <View style={styles.cosmicGridCanvas}>
-            {/* Ambient Background Glows */}
-            <View style={styles.glowNebula1} />
-            <View style={styles.glowNebula2} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* ─── Hero Section: World Mood Map / Celestial Canvas ─── */}
+        <View style={[styles.heroMapContainer, isFullMap && styles.fullMap]}>
+          {Platform.OS !== 'web' ? (
+            <MapContainer
+              ref={mapRef}
+              style={StyleSheet.absoluteFill}
+              provider={PROVIDER_DEFAULT}
+              initialRegion={INITIAL_REGION}
+              customMapStyle={theme.darkMapStyle}
+              userInterfaceStyle="dark"
+              showsCompass={false}
+              showsUserLocation
+            >
+              {filteredBubbles.map((bubble) => (
+                <Marker
+                  key={bubble.id}
+                  coordinate={{
+                    latitude: bubble.latitude,
+                    longitude: bubble.longitude,
+                  }}
+                  onPress={() => handleBubblePress(bubble)}
+                >
+                  <LuminousMoodBubble
+                    id={bubble.id}
+                    emotion={bubble.emotion}
+                    intensity={bubble.intensity}
+                    authorName={bubble.authorName}
+                    isAnonymous={bubble.isAnonymous}
+                    size="sm"
+                    isFloating
+                  />
+                </Marker>
+              ))}
+            </MapContainer>
+          ) : (
+            <View style={styles.cosmicGridCanvas}>
+              <View style={styles.glowNebula1} />
+              <View style={styles.glowNebula2} />
+              {filteredBubbles.map((bubble) => (
+                <View
+                  key={bubble.id}
+                  style={[
+                    styles.celestialMarkerWrapper,
+                    { left: (bubble.canvasX || 100) * 0.8, top: (bubble.canvasY || 100) * 0.4 },
+                  ]}
+                >
+                  <LuminousMoodBubble
+                    id={bubble.id}
+                    emotion={bubble.emotion}
+                    intensity={bubble.intensity}
+                    authorName={bubble.authorName}
+                    isAnonymous={bubble.isAnonymous}
+                    size="sm"
+                    isFloating
+                    onPress={() => handleBubblePress(bubble)}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
 
-            {/* Grid Coordinate Markers */}
-            <View style={styles.gridOverlay}>
-              <Typography variant="caption" color="rgba(255, 255, 255, 0.15)">
-                LAT: 28.6139° N • LNG: 77.2090° E • WORLD MOOD CANVAS
-              </Typography>
+          {/* Frosted Fade-out Bottom Gradient */}
+          <LinearGradient
+            colors={['transparent', 'rgba(10, 11, 20, 0.8)', '#0A0B14']}
+            locations={[0, 0.7, 1]}
+            style={styles.heroFadeMask}
+            pointerEvents="none"
+          />
+
+          {/* Floating Hero Stat Badge */}
+          <View style={styles.heroFloatingBadge}>
+            <GlassCard variant="compact" style={styles.heroStatCard}>
+              <View style={styles.heroStatRow}>
+                <View style={styles.pulsingDot} />
+                <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
+                  {activeBubblesCount} active echoes worldwide
+                </Typography>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsFullMap(!isFullMap);
+                    haptics.selection();
+                  }}
+                  style={styles.expandMapButton}
+                >
+                  <Ionicons
+                    name={isFullMap ? 'contract-outline' : 'expand-outline'}
+                    size={16}
+                    color={colors.primaryLight}
+                  />
+                </TouchableOpacity>
+              </View>
+            </GlassCard>
+          </View>
+        </View>
+
+        {/* ─── Bento Grid Content Section ─── */}
+        {!isFullMap && (
+          <View style={styles.bentoSection}>
+            {/* 1. Trending Emotions Ticker */}
+            <TrendingMoodsTicker
+              trends={SAMPLE_TRENDS}
+              onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
+            />
+
+            {/* 2. Top Bento Row: Streak & Daily Aura Stat */}
+            <View style={styles.bentoRow}>
+              <View style={styles.bentoHalf}>
+                <StreakWidget currentStreak={7} maxStreak={30} />
+              </View>
+              <View style={styles.bentoHalf}>
+                <GlassCard variant="stat" style={styles.auraMetricCard}>
+                  <Typography variant="overline" style={{ color: colors.textMuted, marginBottom: 4 }}>
+                    COMMUNITY AURA
+                  </Typography>
+                  <Typography variant="stat" style={{ color: colors.primaryLight }}>
+                    7.8
+                  </Typography>
+                  <Typography variant="caption" style={{ color: colors.textSecondary, marginTop: 4 }}>
+                    Mostly Calm & Joy ✨
+                  </Typography>
+                </GlassCard>
+              </View>
             </View>
 
-            {/* Starlight Constellation Echoes */}
-            {filteredBubbles.map((bubble) => (
-              <View
-                key={bubble.id}
-                style={[
-                  styles.celestialMarkerWrapper,
-                  { left: bubble.canvasX, top: bubble.canvasY },
-                ]}
-              >
-                <LuminousMoodBubble
-                  id={bubble.id}
-                  emotion={bubble.emotion}
-                  intensity={bubble.intensity}
-                  authorName={bubble.authorName}
-                  isAnonymous={bubble.isAnonymous}
-                  size="md"
-                  isFloating
-                  onPress={() => handleBubblePress(bubble)}
-                />
-              </View>
-            ))}
+            {/* 3. Mood Pulse Distribution Hero Tile */}
+            <View style={styles.bentoFull}>
+              <MoodPulseCard
+                data={SAMPLE_PULSE_DATA}
+                onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
+              />
+            </View>
+
+            {/* 4. Community Spotlight Hero Tile */}
+            <View style={styles.bentoFull}>
+              <CommunitySpotlight
+                name="Quiet Reflections"
+                description="A serene space to share calm moments, morning coffee thoughts, and peaceful sunsets."
+                memberCount={142}
+                memberAvatars={['Aarav', 'Sophie', 'Marcus', 'Elena']}
+                emotion="calm"
+                onJoinPress={() => {
+                  navigation.navigate('CommunityFlow');
+                  haptics.success();
+                }}
+              />
+            </View>
+
+            {/* 5. Recent Echoes Masonry Feed */}
+            <View style={styles.feedHeader}>
+              <Typography variant="overline" style={{ color: colors.textMuted }}>
+                RECENT COMMUNITY ECHOES
+              </Typography>
+              {selectedFilter && (
+                <TouchableOpacity
+                  onPress={() => setSelectedFilter(null)}
+                  style={styles.clearFilterPill}
+                >
+                  <Typography variant="caption" style={{ color: colors.primaryLight }}>
+                    Clear {selectedFilter} ✕
+                  </Typography>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <BentoGrid columns={2} gap={12} animated>
+              {filteredBubbles.map((bubble) => {
+                const config = getEmotionConfig(bubble.emotion);
+                return (
+                  <GlassCard
+                    key={bubble.id}
+                    variant="default"
+                    glowColor={config.glow}
+                    onPress={() => handleBubblePress(bubble)}
+                    style={styles.feedCard}
+                  >
+                    <View style={styles.cardHeader}>
+                      <View style={[styles.emotionDot, { backgroundColor: config.primary }]} />
+                      <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary, flex: 1 }}>
+                        {bubble.authorName}
+                      </Typography>
+                      <Typography variant="caption">{config.emoji}</Typography>
+                    </View>
+
+                    <Typography
+                      variant="bodySmall"
+                      style={{ color: colors.textSecondary, marginVertical: 8 }}
+                      numberOfLines={4}
+                    >
+                      {bubble.content}
+                    </Typography>
+
+                    <View style={styles.cardFooter}>
+                      <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 11 }}>
+                        📍 {bubble.locationCity.split(',')[0]}
+                      </Typography>
+                      <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 11 }}>
+                        ❤️ {bubble.likesCount}
+                      </Typography>
+                    </View>
+                  </GlassCard>
+                );
+              })}
+            </BentoGrid>
           </View>
         )}
-      </View>
+      </ScrollView>
 
       {/* Interactive Bottom Sheet Detail Overlay */}
       <BubbleDetailSheet
@@ -361,7 +530,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }}
       />
 
-      {/* Floating Create Bubble Action Button */}
+      {/* Floating Check-in Action Button */}
       <FloatingActionButton
         onPress={() => (navigation as any).navigate('CreateBubbleModal')}
         label="Check In"
@@ -380,15 +549,114 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07080D',
+    backgroundColor: '#0A0B14',
   },
-  canvasContainer: {
-    flex: 1,
+  scrollContent: {
+    paddingBottom: 110,
+  },
+  heroMapContainer: {
+    width: '100%',
+    height: SCREEN_HEIGHT * 0.38,
     position: 'relative',
+    overflow: 'hidden',
+  },
+  fullMap: {
+    height: SCREEN_HEIGHT * 0.82,
+  },
+  heroFadeMask: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 70,
+  },
+  heroFloatingBadge: {
+    position: 'absolute',
+    bottom: 12,
+    left: 16,
+    right: 16,
+    zIndex: 10,
+  },
+  heroStatCard: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  heroStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pulsingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.success,
+    marginRight: 8,
+  },
+  expandMapButton: {
+    padding: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  bentoSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 16,
+  },
+  bentoRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bentoHalf: {
+    flex: 1,
+  },
+  bentoFull: {
+    width: '100%',
+  },
+  auraMetricCard: {
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  feedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  clearFilterPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+  },
+  feedCard: {
+    padding: 14,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  emotionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+    paddingTop: 8,
   },
   cosmicGridCanvas: {
     flex: 1,
-    backgroundColor: '#07080D',
+    backgroundColor: '#0A0B14',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -396,25 +664,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '15%',
     left: '10%',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(108, 92, 231, 0.18)',
   },
   glowNebula2: {
     position: 'absolute',
     bottom: '20%',
     right: '5%',
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    backgroundColor: 'rgba(78, 204, 232, 0.08)',
-  },
-  gridOverlay: {
-    position: 'absolute',
-    bottom: 24,
-    left: 20,
-    zIndex: 5,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(0, 206, 201, 0.12)',
   },
   celestialMarkerWrapper: {
     position: 'absolute',

@@ -2,11 +2,14 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
-import { theme } from '@/theme';
+import { theme, colors, shadows } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { AuroraBackground } from '@/components/effects/AuroraBackground';
+import { ParticleCanvas } from '@/components/effects/ParticleCanvas';
 import { useAuthStore } from '@/stores/authStore';
+import { haptics } from '@/theme/haptics';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
@@ -14,101 +17,116 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
   const { toggleDemoAuth } = useAuthStore();
 
   return (
-    <ScreenWrapper style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.heroSection}>
-          <View style={styles.orb}>
-            <Typography variant="display">🌌</Typography>
+    <View style={styles.outerWrapper}>
+      <AuroraBackground emotion="joy" />
+      <ParticleCanvas count={15} />
+
+      <ScreenWrapper style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.heroSection}>
+            <View style={[styles.orb, shadows.neonPulse(colors.primary)]}>
+              <Typography variant="display">🌌</Typography>
+            </View>
+            <Typography variant="display" weight="heavy" align="center" style={styles.title}>
+              MoodSpace
+            </Typography>
+            <Typography
+              variant="bodyLarge"
+              color={colors.textSecondary}
+              align="center"
+              style={styles.subtitle}
+            >
+              A living space to share how you feel, track your inner world, and discover nearby souls.
+            </Typography>
           </View>
-          <Typography variant="h1" weight="heavy" align="center" style={styles.title}>
-            Welcome to MoodSpace
-          </Typography>
-          <Typography
-            variant="bodyLarge"
-            color={theme.colors.textSecondary}
-            align="center"
-            style={styles.subtitle}
-          >
-            A friendly place to share how you're feeling, track your daily moods, and connect with people who understand.
-          </Typography>
-        </View>
 
-        <View style={styles.actionsSection}>
-          <Button
-            title="Create Account"
-            variant="primary"
-            fullWidth
-            size="lg"
-            onPress={() => navigation.navigate('Register')}
-            style={styles.primaryBtn}
-          />
-          <Button
-            title="I Already Have an Account"
-            variant="secondary"
-            fullWidth
-            size="md"
-            onPress={() => navigation.navigate('Login')}
-            style={styles.secondaryBtn}
-          />
-
-          <Button
-            title="Explore as Guest (No Sign-Up Needed)"
-            variant="ghost"
-            fullWidth
-            size="sm"
-            onPress={toggleDemoAuth}
-            style={styles.demoBtn}
-          />
+          <View style={styles.actionsSection}>
+            <Button
+              title="Create Account"
+              variant="aurora"
+              fullWidth
+              size="lg"
+              onPress={() => {
+                navigation.navigate('Register');
+                haptics.selection();
+              }}
+              style={styles.primaryBtn}
+            />
+            <Button
+              title="I Already Have an Account"
+              variant="glass"
+              fullWidth
+              size="md"
+              onPress={() => {
+                navigation.navigate('Login');
+                haptics.selection();
+              }}
+              style={styles.secondaryBtn}
+            />
+            <Button
+              title="Explore as Guest (No Sign-Up Needed)"
+              variant="ghost"
+              fullWidth
+              size="sm"
+              onPress={() => {
+                toggleDemoAuth();
+                haptics.selection();
+              }}
+              style={styles.demoBtn}
+            />
+          </View>
         </View>
-      </View>
-    </ScreenWrapper>
+      </ScreenWrapper>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
-    padding: theme.spacing.xl,
+    padding: 20,
     justifyContent: 'space-between',
   },
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xl,
+    paddingVertical: 24,
   },
   heroSection: {
     alignItems: 'center',
-    marginTop: theme.spacing.xxxl,
+    marginTop: 48,
   },
   orb: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.colors.surfaceElevated,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.glass.surface,
     borderWidth: 2,
-    borderColor: theme.colors.primaryLight,
+    borderColor: colors.glass.borderGlow,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.xl,
-    ...theme.shadows.glow(theme.colors.primary, 0.4),
+    marginBottom: 24,
   },
   title: {
-    marginBottom: theme.spacing.sm,
+    color: colors.textPrimary,
+    marginBottom: 8,
   },
   subtitle: {
-    maxWidth: 300,
+    maxWidth: 320,
     lineHeight: 24,
   },
   actionsSection: {
-    width: '100%',
     gap: 12,
+    marginBottom: 16,
   },
   primaryBtn: {
     marginBottom: 4,
   },
-  secondaryBtn: {
-    marginBottom: 4,
-  },
+  secondaryBtn: {},
   demoBtn: {
     marginTop: 4,
   },
