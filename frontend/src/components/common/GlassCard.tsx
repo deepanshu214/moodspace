@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Pressable, ViewStyle, StyleProp, GestureResponderEvent, Platform, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +21,25 @@ export interface GlassCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
+const parseColorToRgba = (color: string, alpha: number): string => {
+  if (!color) return `rgba(255, 255, 255, ${alpha})`;
+  const trimmed = color.trim();
+  if (trimmed.startsWith('rgba(')) {
+    return trimmed.replace(/,\s*[\d.]+\)$/, `, ${alpha})`);
+  }
+  if (trimmed.startsWith('rgb(')) {
+    return trimmed.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+  }
+  if (trimmed.startsWith('#')) {
+    const hex = trimmed.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const b = parseInt(hex.substring(4, 6), 16) || 0;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  return trimmed;
+};
+
 export const GlassCard: React.FC<GlassCardProps> = ({
   variant = 'default',
   glowColor,
@@ -29,6 +48,15 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   style,
 }) => {
   const isPressed = useSharedValue(0);
+
+  const startBorder = useMemo(
+    () => (glowColor ? parseColorToRgba(glowColor, 0.15) : theme.colors.glass.border),
+    [glowColor]
+  );
+  const endBorder = useMemo(
+    () => (glowColor ? parseColorToRgba(glowColor, 0.40) : theme.colors.glass.borderGlow),
+    [glowColor]
+  );
 
   const handlePressIn = (e: GestureResponderEvent) => {
     isPressed.value = withSpring(1, theme.springs.stiff);
@@ -44,16 +72,11 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       transform: [
         { scale: withSpring(1 - 0.03 * isPressed.value, theme.springs.stiff) }
       ],
-      borderColor: glowColor 
-        ? interpolateColor(
-            isPressed.value,
-            [0, 1],
-            [
-              glowColor.replace('rgb', 'rgba').replace(')', ', 0.08)'), 
-              glowColor.replace('rgb', 'rgba').replace(')', ', 0.25)')
-            ]
-          )
-        : theme.colors.glass.border,
+      borderColor: interpolateColor(
+        isPressed.value,
+        [0, 1],
+        [startBorder, endBorder]
+      ),
     };
   });
 
