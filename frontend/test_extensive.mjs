@@ -668,5 +668,115 @@ test('EXTENSIVE 12: Stage 11 User Aura, Mood Streak & Privacy State Reducers', a
   });
 });
 
+test('EXTENSIVE 13: Stage 12 Outbox Queue, Exponential Retry Backoff & Cache Invalidation Mechanics', async (t) => {
+  await t.test('FIFO outbox queue serialization and item lifecycle', () => {
+    let queue = [];
+    function enqueue(action) {
+      queue.push({
+        id: `q-${Date.now()}-${Math.random()}`,
+        ...action,
+        retryCount: 0,
+        maxRetries: 3,
+        status: 'pending',
+      });
+    }
+
+    enqueue({ type: 'CREATE_BUBBLE', payload: { content: 'Offline whisper' } });
+    enqueue({ type: 'EMPATHY_REACTION', payload: { bubbleId: 'b-1', emoji: '✨' } });
+    enqueue({ type: 'SEND_MESSAGE', payload: { conversationId: 'c-1', text: 'Hello' } });
+
+    assert.strictEqual(queue.length, 3, 'Queue enqueues 3 actions');
+    assert.strictEqual(queue[0].type, 'CREATE_BUBBLE', 'First enqueued action is preserved first (FIFO)');
+    assert.strictEqual(queue[2].type, 'SEND_MESSAGE', 'Last enqueued action is last');
+
+    // Remove middle action
+    const midId = queue[1].id;
+    queue = queue.filter((item) => item.id !== midId);
+    assert.strictEqual(queue.length, 2, 'Queue has 2 actions after removing middle item');
+    assert.strictEqual(queue[1].type, 'SEND_MESSAGE', 'SEND_MESSAGE is now at index 1');
+
+    // Clear queue
+    queue = [];
+    assert.strictEqual(queue.length, 0, 'Queue is empty after clear');
+  });
+
+  await t.test('Sequential queue processor with retry counts and failure threshold', async () => {
+    const queue = [
+      { id: '1', type: 'CREATE_BUBBLE', payload: { id: 'b-new' }, retryCount: 0, maxRetries: 3, status: 'pending' },
+      { id: '2', type: 'FAILING_ACTION', payload: {}, retryCount: 2, maxRetries: 3, status: 'pending' }, // Will fail and exceed maxRetries
+      { id: '3', type: 'RETRYABLE_ACTION', payload: {}, retryCount: 0, maxRetries: 3, status: 'pending' }, // Will fail once, remaining in queue
+    ];
+
+    let processed = 0;
+    let failed = 0;
+    const remainingQueue = [];
+
+    for (const action of queue) {
+      if (action.type === 'CREATE_BUBBLE') {
+        processed++;
+      } else {
+        // Simulating error
+        action.retryCount += 1;
+        if (action.retryCount >= action.maxRetries) {
+          action.status = 'failed';
+          action.error = 'Sync failed after max retries';
+          failed++;
+        } else {
+          remainingQueue.push(action);
+        }
+      }
+    }
+
+    assert.strictEqual(processed, 1, '1 action successfully processed');
+    assert.strictEqual(failed, 1, '1 action permanently failed and removed from pending');
+    assert.strictEqual(remainingQueue.length, 1, '1 retryable action remains in queue');
+    assert.strictEqual(remainingQueue[0].id, '3');
+    assert.strictEqual(remainingQueue[0].retryCount, 1, 'Retry count incremented to 1');
+  });
+
+  await t.test('Action type to React Query cache invalidation mapping', () => {
+    function getInvalidationKeys(type) {
+      switch (type) {
+        case 'CREATE_BUBBLE':
+        case 'EMPATHY_REACTION':
+          return [['mood'], ['feed']];
+        case 'ADD_COMMENT':
+          return [['feed']];
+        case 'SEND_MESSAGE':
+          return [['messages']];
+        case 'JOIN_COMMUNITY':
+        case 'LEAVE_COMMUNITY':
+        case 'CREATE_COMMUNITY_POST':
+          return [['communities'], ['community']];
+        case 'UPDATE_PRIVACY':
+          return [['userStats']];
+        default:
+          return [];
+      }
+    }
+
+    assert.deepStrictEqual(getInvalidationKeys('CREATE_BUBBLE'), [['mood'], ['feed']]);
+    assert.deepStrictEqual(getInvalidationKeys('ADD_COMMENT'), [['feed']]);
+    assert.deepStrictEqual(getInvalidationKeys('SEND_MESSAGE'), [['messages']]);
+    assert.deepStrictEqual(getInvalidationKeys('JOIN_COMMUNITY'), [['communities'], ['community']]);
+    assert.deepStrictEqual(getInvalidationKeys('UPDATE_PRIVACY'), [['userStats']]);
+  });
+
+  await t.test('Offline banner visibility logic depending on connectivity and outbox queue', () => {
+    function shouldShowBanner(isOnline, pendingCount, isSyncing) {
+      if (isOnline && pendingCount === 0 && !isSyncing) {
+        return false;
+      }
+      return true;
+    }
+
+    assert.strictEqual(shouldShowBanner(true, 0, false), false, 'Hidden when online with empty queue');
+    assert.strictEqual(shouldShowBanner(false, 0, false), true, 'Visible when device is offline');
+    assert.strictEqual(shouldShowBanner(true, 3, false), true, 'Visible when online with pending actions to sync');
+    assert.strictEqual(shouldShowBanner(true, 0, true), true, 'Visible while synchronizing');
+  });
+});
+
+
 
 

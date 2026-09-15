@@ -13,3 +13,5 @@ export * from './EmptyState';
 export * from './Toast';
 export * from './Modal';
 export * from './ScreenWrapper';
+export * from './OfflineBanner';
+

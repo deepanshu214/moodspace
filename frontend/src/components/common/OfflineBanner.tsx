@@ -1,0 +1,106 @@
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { theme } from '@/theme';
+import { Typography } from './Typography';
+import { Ionicons } from '@expo/vector-icons';
+import { useNetworkStore } from '@/stores/networkStore';
+import { offlineSyncService } from '@/services/offlineSyncService';
+
+export const OfflineBanner: React.FC = () => {
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  const isSyncing = useNetworkStore((s) => s.isSyncing);
+  const pendingCount = useNetworkStore((s) => s.pendingCount);
+
+  // Hidden if fully online and no pending syncs
+  if (isOnline && pendingCount === 0 && !isSyncing) {
+    return null;
+  }
+
+  const handleManualSync = () => {
+    offlineSyncService.processQueue();
+  };
+
+  return (
+    <View
+      style={[
+        styles.banner,
+        !isOnline ? styles.bannerOffline : styles.bannerSyncing,
+      ]}
+    >
+      <View style={styles.content}>
+        <Ionicons
+          name={
+            !isOnline
+              ? 'cloud-offline-outline'
+              : isSyncing
+              ? 'sync-outline'
+              : 'cloud-upload-outline'
+          }
+          size={16}
+          color={!isOnline ? '#FFD166' : theme.colors.primaryLight}
+        />
+
+        <Typography variant="caption" weight="semibold" color={theme.colors.textPrimary} style={styles.text}>
+          {!isOnline
+            ? pendingCount > 0
+              ? `Holding offline whispers • ${pendingCount} pending sync`
+              : 'Offline Mode • Reflections saved on device'
+            : isSyncing
+            ? `Synchronizing ${pendingCount} reflection${pendingCount !== 1 ? 's' : ''}…`
+            : `${pendingCount} offline reflection${pendingCount !== 1 ? 's' : ''} waiting to sync`}
+        </Typography>
+      </View>
+
+      {isOnline && pendingCount > 0 && !isSyncing && (
+        <TouchableOpacity
+          onPress={handleManualSync}
+          activeOpacity={0.75}
+          style={styles.syncBtn}
+        >
+          <Typography variant="caption" weight="bold" color="#FFFFFF">
+            Sync Now
+          </Typography>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: theme.spacing.md,
+    marginHorizontal: theme.spacing.md,
+    marginTop: 6,
+    marginBottom: 4,
+    borderRadius: theme.radius.round,
+    borderWidth: 1,
+  },
+  bannerOffline: {
+    backgroundColor: 'rgba(255, 209, 102, 0.12)',
+    borderColor: 'rgba(255, 209, 102, 0.35)',
+  },
+  bannerSyncing: {
+    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    borderColor: 'rgba(108, 92, 231, 0.35)',
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  text: {
+    flexShrink: 1,
+  },
+  syncBtn: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: theme.radius.round,
+    marginLeft: 8,
+  },
+});
