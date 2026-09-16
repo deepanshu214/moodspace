@@ -12,6 +12,7 @@ import Animated, {
   withRepeat,
   withSequence,
 } from 'react-native-reanimated';
+import { useTheme } from '@/context';
 import { colors, shadows } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 
@@ -29,11 +30,12 @@ export const StreakWidget: React.FC<StreakWidgetProps> = ({
   currentStreak,
   maxStreak = 30,
 }) => {
+  const { colors, isDark } = useTheme();
   const progress = useSharedValue(0);
   const flameScale = useSharedValue(1);
 
   const ringSize = 72;
-  const strokeWidth = 4;
+  const strokeWidth = 5;
   const radius = (ringSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -50,7 +52,7 @@ export const StreakWidget: React.FC<StreakWidgetProps> = ({
     // Flame breathing animation
     flameScale.value = withRepeat(
       withSequence(
-        withTiming(1.15, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.18, { duration: 800, easing: Easing.inOut(Easing.ease) }),
         withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
       ),
       -1,
@@ -66,14 +68,14 @@ export const StreakWidget: React.FC<StreakWidgetProps> = ({
     transform: [{ scale: flameScale.value }],
   }));
 
-  // Bigger flame for longer streaks
+  // Warm glowing flame for mindful check-ins
   const flameEmoji = currentStreak >= 14 ? '🔥' : currentStreak >= 7 ? '🔥' : '✨';
   const flameSize = currentStreak >= 14 ? 28 : currentStreak >= 7 ? 24 : 20;
 
   return (
-    <View style={[styles.container, shadows.glassGlow(colors.accent, 0.12)]}>
-      <BlurView tint="dark" intensity={25} style={styles.blur}>
-        <View style={styles.content}>
+    <View style={[styles.container, { borderColor: colors.glass.border }, shadows.glassGlow(colors.secondary, 0.16)]}>
+      <BlurView tint={isDark ? 'dark' : 'light'} intensity={25} style={styles.blur}>
+        <View style={[styles.content, { backgroundColor: colors.glass.surface }]}>
           <View style={styles.ringContainer}>
             <Svg width={ringSize} height={ringSize} style={styles.svg}>
               {/* Background track */}
@@ -81,16 +83,16 @@ export const StreakWidget: React.FC<StreakWidgetProps> = ({
                 cx={ringSize / 2}
                 cy={ringSize / 2}
                 r={radius}
-                stroke="rgba(255,255,255,0.06)"
+                stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}
                 strokeWidth={strokeWidth}
                 fill="transparent"
               />
-              {/* Animated progress */}
+              {/* Animated progress in warm honey / sunset tone */}
               <AnimatedCircle
                 cx={ringSize / 2}
                 cy={ringSize / 2}
                 r={radius}
-                stroke={colors.accent}
+                stroke={colors.secondary}
                 strokeWidth={strokeWidth}
                 fill="transparent"
                 strokeLinecap="round"
@@ -111,8 +113,11 @@ export const StreakWidget: React.FC<StreakWidgetProps> = ({
           <Typography variant="stat" style={{ color: colors.textPrimary, textAlign: 'center' }}>
             {currentStreak}
           </Typography>
-          <Typography variant="caption" style={{ color: colors.textMuted, textAlign: 'center' }}>
+          <Typography variant="caption" weight="semibold" style={{ color: colors.textSecondary, textAlign: 'center' }}>
             day streak
+          </Typography>
+          <Typography variant="caption" style={{ color: colors.primaryLight, fontSize: 10, textAlign: 'center', marginTop: 2 }}>
+            glowing bright ✨
           </Typography>
         </View>
       </BlurView>

@@ -154,12 +154,12 @@ export const MainTabNavigator: React.FC = () => {
         }}
       />
 
-      {/* 2. NOTIFICATIONS */}
+      {/* 2. ACTIVITY */}
       <Tab.Screen
         name="NotificationsTab"
         component={NotificationsScreen}
         options={{
-          tabBarLabel: 'Alerts',
+          tabBarLabel: 'Activity',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'notifications' : 'notifications-outline'}
@@ -189,7 +189,7 @@ export const MainTabNavigator: React.FC = () => {
         name="ChatsTab"
         component={ChatNavigator}
         options={{
-          tabBarLabel: 'Echoes',
+          tabBarLabel: 'Chats',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
@@ -205,7 +205,7 @@ export const MainTabNavigator: React.FC = () => {
         name="ProfileTab"
         component={ProfileNavigator}
         options={{
-          tabBarLabel: 'Aura',
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={21} color={color} />
           ),

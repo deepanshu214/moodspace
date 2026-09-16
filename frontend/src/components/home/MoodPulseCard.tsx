@@ -10,6 +10,7 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
+import { useTheme } from '@/context';
 import { colors, springs, shadows, getEmotionConfig } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { haptics } from '@/theme/haptics';
@@ -32,6 +33,7 @@ const AnimatedBar: React.FC<{
   index: number;
   onPress?: () => void;
 }> = ({ emotion, percentage, index, onPress }) => {
+  const { colors, isDark } = useTheme();
   const barWidth = useSharedValue(0);
   const scale = useSharedValue(1);
   const config = getEmotionConfig(emotion);
@@ -67,11 +69,11 @@ const AnimatedBar: React.FC<{
         <Typography variant="caption" style={{ color: colors.textSecondary }}>
           {config.emoji}
         </Typography>
-        <Typography variant="caption" style={{ color: colors.textSecondary, marginLeft: 6 }}>
+        <Typography variant="caption" weight="medium" style={{ color: colors.textSecondary, marginLeft: 6 }}>
           {config.label}
         </Typography>
       </View>
-      <View style={styles.barTrack}>
+      <View style={[styles.barTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }]}>
         <Animated.View style={[styles.barFillContainer, barStyle]}>
           <LinearGradient
             colors={config.gradientPair}
@@ -96,16 +98,23 @@ const AnimatedBar: React.FC<{
  * MoodPulseCard — Glass hero card with animated emotion distribution bars
  */
 export const MoodPulseCard: React.FC<MoodPulseCardProps> = ({ data, onEmotionPress }) => {
+  const { colors, isDark } = useTheme();
+
   return (
-    <View style={[styles.container, shadows.glassGlow(colors.primary, 0.15)]}>
-      <BlurView tint="dark" intensity={25} style={styles.blur}>
-        <View style={styles.content}>
+    <View style={[styles.container, { borderColor: colors.glass.border }, shadows.glassGlow(colors.primary, 0.12)]}>
+      <BlurView tint={isDark ? 'dark' : 'light'} intensity={25} style={styles.blur}>
+        <View style={[styles.content, { backgroundColor: colors.glass.surface }]}>
           <View style={styles.header}>
-            <Typography variant="overline" style={{ color: colors.textMuted }}>
-              MOOD PULSE
-            </Typography>
-            <Typography variant="caption" style={{ color: colors.textMuted }}>
-              Right now
+            <View>
+              <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight, letterSpacing: 0.5 }}>
+                COMMUNITY RHYTHM
+              </Typography>
+              <Typography variant="caption" style={{ color: colors.textMuted, marginTop: 2 }}>
+                What we're feeling together right now
+              </Typography>
+            </View>
+            <Typography variant="caption" weight="semibold" style={{ color: colors.secondary }}>
+              Live ✨
             </Typography>
           </View>
           {data.map((item, index) => (

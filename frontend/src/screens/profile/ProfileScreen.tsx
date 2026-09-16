@@ -134,7 +134,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.topBar}>
         <View style={styles.topBarTitleRow}>
           <Typography variant="h2" weight="bold" style={{ color: colors.textPrimary }}>
-            Emotional Soul
+            Your Space & Memories
           </Typography>
         </View>
 

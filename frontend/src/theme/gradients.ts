@@ -12,57 +12,57 @@ export interface GradientPreset {
 
 // ─── Named Aurora Gradient Presets ───
 export const gradients = {
-  /** Default idle aurora — purple/teal/pink */
+  /** Default idle aurora — warm sunset peach / honey / lavender */
   auroraDefault: {
-    colors: ['#6C5CE7', '#00CEC9', '#E84393', '#4834D4'],
+    colors: ['#FF7E67', '#FFB443', '#A78BFA', '#FF6584'],
     locations: [0, 0.35, 0.7, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
   } as GradientPreset,
 
-  /** Calm mood — teal/blue/green */
+  /** Calm mood — warm sage / soft sky */
   auroraCalm: {
-    colors: ['#00CEC9', '#0984E3', '#00B894', '#00CEC9'],
+    colors: ['#56C596', '#4FA8D1', '#85E3B3', '#56C596'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0, y: 0.2 },
     end: { x: 1, y: 0.8 },
   } as GradientPreset,
 
-  /** Joy mood — warm golden/pink */
+  /** Joy mood — golden honey / warm peach / blush */
   auroraJoy: {
-    colors: ['#FFB800', '#E84393', '#FD79A8', '#FFB800'],
+    colors: ['#FFB443', '#FF7E67', '#FF6584', '#FFB443'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.2, y: 0 },
     end: { x: 0.8, y: 1 },
   } as GradientPreset,
 
-  /** Anxiety mood — deep violet churn */
+  /** Anxiety mood — soft lavender & violet */
   auroraAnxiety: {
-    colors: ['#9C27B0', '#6C5CE7', '#4834D4', '#9C27B0'],
+    colors: ['#A78BFA', '#8B5CF6', '#6366F1', '#A78BFA'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.1, y: 0.1 },
     end: { x: 0.9, y: 0.9 },
   } as GradientPreset,
 
-  /** Anger mood — ember glow */
+  /** Anger mood — warm ember glow */
   auroraAnger: {
-    colors: ['#E17055', '#FF7675', '#D63031', '#E17055'],
+    colors: ['#FF6B6B', '#FF8E72', '#E05A47', '#FF6B6B'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
   } as GradientPreset,
 
-  /** Sadness mood — ocean blue */
+  /** Sadness mood — ocean twilight */
   auroraSadness: {
-    colors: ['#4A90E2', '#5C6BC0', '#0984E3', '#4A90E2'],
+    colors: ['#5B86E5', '#6C72CB', '#36D1DC', '#5B86E5'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0, y: 0.3 },
     end: { x: 1, y: 0.7 },
   } as GradientPreset,
 
-  /** Love mood — rose/magenta */
+  /** Love mood — warm rose & coral */
   auroraLove: {
-    colors: ['#FF6B81', '#E84393', '#FD79A8', '#FF6B81'],
+    colors: ['#FF6584', '#FF7E67', '#FF9A9E', '#FF6584'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.3, y: 0 },
     end: { x: 0.7, y: 1 },
@@ -72,7 +72,7 @@ export const gradients = {
 
   /** Primary brand gradient for buttons/FABs */
   primaryButton: {
-    colors: ['#6C5CE7', '#A29BFE'],
+    colors: ['#FF7E67', '#FFB443'],
     locations: [0, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
@@ -80,7 +80,7 @@ export const gradients = {
 
   /** Glass surface subtle gradient overlay */
   glassSurface: {
-    colors: ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0)'],
+    colors: ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0)'],
     locations: [0, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
@@ -88,7 +88,7 @@ export const gradients = {
 
   /** Fade-out mask for hero sections */
   heroFade: {
-    colors: ['transparent', '#0A0B14'],
+    colors: ['transparent', '#121018'],
     locations: [0, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
