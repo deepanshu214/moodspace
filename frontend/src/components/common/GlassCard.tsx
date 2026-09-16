@@ -93,10 +93,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         };
       case 'stat':
         return {
-          aspectRatio: 1,
           padding: theme.spacing.md,
           alignItems: 'center',
           justifyContent: 'center',
+          minHeight: 140,
         };
       case 'default':
       default:

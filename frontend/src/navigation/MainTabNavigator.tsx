@@ -37,8 +37,8 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
   React.useEffect(() => {
     pulseScale.value = withRepeat(
       withSequence(
-        withTiming(1.15, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        withTiming(1.12, { duration: 1600, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.ease) })
       ),
       -1,
       true
@@ -60,7 +60,7 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
 
   const pulseAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
-    opacity: 0.35,
+    opacity: 0.25,
   }));
 
   return (
@@ -70,7 +70,6 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
       onPressOut={handlePressOut}
       style={styles.centerBtnContainer}
     >
-      {/* Outer ambient glow pulse */}
       <Animated.View style={[styles.centerFabGlow, pulseAnimatedStyle]} />
       <Animated.View style={[styles.centerFab, animatedStyle]}>
         <LinearGradient
@@ -95,33 +94,35 @@ export const MainTabNavigator: React.FC = () => {
         tabBarActiveTintColor: colors.primaryLight,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(15, 16, 25, 0.92)',
+          backgroundColor: 'transparent',
           borderTopWidth: 0,
-          borderWidth: 1,
-          borderColor: colors.glass.borderLight,
+          borderWidth: 0,
           borderRadius: 32,
-          marginHorizontal: 14,
+          marginHorizontal: 16,
           marginBottom: Platform.OS === 'ios' ? 24 : 14,
           height: Platform.OS === 'ios' ? 76 : 66,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 16 : 8,
           position: 'absolute',
-          elevation: 12,
-          ...shadows.glassGlow(colors.primary, 0.15),
-          overflow: 'hidden',
+          elevation: 16,
+          ...shadows.medium,
         },
-        tabBarBackground: () =>
-          Platform.OS === 'ios' ? (
-            <BlurView
-              tint="dark"
-              intensity={40}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : null,
+        tabBarBackground: () => (
+          <View style={styles.tabBackgroundWrapper}>
+            {Platform.OS === 'ios' ? (
+              <BlurView
+                tint="dark"
+                intensity={80}
+                style={StyleSheet.absoluteFill}
+              />
+            ) : null}
+            <View style={styles.tabDarkBackdrop} />
+          </View>
+        ),
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '600',
-          letterSpacing: 0.4,
+          letterSpacing: 0.3,
           marginTop: 2,
         },
       }}
@@ -211,8 +212,27 @@ export const MainTabNavigator: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  tabBackgroundWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  tabDarkBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(12, 14, 23, 0.88)',
+  },
   centerBtnContainer: {
-    top: -14,
+    top: -12,
     justifyContent: 'center',
     alignItems: 'center',
     width: 58,
@@ -220,19 +240,19 @@ const styles = StyleSheet.create({
   },
   centerFabGlow: {
     position: 'absolute',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.primary,
   },
   centerFab: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    ...shadows.glow(colors.primary, 0.6),
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    ...shadows.glow(colors.primary, 0.5),
   },
   centerFabGradient: {
     flex: 1,

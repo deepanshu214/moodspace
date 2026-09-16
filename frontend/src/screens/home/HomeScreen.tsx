@@ -19,11 +19,9 @@ import { theme, colors, getEmotionConfig } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { GlassCard } from '@/components/common/GlassCard';
-import { FloatingActionButton } from '@/components/mood/FloatingActionButton';
-import { AtmosphericPulseRibbon } from '@/components/mood/AtmosphericPulseRibbon';
 import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
 import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
-import { AppWalkthroughModal } from '@/components/tutorial';
+import { InteractiveFeatureTour, AppWalkthroughModal } from '@/components/tutorial';
 import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
 import { MapContainer, Marker, PROVIDER_DEFAULT } from '@/components/map';
@@ -85,7 +83,7 @@ const DEFAULT_BUBBLES: DisplayBubble[] = [
     latitude: 28.6139,
     longitude: 77.209,
     canvasX: SCREEN_WIDTH * 0.28,
-    canvasY: SCREEN_HEIGHT * 0.32,
+    canvasY: SCREEN_HEIGHT * 0.22,
   },
   {
     id: 'b-2',
@@ -104,7 +102,7 @@ const DEFAULT_BUBBLES: DisplayBubble[] = [
     latitude: 35.6762,
     longitude: 139.6503,
     canvasX: SCREEN_WIDTH * 0.68,
-    canvasY: SCREEN_HEIGHT * 0.45,
+    canvasY: SCREEN_HEIGHT * 0.25,
   },
   {
     id: 'b-3',
@@ -123,7 +121,7 @@ const DEFAULT_BUBBLES: DisplayBubble[] = [
     latitude: 51.5074,
     longitude: -0.1278,
     canvasX: SCREEN_WIDTH * 0.22,
-    canvasY: SCREEN_HEIGHT * 0.62,
+    canvasY: SCREEN_HEIGHT * 0.28,
   },
   {
     id: 'b-4',
@@ -141,8 +139,8 @@ const DEFAULT_BUBBLES: DisplayBubble[] = [
     commentsCount: 17,
     latitude: 48.8566,
     longitude: 2.3522,
-    canvasX: SCREEN_WIDTH * 0.62,
-    canvasY: SCREEN_HEIGHT * 0.22,
+    canvasX: SCREEN_WIDTH * 0.58,
+    canvasY: SCREEN_HEIGHT * 0.18,
   },
   {
     id: 'b-5',
@@ -161,8 +159,8 @@ const DEFAULT_BUBBLES: DisplayBubble[] = [
     isAnonymous: true,
     latitude: 40.7128,
     longitude: -74.006,
-    canvasX: SCREEN_WIDTH * 0.78,
-    canvasY: SCREEN_HEIGHT * 0.68,
+    canvasX: SCREEN_WIDTH * 0.72,
+    canvasY: SCREEN_HEIGHT * 0.26,
   },
 ];
 
@@ -195,6 +193,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [showTourModal, setShowTourModal] = useState(false);
+  const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
   const [isFullMap, setIsFullMap] = useState(false);
 
   // TanStack queries
@@ -226,7 +225,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         latitude: item.latitude || INITIAL_REGION.latitude + (Math.random() - 0.5) * 0.05,
         longitude: item.longitude || INITIAL_REGION.longitude + (Math.random() - 0.5) * 0.05,
         canvasX: 40 + (idx * 75) % (SCREEN_WIDTH - 80),
-        canvasY: 180 + (idx * 85) % (SCREEN_HEIGHT - 320),
+        canvasY: 60 + (idx * 55) % 180,
       }));
       return mapped;
     }
@@ -245,10 +244,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     const checkTour = async () => {
       try {
-        const hasSeen = await storage.getItem('hasSeenAppTour_v1');
-        if (!hasSeen) {
+        const hasSeenV2 = await storage.getItem('hasCompletedInteractiveTour_v2');
+        const hasSeenV1 = await storage.getItem('hasSeenAppTour_v1');
+        if (!hasSeenV2 && !hasSeenV1) {
           setShowTourModal(true);
-          await storage.setItem('hasSeenAppTour_v1', 'true');
         }
       } catch {}
     };
@@ -284,24 +283,45 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     haptics.light();
   };
 
-  const dominantEmotion = pulseData?.dominant_emotion || 'calm';
-  const averageIntensity = pulseData?.intensity_average || 7.4;
   const activeBubblesCount = pulseData?.active_bubbles_count || allBubbles.length * 18;
 
   return (
     <ScreenWrapper style={styles.container}>
-      {/* Top Atmospheric Pulse Ribbon Header */}
-      <AtmosphericPulseRibbon
-        dominantEmotion={dominantEmotion}
-        intensityAverage={averageIntensity}
-        activeBubblesCount={activeBubblesCount}
-        selectedFilter={selectedFilter}
-        onSelectFilter={setSelectedFilter}
-        onRecenterPress={handleRecenter}
-        onStreamPress={() => navigation.navigate('FeedStream')}
-        onCirclesPress={() => navigation.navigate('CommunityFlow')}
-        onTourPress={() => setShowTourModal(true)}
-      />
+      {/* ── Sleek Top Navigation Bar ── */}
+      <View style={styles.topHeader}>
+        <View style={styles.headerTitles}>
+          <Typography variant="h2" weight="heavy" style={{ color: colors.textPrimary }}>
+            MoodSpace
+          </Typography>
+          <Typography variant="caption" style={{ color: colors.textMuted }}>
+            Live Emotional Map & Atmosphere
+          </Typography>
+        </View>
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerActionPill}
+            onPress={() => {
+              setShowTourModal(true);
+              haptics.light();
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="help-circle-outline" size={16} color={colors.primaryLight} />
+            <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight, marginLeft: 4 }}>
+              Guide
+            </Typography>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={handleRecenter}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="locate-outline" size={18} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -350,7 +370,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   key={bubble.id}
                   style={[
                     styles.celestialMarkerWrapper,
-                    { left: (bubble.canvasX || 100) * 0.8, top: (bubble.canvasY || 100) * 0.4 },
+                    { left: (bubble.canvasX || 100) * 0.8, top: (bubble.canvasY || 100) * 0.5 },
                   ]}
                 >
                   <LuminousMoodBubble
@@ -370,35 +390,31 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Frosted Fade-out Bottom Gradient */}
           <LinearGradient
-            colors={['transparent', 'rgba(10, 11, 20, 0.8)', '#0A0B14']}
+            colors={['transparent', 'rgba(10, 11, 20, 0.7)', '#0A0B14']}
             locations={[0, 0.7, 1]}
             style={styles.heroFadeMask}
             pointerEvents="none"
           />
 
-          {/* Floating Hero Stat Badge */}
-          <View style={styles.heroFloatingBadge}>
-            <GlassCard variant="compact" style={styles.heroStatCard}>
-              <View style={styles.heroStatRow}>
-                <View style={styles.pulsingDot} />
-                <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
-                  {activeBubblesCount} active echoes worldwide
-                </Typography>
-                <TouchableOpacity
-                  onPress={() => {
-                    setIsFullMap(!isFullMap);
-                    haptics.selection();
-                  }}
-                  style={styles.expandMapButton}
-                >
-                  <Ionicons
-                    name={isFullMap ? 'contract-outline' : 'expand-outline'}
-                    size={16}
-                    color={colors.primaryLight}
-                  />
-                </TouchableOpacity>
-              </View>
-            </GlassCard>
+          {/* Floating Map Status Chip */}
+          <View style={styles.mapStatusChip}>
+            <View style={styles.pulsingDot} />
+            <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
+              {activeBubblesCount} echoes worldwide
+            </Typography>
+            <TouchableOpacity
+              onPress={() => {
+                setIsFullMap(!isFullMap);
+                haptics.selection();
+              }}
+              style={styles.expandMapButton}
+            >
+              <Ionicons
+                name={isFullMap ? 'contract-outline' : 'expand-outline'}
+                size={14}
+                color={colors.textPrimary}
+              />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -411,13 +427,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
             />
 
-            {/* 2. Top Bento Row: Streak & Daily Aura Stat */}
+            {/* 2. Bento Row: Streak & Community Aura Stat (Fixed equal proportions) */}
             <View style={styles.bentoRow}>
               <View style={styles.bentoHalf}>
                 <StreakWidget currentStreak={7} maxStreak={30} />
               </View>
+
               <View style={styles.bentoHalf}>
-                <GlassCard variant="stat" style={styles.auraMetricCard}>
+                <GlassCard variant="default" style={styles.auraMetricCard}>
                   <Typography variant="overline" style={{ color: colors.textMuted, marginBottom: 4 }}>
                     COMMUNITY AURA
                   </Typography>
@@ -530,17 +547,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }}
       />
 
-      {/* Floating Check-in Action Button */}
-      <FloatingActionButton
-        onPress={() => (navigation as any).navigate('CreateBubbleModal')}
-        label="Check In"
-        iconName="sparkles"
-      />
-
-      {/* App Tour Walkthrough for New Users */}
-      <AppWalkthroughModal
+      {/* Interactive In-App Feature Guide */}
+      <InteractiveFeatureTour
         visible={showTourModal}
         onClose={() => setShowTourModal(false)}
+      />
+
+      {/* Classical Feature Walkthrough (Accessible via Guide or Settings) */}
+      <AppWalkthroughModal
+        visible={showWalkthroughModal}
+        onClose={() => setShowWalkthroughModal(false)}
       />
     </ScreenWrapper>
   );
@@ -551,16 +567,60 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0B14',
   },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 8 : 12,
+    paddingBottom: 10,
+    zIndex: 10,
+  },
+  headerTitles: {
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 92, 231, 0.3)',
+  },
+  headerIconButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.glass.surface,
+    borderWidth: 1,
+    borderColor: colors.glass.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scrollContent: {
     paddingBottom: 110,
   },
   heroMapContainer: {
-    width: '100%',
-    height: SCREEN_HEIGHT * 0.38,
+    width: SCREEN_WIDTH - 32,
+    marginHorizontal: 16,
+    height: SCREEN_HEIGHT * 0.32,
     position: 'relative',
     overflow: 'hidden',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.glass.border,
   },
   fullMap: {
+    width: '100%',
+    marginHorizontal: 0,
+    borderRadius: 0,
     height: SCREEN_HEIGHT * 0.82,
   },
   heroFadeMask: {
@@ -568,44 +628,43 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 70,
+    height: 50,
   },
-  heroFloatingBadge: {
+  mapStatusChip: {
     position: 'absolute',
     bottom: 12,
-    left: 16,
-    right: 16,
-    zIndex: 10,
-  },
-  heroStatCard: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  heroStatRow: {
+    left: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(18, 20, 32, 0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    gap: 8,
+    zIndex: 10,
   },
   pulsingDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.success,
-    marginRight: 8,
   },
   expandMapButton: {
-    padding: 4,
+    padding: 3,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   bentoSection: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    gap: 16,
+    gap: 14,
   },
   bentoRow: {
     flexDirection: 'row',
     gap: 12,
+    alignItems: 'stretch',
   },
   bentoHalf: {
     flex: 1,
@@ -614,7 +673,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   auraMetricCard: {
-    height: '100%',
+    flex: 1,
+    minHeight: 140,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -623,8 +683,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 6,
+    marginBottom: 2,
   },
   clearFilterPill: {
     paddingHorizontal: 10,
@@ -664,18 +724,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '15%',
     left: '10%',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: 'rgba(108, 92, 231, 0.18)',
   },
   glowNebula2: {
     position: 'absolute',
     bottom: '20%',
     right: '5%',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
     backgroundColor: 'rgba(0, 206, 201, 0.12)',
   },
   celestialMarkerWrapper: {
