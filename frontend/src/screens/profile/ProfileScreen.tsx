@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme, colors, shadows } from '@/theme';
 import { Typography } from '@/components/common/Typography';
@@ -17,6 +18,7 @@ import {
   EditProfileModal,
 } from '@/components/profile';
 import { storage } from '@/utils/storage';
+import { getUserPostedBubbles, deleteUserPostedBubble, UserPostBubble } from '@/utils/userPosts';
 
 import { useAuthStore } from '@/stores/authStore';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -80,6 +82,38 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     ? incognitoLocal
     : (privacyData?.incognito_by_default ?? false);
 
+  const [myPosts, setMyPosts] = useState<UserPostBubble[]>([]);
+
+  const loadMyPosts = useCallback(async () => {
+    const posts = await getUserPostedBubbles();
+    setMyPosts(posts);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMyPosts();
+    }, [loadMyPosts])
+  );
+
+  const handleDeletePost = (id: string) => {
+    Alert.alert(
+      'Delete Echo',
+      'Are you sure you want to remove this reflection from your profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            haptics.medium();
+            const updated = await deleteUserPostedBubble(id);
+            setMyPosts(updated);
+          },
+        },
+      ]
+    );
+  };
+
   const handleToggleIncognito = (value: boolean) => {
     setIncognitoLocal(value);
     haptics.selection();
@@ -105,14 +139,20 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.topBarActions}>
-          <IconButton
-            icon={<Ionicons name="settings-outline" size={22} color={colors.textPrimary} />}
-            variant="glass"
+          <TouchableOpacity
+            style={[styles.settingsPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
             onPress={() => {
               navigation.navigate('Settings');
               haptics.light();
             }}
-          />
+            activeOpacity={0.7}
+            accessibilityLabel="Open Settings"
+          >
+            <Ionicons name="settings-outline" size={16} color={colors.primary} />
+            <Typography variant="caption" weight="bold" color={colors.textPrimary} style={{ marginLeft: 6 }}>
+              Settings
+            </Typography>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -235,6 +275,103 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       {/* ── Mood History Heatmap ── */}
       <MoodHistoryHeatmap days={heatmap} />
 
+      {/* ── My Shared Echoes (What I Posted) ── */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeaderRow}>
+          <Typography variant="overline" color={colors.textMuted} style={styles.sectionTitle}>
+            MY SHARED ECHOES & POSTS
+          </Typography>
+          <View style={[styles.badgeCount, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}>
+            <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+              {myPosts.length}
+            </Typography>
+          </View>
+        </View>
+
+        {myPosts.length > 0 ? (
+          <View style={styles.myPostsList}>
+            {myPosts.map((post) => (
+              <GlassCard key={post.id} variant="default" style={styles.postCard}>
+                <View style={styles.postHeaderRow}>
+                  <View style={styles.postEmotionRow}>
+                    <MoodTag
+                      emotion={post.emotion}
+                      secondaryEmotion={post.secondaryEmotion}
+                      intensity={post.intensity}
+                    />
+                    {post.isAnonymous && (
+                      <View style={[styles.anonBadge, { borderColor: colors.glass.border }]}>
+                        <Typography variant="caption" style={{ fontSize: 11, color: colors.secondary }}>
+                          👻 Ghost
+                        </Typography>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.postHeaderRight}>
+                    <Typography variant="caption" color={colors.textMuted} style={{ marginRight: 8 }}>
+                      {post.timestamp || 'Recent'}
+                    </Typography>
+                    <TouchableOpacity
+                      onPress={() => handleDeletePost(post.id)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <Typography variant="body" color={colors.textPrimary} style={styles.postContent}>
+                  "{post.content}"
+                </Typography>
+
+                <View style={styles.postFooterRow}>
+                  <View style={styles.postLocationRow}>
+                    <Ionicons name="location-outline" size={13} color={colors.textMuted} />
+                    <Typography variant="caption" color={colors.textMuted} style={{ marginLeft: 4 }}>
+                      {post.locationCity || 'Worldwide'}
+                    </Typography>
+                    {post.weatherTemp !== undefined && (
+                      <Typography variant="caption" color={colors.textMuted} style={{ marginLeft: 8 }}>
+                        • {post.weatherTemp}°C {post.weatherCondition}
+                      </Typography>
+                    )}
+                  </View>
+
+                  <View style={styles.postLikesRow}>
+                    <Ionicons name="heart" size={13} color="#FD79A8" />
+                    <Typography variant="caption" color={colors.textSecondary} style={{ marginLeft: 4 }}>
+                      {post.likesCount || 0}
+                    </Typography>
+                  </View>
+                </View>
+              </GlassCard>
+            ))}
+          </View>
+        ) : (
+          <GlassCard variant="compact" style={styles.emptyPostsCard}>
+            <Typography style={{ fontSize: 24, textAlign: 'center', marginBottom: 6 }}>🌱</Typography>
+            <Typography variant="body" weight="semibold" color={colors.textPrimary} style={{ textAlign: 'center' }}>
+              No Shared Echoes Yet
+            </Typography>
+            <Typography variant="caption" color={colors.textMuted} style={{ textAlign: 'center', marginTop: 4, marginBottom: 12 }}>
+              When you drop a mood bubble on the map, your reflections are saved here so you can revisit them anytime.
+            </Typography>
+            <Button
+              title="Share Your First Mood"
+              variant="aurora"
+              size="sm"
+              onPress={() => {
+                haptics.light();
+                (navigation as any).navigate('HomeTab', { screen: 'CreateBubble' });
+              }}
+              leftIcon={<Ionicons name="add" size={16} color="#FFFFFF" />}
+            />
+          </GlassCard>
+        )}
+      </View>
+
       {/* ── Quick Action Navigation Grid ── */}
       <View style={styles.actionsGrid}>
         <Button
@@ -246,6 +383,17 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             haptics.light();
           }}
           leftIcon={<Ionicons name="pencil" size={16} color={colors.textPrimary} />}
+          style={styles.actionBtn}
+        />
+        <Button
+          title="Settings"
+          variant="glass"
+          size="md"
+          onPress={() => {
+            navigation.navigate('Settings');
+            haptics.light();
+          }}
+          leftIcon={<Ionicons name="settings-outline" size={16} color={colors.textPrimary} />}
           style={styles.actionBtn}
         />
         <Button
@@ -418,5 +566,78 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  settingsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 18,
+    borderWidth: 1,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  badgeCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  myPostsList: {
+    gap: 12,
+  },
+  postCard: {
+    padding: 14,
+    borderRadius: 18,
+  },
+  postHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  postEmotionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  anonBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  postHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  postContent: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  postFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  postLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  postLikesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  emptyPostsCard: {
+    alignItems: 'center',
+    padding: 20,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,11 +8,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { getUserPostedBubbles, UserPostBubble } from '@/utils/userPosts';
 
 import { HomeStackParamList, MainTabParamList } from '@/navigation/types';
 import { theme, getEmotionConfig } from '@/theme';
@@ -231,33 +232,56 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     25
   );
 
+  const [myLocalBubbles, setMyLocalBubbles] = useState<UserPostBubble[]>([]);
+
+  const loadLocalBubbles = useCallback(async () => {
+    const posts = await getUserPostedBubbles();
+    setMyLocalBubbles(posts);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadLocalBubbles();
+    }, [loadLocalBubbles])
+  );
+
   // Combine and normalize bubbles
   const allBubbles = useMemo(() => {
-    if (nearbyApiBubbles && nearbyApiBubbles.length > 0) {
-      const mapped: DisplayBubble[] = nearbyApiBubbles.map((item, idx) => ({
-        id: item.id || `api-${idx}`,
-        authorName: item.is_incognito ? 'Anonymous Friend' : (item.user_id || 'Traveler'),
-        auraScore: 250,
-        emotion: item.primary_emotion || 'calm',
-        secondaryEmotion: item.secondary_emotion,
-        intensity: item.intensity || 7,
-        content: item.notes || '',
-        locationCity: item.city || 'Worldwide',
-        weatherCondition: item.weather_condition || 'Starry Sky',
-        weatherTemp: item.weather_temp || 18,
-        timestamp: 'Recent',
-        likesCount: item.reactions_count || 0,
-        commentsCount: item.comments_count || 0,
-        isAnonymous: item.is_incognito,
-        latitude: item.latitude || INITIAL_REGION.latitude + (Math.random() - 0.5) * 0.05,
-        longitude: item.longitude || INITIAL_REGION.longitude + (Math.random() - 0.5) * 0.05,
-        canvasX: 40 + (idx * 75) % (SCREEN_WIDTH - 80),
-        canvasY: 60 + (idx * 55) % 180,
+    const base: DisplayBubble[] = (nearbyApiBubbles && nearbyApiBubbles.length > 0)
+      ? nearbyApiBubbles.map((item, idx) => ({
+          id: item.id || `api-${idx}`,
+          authorName: item.is_incognito ? 'Anonymous Friend' : (item.user_id || 'Traveler'),
+          auraScore: 250,
+          emotion: item.primary_emotion || 'calm',
+          secondaryEmotion: item.secondary_emotion,
+          intensity: item.intensity || 7,
+          content: item.notes || '',
+          locationCity: item.city || 'Worldwide',
+          weatherCondition: item.weather_condition || 'Starry Sky',
+          weatherTemp: item.weather_temp || 18,
+          timestamp: 'Recent',
+          likesCount: item.reactions_count || 0,
+          commentsCount: item.comments_count || 0,
+          isAnonymous: item.is_incognito,
+          latitude: item.latitude || INITIAL_REGION.latitude + (Math.random() - 0.5) * 0.05,
+          longitude: item.longitude || INITIAL_REGION.longitude + (Math.random() - 0.5) * 0.05,
+          canvasX: 40 + (idx * 75) % (SCREEN_WIDTH - 80),
+          canvasY: 60 + (idx * 55) % 180,
+        }))
+      : DEFAULT_BUBBLES;
+
+    if (myLocalBubbles && myLocalBubbles.length > 0) {
+      const localMapped: DisplayBubble[] = myLocalBubbles.map((m, idx) => ({
+        ...m,
+        canvasX: 70 + (idx * 65) % (SCREEN_WIDTH - 120),
+        canvasY: 75 + (idx * 45) % 160,
       }));
-      return mapped;
+      const existingIds = new Set(localMapped.map((b) => b.id));
+      return [...localMapped, ...base.filter((b) => !existingIds.has(b.id))];
     }
-    return DEFAULT_BUBBLES;
-  }, [nearbyApiBubbles]);
+
+    return base;
+  }, [nearbyApiBubbles, myLocalBubbles]);
 
   // Filter bubbles
   const filteredBubbles = useMemo(() => {
@@ -363,6 +387,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <Ionicons name="locate" size={16} color={colors.primary} />
+          </TouchableOpacity>
+
+          {/* App Settings Button */}
+          <TouchableOpacity
+            style={[styles.headerIconButton, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            onPress={() => {
+              haptics.light();
+              (navigation as any).navigate('ProfileTab', { screen: 'Settings' });
+            }}
+            activeOpacity={0.7}
+            accessibilityLabel="App Settings"
+          >
+            <Ionicons name="settings-outline" size={16} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>

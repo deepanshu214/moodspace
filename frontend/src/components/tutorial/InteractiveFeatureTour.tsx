@@ -8,17 +8,6 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-  FadeIn,
-  FadeOut,
-} from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, theme, shadows } from '@/theme';
@@ -44,7 +33,7 @@ interface TourStep {
   emoji: string;
   color: string;
   description: string;
-  dockPosition: 'top' | 'bottom'; // Top docked if target is bottom; bottom docked if target is top
+  dockPosition: 'top' | 'bottom';
   spotlightTarget: {
     top?: number;
     bottom?: number;
@@ -158,20 +147,20 @@ const TOUR_STEPS: TourStep[] = [
     demoType: 'circle',
   },
   {
-    id: 'chats',
+    id: 'chat',
     stepNumber: 6,
     totalSteps: 7,
     title: '1-on-1 Gentle Chats',
-    badge: 'Step 6 of 7 • Kindred Spirits',
-    emoji: '🕊️',
+    badge: 'Step 6 of 7 • Connect',
+    emoji: '💬',
     color: '#A29BFE',
     description:
-      'Privately connect with someone on your emotional wavelength. Share comfort with icebreaker prompts in safe, respectful chats.',
+      'Privately connect with someone who resonates with your feeling. Safe, gentle, anonymous-friendly conversation.',
     dockPosition: 'top',
     spotlightTarget: {
       bottom: Platform.OS === 'ios' ? 24 : 14,
-      left: SCREEN_WIDTH * 0.58,
-      width: 64,
+      left: SCREEN_WIDTH * 0.76,
+      width: 58,
       height: 56,
       borderRadius: 20,
     },
@@ -182,16 +171,16 @@ const TOUR_STEPS: TourStep[] = [
     stepNumber: 7,
     totalSteps: 7,
     title: 'Daily Streak & Constellation',
-    badge: 'Step 7 of 7 • Mindful Rhythm',
+    badge: 'Step 7 of 7 • Reflection',
     emoji: '🔥',
     color: '#FF7675',
     description:
-      'Build a daily check-in habit, watch your monthly mood constellation fill with color, and grow your Aura score with mindful consistency.',
-    dockPosition: 'top',
+      'Build your mindful check-in streak and view your entire month in soft organic mood pebbles and emotional colors on your Profile.',
+    dockPosition: 'bottom',
     spotlightTarget: {
       bottom: Platform.OS === 'ios' ? 24 : 14,
-      left: SCREEN_WIDTH * 0.80,
-      width: 60,
+      left: SCREEN_WIDTH * 0.88,
+      width: 58,
       height: 56,
       borderRadius: 20,
     },
@@ -215,25 +204,15 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
   const [demoMessageSent, setDemoMessageSent] = useState(false);
   const [demoBubbleTapped, setDemoBubbleTapped] = useState(false);
 
-  const pulseAnim = useSharedValue(1);
-
   useEffect(() => {
     if (visible) {
       setCurrentStepIndex(0);
-      pulseAnim.value = withRepeat(
-        withSequence(
-          withTiming(1.08, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1.0, { duration: 1000, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
     }
   }, [visible]);
 
   if (!visible) return null;
 
-  const step = TOUR_STEPS[currentStepIndex];
+  const step = TOUR_STEPS[currentStepIndex] || TOUR_STEPS[0];
   const isLast = currentStepIndex === TOUR_STEPS.length - 1;
 
   const handleNext = () => {
@@ -260,27 +239,14 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
     onClose();
   };
 
-  const animatedSpotlightStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseAnim.value }],
-  }));
-
-  const spotlightPositionStyle = {
-    top: step.spotlightTarget.top,
-    bottom: step.spotlightTarget.bottom,
-    left: step.spotlightTarget.left,
-    width: step.spotlightTarget.width,
-    height: step.spotlightTarget.height,
-    borderRadius: step.spotlightTarget.borderRadius,
-  };
-
   // Render Interactive Sandbox based on current feature demoType
   const renderInteractiveDemo = () => {
     switch (step.demoType) {
       case 'map':
         return (
           <View style={styles.demoCard}>
-            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
-              INTERACTIVE DEMO: TAP THE MOOD BUBBLE
+            <Typography variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              TRY IT: TAP THE MOOD BUBBLE
             </Typography>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -299,8 +265,8 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
               </Typography>
             </TouchableOpacity>
             {demoBubbleTapped && (
-              <Typography variant="caption" color={colors.primaryLight} style={{ marginTop: 6, fontStyle: 'italic' }}>
-                "Listening to gentle raindrops against the window with hot tea."
+              <Typography variant="caption" color="#00CEC9" style={{ marginTop: 6, fontStyle: 'italic' }}>
+                ✓ Bubble opened: "Listening to the quiet city sounds as morning breaks."
               </Typography>
             )}
           </View>
@@ -309,36 +275,34 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
       case 'emotion':
         return (
           <View style={styles.demoCard}>
-            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+            <Typography variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 6 }}>
               TRY IT: PICK YOUR FEELING
             </Typography>
             <View style={styles.demoRow}>
               {[
-                { name: 'calm', label: 'Calm', emoji: '🌿', color: '#00CEC9' },
-                { name: 'joy', label: 'Joy', emoji: '☀️', color: '#FFB800' },
-                { name: 'love', label: 'Love', emoji: '💖', color: '#FF6B81' },
-              ].map((em) => {
-                const active = demoSelectedEmotion === em.name;
-                return (
-                  <TouchableOpacity
-                    key={em.name}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setDemoSelectedEmotion(em.name);
-                      haptics.selection();
-                    }}
-                    style={[
-                      styles.demoPill,
-                      active && { borderColor: em.color, backgroundColor: `${em.color}25` },
-                    ]}
-                  >
-                    <Typography style={{ fontSize: 16 }}>{em.emoji}</Typography>
-                    <Typography variant="caption" weight="bold" color={active ? em.color : colors.textSecondary} style={{ marginLeft: 4 }}>
-                      {em.label}
-                    </Typography>
-                  </TouchableOpacity>
-                );
-              })}
+                { emotion: 'joy', emoji: '☀️', label: 'Joy' },
+                { emotion: 'calm', emoji: '🌿', label: 'Calm' },
+                { emotion: 'love', emoji: '💖', label: 'Love' },
+                { emotion: 'sadness', emoji: '💜', label: 'Deep' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.emotion}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setDemoSelectedEmotion(item.emotion);
+                    haptics.selection();
+                  }}
+                  style={[
+                    styles.demoEmotionBtn,
+                    demoSelectedEmotion === item.emotion && styles.demoEmotionBtnActive,
+                  ]}
+                >
+                  <Typography style={{ fontSize: 18 }}>{item.emoji}</Typography>
+                  <Typography variant="caption" color={colors.textPrimary} style={{ fontSize: 10, marginTop: 2 }}>
+                    {item.label}
+                  </Typography>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         );
@@ -346,17 +310,17 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
       case 'pulse':
         return (
           <View style={styles.demoCard}>
-            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
-              LIVE ATMOSPHERE BREAKDOWN
+            <Typography variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              ATMOSPHERE PULSE PREVIEW
             </Typography>
-            <View style={styles.demoPulseRow}>
-              <View style={[styles.demoPulseBar, { flex: 4, backgroundColor: '#00CEC9' }]} />
-              <View style={[styles.demoPulseBar, { flex: 3, backgroundColor: '#FFB800' }]} />
-              <View style={[styles.demoPulseBar, { flex: 2, backgroundColor: '#9C27B0' }]} />
-              <View style={[styles.demoPulseBar, { flex: 1, backgroundColor: '#4A90E2' }]} />
+            <View style={styles.pulseBarContainer}>
+              <View style={[styles.pulseSegment, { flex: 4, backgroundColor: '#00CEC9' }]} />
+              <View style={[styles.pulseSegment, { flex: 3, backgroundColor: '#FFB800' }]} />
+              <View style={[styles.pulseSegment, { flex: 2, backgroundColor: '#FD79A8' }]} />
+              <View style={[styles.pulseSegment, { flex: 1, backgroundColor: '#A29BFE' }]} />
             </View>
-            <Typography variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
-              40% Calm 🌿 • 30% Joy ☀️ • 20% Reflective 💜 • 10% Soft 🌧️
+            <Typography variant="caption" color={colors.textSecondary} style={{ marginTop: 6, textAlign: 'center' }}>
+              40% Calm 🌿 • 30% Joy ☀️ • 20% Love 💖
             </Typography>
           </View>
         );
@@ -364,28 +328,29 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
       case 'reaction':
         return (
           <View style={styles.demoCard}>
-            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
-              TRY SENDING A REACTION
+            <Typography variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              TRY IT: TAP TO SEND EMPATHY
             </Typography>
+            <ReactionFloater emoji={demoFloaterEmoji} triggerKey={demoFloaterKey} />
             <View style={styles.demoRow}>
               {[
-                { emoji: '❤️', label: 'Support' },
-                { emoji: '🤗', label: 'Hug' },
-                { emoji: '🌊', label: 'With You' },
+                { label: 'Support', emoji: '❤️' },
+                { label: 'Hug', emoji: '🤗' },
+                { label: 'With You', emoji: '🌊' },
+                { label: 'Celebrate', emoji: '✨' },
               ].map((rx) => (
                 <TouchableOpacity
                   key={rx.label}
                   activeOpacity={0.7}
                   onPress={() => {
                     setDemoFloaterEmoji(rx.emoji);
-                    setDemoFloaterKey(Date.now());
-                    haptics.medium();
+                    setDemoFloaterKey((k) => k + 1);
+                    haptics.light();
                   }}
-                  style={styles.demoPill}
+                  style={styles.demoRxPill}
                 >
-                  <ReactionFloater emoji={demoFloaterEmoji} triggerKey={demoFloaterKey} />
-                  <Typography style={{ fontSize: 15 }}>{rx.emoji}</Typography>
-                  <Typography variant="caption" weight="semibold" color={colors.textPrimary} style={{ marginLeft: 4 }}>
+                  <Typography style={{ fontSize: 16 }}>{rx.emoji}</Typography>
+                  <Typography variant="caption" color={colors.textPrimary} style={{ fontSize: 10, marginTop: 2 }}>
                     {rx.label}
                   </Typography>
                 </TouchableOpacity>
@@ -429,7 +394,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
       case 'chat':
         return (
           <View style={styles.demoCard}>
-            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+            <Typography variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 6 }}>
               TRY GENTLE ICEBREAKER
             </Typography>
             <TouchableOpacity
@@ -475,105 +440,97 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
     }
   };
 
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        {/* ── Glowing Spotlight Ring Framing Target (Never Blocks Clicks) ── */}
-        <Animated.View
-          style={[
-            styles.spotlightBox,
-            {
-              borderColor: step.color,
-              shadowColor: step.color,
-              borderRadius: step.spotlightTarget.borderRadius,
-            },
-            animatedSpotlightStyle,
-            spotlightPositionStyle,
-          ]}
-        />
+  const ContainerBlur = Platform.OS === 'android' ? View : BlurView;
+  const blurProps = Platform.OS === 'android'
+    ? { style: styles.tooltipBlur }
+    : { intensity: 70, tint: 'dark' as const, style: styles.tooltipBlur };
 
-        {/* ── Guidance Tooltip Card (Smart Docked Away from Target) ── */}
-        <Animated.View
-          entering={FadeIn.duration(250)}
-          exiting={FadeOut.duration(150)}
-          style={[
-            styles.tooltipCard,
-            step.dockPosition === 'top'
-              ? { top: Platform.OS === 'ios' ? 70 : 50 }
-              : { bottom: Platform.OS === 'ios' ? 100 : 80 },
-          ]}
-        >
-          <BlurView intensity={55} tint="dark" style={styles.tooltipBlur}>
-            <View style={styles.tooltipContent}>
-              {/* Header: Badge & Skip */}
-              <View style={styles.cardHeader}>
-                <View style={[styles.badgePill, { backgroundColor: `${step.color}22`, borderColor: `${step.color}55` }]}>
-                  <Typography variant="caption" weight="bold" style={{ color: step.color, fontSize: 11 }}>
-                    {step.badge}
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View style={styles.overlay}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        <View style={styles.centerContainer} pointerEvents="box-none">
+          <View style={[styles.tooltipCard, { borderColor: step.color }]}>
+            <ContainerBlur {...blurProps}>
+              <View style={styles.tooltipContent}>
+                {/* Header: Badge & Skip */}
+                <View style={styles.cardHeader}>
+                  <View style={[styles.badgePill, { backgroundColor: `${step.color}22`, borderColor: `${step.color}55` }]}>
+                    <Typography variant="caption" weight="bold" style={{ color: step.color, fontSize: 11 }}>
+                      {step.badge}
+                    </Typography>
+                  </View>
+
+                  <TouchableOpacity onPress={handleComplete} style={styles.skipButton} activeOpacity={0.7}>
+                    <Typography variant="caption" style={{ color: colors.textMuted }}>
+                      Skip Guide ✕
+                    </Typography>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Title with Emoji */}
+                <View style={styles.titleRow}>
+                  <Typography style={{ fontSize: 24, marginRight: 8 }}>{step.emoji}</Typography>
+                  <Typography variant="h3" weight="bold" style={{ color: colors.textPrimary, flex: 1 }}>
+                    {step.title}
                   </Typography>
                 </View>
 
-                <TouchableOpacity onPress={handleComplete} style={styles.skipButton} activeOpacity={0.7}>
-                  <Typography variant="caption" style={{ color: colors.textMuted }}>
-                    Skip Guide ✕
-                  </Typography>
-                </TouchableOpacity>
-              </View>
-
-              {/* Title with Emoji */}
-              <View style={styles.titleRow}>
-                <Typography style={{ fontSize: 22, marginRight: 8 }}>{step.emoji}</Typography>
-                <Typography variant="h3" weight="bold" style={{ color: colors.textPrimary, flex: 1 }}>
-                  {step.title}
+                {/* Body Description */}
+                <Typography variant="bodySmall" style={styles.descriptionText}>
+                  {step.description}
                 </Typography>
-              </View>
 
-              {/* Body Description */}
-              <Typography variant="bodySmall" style={styles.descriptionText}>
-                {step.description}
-              </Typography>
+                {/* Interactive Sandbox Demo */}
+                <ScrollView style={styles.demoScroll} showsVerticalScrollIndicator={false}>
+                  {renderInteractiveDemo()}
+                </ScrollView>
 
-              {/* Interactive Sandbox Demo */}
-              {renderInteractiveDemo()}
+                {/* Step Progress Dots */}
+                <View style={styles.dotsRow}>
+                  {TOUR_STEPS.map((s, idx) => (
+                    <View
+                      key={s.id}
+                      style={[
+                        styles.dot,
+                        idx === currentStepIndex && [styles.activeDot, { backgroundColor: step.color, width: 22 }],
+                      ]}
+                    />
+                  ))}
+                </View>
 
-              {/* Step Progress Dots */}
-              <View style={styles.dotsRow}>
-                {TOUR_STEPS.map((s, idx) => (
-                  <View
-                    key={s.id}
-                    style={[
-                      styles.dot,
-                      idx === currentStepIndex && [styles.activeDot, { backgroundColor: step.color, width: 20 }],
-                    ]}
-                  />
-                ))}
-              </View>
+                {/* Action Buttons: Back & Next */}
+                <View style={styles.actionRow}>
+                  {currentStepIndex > 0 ? (
+                    <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
+                      <Typography variant="label" weight="semibold" style={{ color: colors.textSecondary }}>
+                        ← Back
+                      </Typography>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ width: 65 }} />
+                  )}
 
-              {/* Action Buttons: Back & Next */}
-              <View style={styles.actionRow}>
-                {currentStepIndex > 0 ? (
-                  <TouchableOpacity onPress={handleBack} style={styles.backButton} activeOpacity={0.7}>
-                    <Typography variant="label" weight="semibold" style={{ color: colors.textSecondary }}>
-                      ← Back
+                  <TouchableOpacity
+                    onPress={handleNext}
+                    style={[styles.nextButton, { backgroundColor: step.color }]}
+                    activeOpacity={0.8}
+                  >
+                    <Typography variant="label" weight="bold" style={{ color: '#FFFFFF' }}>
+                      {isLast ? 'Got it! Explore 🚀' : 'Next →'}
                     </Typography>
                   </TouchableOpacity>
-                ) : (
-                  <View style={{ width: 65 }} />
-                )}
-
-                <TouchableOpacity
-                  onPress={handleNext}
-                  style={[styles.nextButton, { backgroundColor: step.color }]}
-                  activeOpacity={0.8}
-                >
-                  <Typography variant="label" weight="bold" style={{ color: '#FFFFFF' }}>
-                    {isLast ? 'Got it! Explore 🚀' : 'Next →'}
-                  </Typography>
-                </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </BlurView>
-        </Animated.View>
+            </ContainerBlur>
+          </View>
+        </View>
       </View>
     </Modal>
   );
@@ -582,26 +539,19 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 14, 0.70)',
+    backgroundColor: 'rgba(5, 7, 14, 0.78)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
-  spotlightBox: {
-    position: 'absolute',
-    borderWidth: 2,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 16,
-    elevation: 20,
-    backgroundColor: 'transparent',
-    pointerEvents: 'none',
+  centerContainer: {
+    width: '100%',
+    maxWidth: 420,
   },
   tooltipCard: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
     borderRadius: 24,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1.5,
     ...shadows.heavy,
   },
   tooltipBlur: {
@@ -609,13 +559,13 @@ const styles = StyleSheet.create({
   },
   tooltipContent: {
     backgroundColor: 'rgba(18, 20, 32, 0.94)',
-    padding: 18,
+    padding: 20,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   badgePill: {
     paddingHorizontal: 10,
@@ -624,81 +574,93 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   skipButton: {
-    padding: 4,
+    padding: 6,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   descriptionText: {
     color: colors.textSecondary,
     lineHeight: 20,
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  demoScroll: {
+    maxHeight: 180,
   },
   demoCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 14,
-    padding: 10,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 12,
     marginBottom: 12,
   },
   demoRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  demoPill: {
+  demoEmotionBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 7,
+    paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    position: 'relative',
+  },
+  demoEmotionBtnActive: {
+    borderColor: '#6C5CE7',
+    backgroundColor: 'rgba(108, 92, 231, 0.25)',
   },
   demoBubblePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    padding: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  pulseBarContainer: {
+    flexDirection: 'row',
+    height: 10,
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  pulseSegment: {
+    height: '100%',
+  },
+  demoRxPill: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 8,
     borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  demoPulseRow: {
-    flexDirection: 'row',
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    gap: 3,
-  },
-  demoPulseBar: {
-    borderRadius: 4,
   },
   circleDemoRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   joinBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.primaryLight,
+  },
+  icebreakerPill: {
+    padding: 10,
     borderRadius: 12,
     backgroundColor: 'rgba(108, 92, 231, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(108, 92, 231, 0.3)',
-  },
-  icebreakerPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   streakDemoRow: {
     flexDirection: 'row',
@@ -709,7 +671,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 14,
+    marginVertical: 12,
   },
   dot: {
     width: 6,
@@ -727,13 +689,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    paddingHorizontal: 14,
     paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   nextButton: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 16,
-    ...shadows.soft,
+    borderRadius: 14,
   },
 });

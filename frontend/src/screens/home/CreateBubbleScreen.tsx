@@ -22,6 +22,8 @@ import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { AuroraBackground } from '@/components/effects/AuroraBackground';
 import { LocationPickerModal, LocationData } from '@/components/location';
 import { useMoodCheckin } from '@/hooks/useMood';
+import { useAuthStore } from '@/stores/authStore';
+import { saveUserPostedBubble } from '@/utils/userPosts';
 import { haptics } from '@/theme/haptics';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateBubbleModal'>;
@@ -62,6 +64,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   const [weatherCondition] = useState('Clear Sky');
   const [weatherTemp] = useState(24);
 
+  const { user } = useAuthStore();
   const emotionConfig = getEmotionConfig(selectedEmotion);
   const { mutate: submitCheckin, isPending } = useMoodCheckin();
 
@@ -87,10 +90,41 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
     return null;
   }, [content]);
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!content.trim()) return;
 
     haptics.medium();
+
+    const newLat = latitude + (Math.random() - 0.5) * 0.005;
+    const newLng = longitude + (Math.random() - 0.5) * 0.005;
+
+    // Locally persist user post immediately so they can always view what they posted
+    const newBubble = {
+      id: `my-post-${Date.now()}`,
+      authorName: isAnonymous ? 'Anonymous Friend' : (user?.displayName || 'Elena Rostova'),
+      auraScore: 450,
+      emotion: selectedEmotion,
+      secondaryEmotion: selectedEmotion.charAt(0).toUpperCase() + selectedEmotion.slice(1),
+      intensity,
+      content: content.trim(),
+      locationCity: locationName,
+      weatherCondition,
+      weatherTemp,
+      timestamp: 'Just now',
+      createdAt: new Date().toISOString(),
+      likesCount: 0,
+      commentsCount: 0,
+      isAnonymous,
+      latitude: newLat,
+      longitude: newLng,
+    };
+
+    try {
+      await saveUserPostedBubble(newBubble);
+    } catch (e) {
+      console.warn('[CreateBubble] Failed to save user post locally:', e);
+    }
+
     submitCheckin(
       {
         primary_emotion: selectedEmotion,
@@ -100,8 +134,8 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         city: locationName,
         weather_condition: weatherCondition,
         weather_temp: weatherTemp,
-        latitude: latitude + (Math.random() - 0.5) * 0.005,
-        longitude: longitude + (Math.random() - 0.5) * 0.005,
+        latitude: newLat,
+        longitude: newLng,
       },
       {
         onSuccess: () => {
