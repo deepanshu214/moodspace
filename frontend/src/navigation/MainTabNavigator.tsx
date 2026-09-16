@@ -22,15 +22,21 @@ import { ProfileNavigator } from './ProfileNavigator';
 import { theme, colors, springs, shadows } from '@/theme';
 import { haptics } from '@/theme/haptics';
 
+import { useTheme } from '@/context';
+
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const EmptyScreen = () => <View style={{ flex: 1, backgroundColor: colors.background }} />;
+const EmptyScreen = () => {
+  const { colors } = useTheme();
+  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+};
 
 interface CenterFabButtonProps {
   onPress: () => void;
 }
 
 const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
   const pulseScale = useSharedValue(1);
 
@@ -70,10 +76,10 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
       onPressOut={handlePressOut}
       style={styles.centerBtnContainer}
     >
-      <Animated.View style={[styles.centerFabGlow, pulseAnimatedStyle]} />
-      <Animated.View style={[styles.centerFab, animatedStyle]}>
+      <Animated.View style={[styles.centerFabGlow, pulseAnimatedStyle, { backgroundColor: colors.primary }]} />
+      <Animated.View style={[styles.centerFab, animatedStyle, { borderColor: colors.glass.border }]}>
         <LinearGradient
-          colors={[colors.primary, colors.accent]}
+          colors={[colors.primary, colors.secondary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.centerFabGradient}
@@ -86,12 +92,14 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
 };
 
 export const MainTabNavigator: React.FC = () => {
+  const { colors, isDark } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.primaryLight,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           backgroundColor: 'transparent',
@@ -108,15 +116,22 @@ export const MainTabNavigator: React.FC = () => {
           ...shadows.medium,
         },
         tabBarBackground: () => (
-          <View style={styles.tabBackgroundWrapper}>
+          <View style={[styles.tabBackgroundWrapper, { borderColor: colors.glass.border }]}>
             {Platform.OS === 'ios' ? (
               <BlurView
-                tint="dark"
-                intensity={80}
+                tint={isDark ? 'dark' : 'light'}
+                intensity={85}
                 style={StyleSheet.absoluteFill}
               />
             ) : null}
-            <View style={styles.tabDarkBackdrop} />
+            <View
+              style={[
+                styles.tabDarkBackdrop,
+                {
+                  backgroundColor: isDark ? 'rgba(12, 14, 23, 0.88)' : 'rgba(255, 255, 255, 0.90)',
+                },
+              ]}
+            />
           </View>
         ),
         tabBarLabelStyle: {
@@ -145,17 +160,6 @@ export const MainTabNavigator: React.FC = () => {
         component={NotificationsScreen}
         options={{
           tabBarLabel: 'Alerts',
-          tabBarBadge: 3,
-          tabBarBadgeStyle: {
-            backgroundColor: colors.secondary,
-            color: '#FFFFFF',
-            fontSize: 9,
-            fontWeight: 'bold',
-            minWidth: 16,
-            height: 16,
-            borderRadius: 8,
-            lineHeight: 14,
-          },
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'notifications' : 'notifications-outline'}

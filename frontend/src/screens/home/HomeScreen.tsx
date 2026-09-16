@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 
 import { HomeStackParamList, MainTabParamList } from '@/navigation/types';
-import { theme, colors, getEmotionConfig } from '@/theme';
+import { theme, getEmotionConfig } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { GlassCard } from '@/components/common/GlassCard';
@@ -98,55 +98,55 @@ const DEFAULT_BUBBLES: DisplayBubble[] = [
     locationCity: 'Tokyo, Japan',
     weatherCondition: 'Crisp Starlight',
     weatherTemp: 18,
-    timestamp: '15m ago',
-    likesCount: 78,
-    commentsCount: 22,
+    timestamp: '14m ago',
+    likesCount: 89,
+    commentsCount: 14,
     latitude: 35.6762,
     longitude: 139.6503,
-    canvasX: SCREEN_WIDTH * 0.68,
-    canvasY: SCREEN_HEIGHT * 0.25,
-  },
-  {
-    id: 'b-3',
-    authorName: 'Marcus Aurel',
-    auraScore: 510,
-    emotion: 'excitement',
-    secondaryEmotion: 'Inspired',
-    intensity: 8,
-    content: 'Finished launching our project from a cozy cafe by the Thames! Excited for what is ahead.',
-    locationCity: 'London, UK',
-    weatherCondition: 'Mild Rain',
-    weatherTemp: 16,
-    timestamp: '25m ago',
-    likesCount: 52,
-    commentsCount: 14,
-    latitude: 51.5074,
-    longitude: -0.1278,
-    canvasX: SCREEN_WIDTH * 0.22,
-    canvasY: SCREEN_HEIGHT * 0.28,
-  },
-  {
-    id: 'b-4',
-    authorName: 'Sophie Dubois',
-    auraScore: 390,
-    emotion: 'love',
-    secondaryEmotion: 'Grateful',
-    intensity: 9,
-    content: 'Sitting in Luxembourg Gardens listening to soft acoustic music. Grateful for today.',
-    locationCity: 'Paris, France',
-    weatherCondition: 'Sunny Afternoon',
-    weatherTemp: 21,
-    timestamp: '45m ago',
-    likesCount: 65,
-    commentsCount: 17,
-    latitude: 48.8566,
-    longitude: 2.3522,
-    canvasX: SCREEN_WIDTH * 0.58,
+    canvasX: SCREEN_WIDTH * 0.65,
     canvasY: SCREEN_HEIGHT * 0.18,
   },
   {
+    id: 'b-3',
+    authorName: 'Liam Chen',
+    auraScore: 310,
+    emotion: 'calm',
+    secondaryEmotion: 'Grateful',
+    intensity: 8,
+    content: 'Rain gently pattering against the library window. Found a cozy corner with my book.',
+    locationCity: 'London, UK',
+    weatherCondition: 'Gentle Rain',
+    weatherTemp: 15,
+    timestamp: '28m ago',
+    likesCount: 52,
+    commentsCount: 11,
+    latitude: 51.5074,
+    longitude: -0.1278,
+    canvasX: SCREEN_WIDTH * 0.45,
+    canvasY: SCREEN_HEIGHT * 0.32,
+  },
+  {
+    id: 'b-4',
+    authorName: 'Sophie Moreau',
+    auraScore: 540,
+    emotion: 'love',
+    secondaryEmotion: 'Connected',
+    intensity: 9,
+    content: 'Sunset over Montmartre with old friends. Reminded of how much love is in the little things.',
+    locationCity: 'Paris, France',
+    weatherCondition: 'Golden Twilight',
+    weatherTemp: 21,
+    timestamp: '39m ago',
+    likesCount: 76,
+    commentsCount: 22,
+    latitude: 48.8566,
+    longitude: 2.3522,
+    canvasX: SCREEN_WIDTH * 0.15,
+    canvasY: SCREEN_HEIGHT * 0.28,
+  },
+  {
     id: 'b-5',
-    authorName: 'Ghost Echo',
+    authorName: 'Anonymous Friend',
     auraScore: 210,
     emotion: 'sadness',
     secondaryEmotion: 'Reflective',
@@ -189,9 +189,18 @@ const SAMPLE_PULSE_DATA = [
   { emotion: 'anger', percentage: 6 },
 ];
 
+const EMOTION_FILTERS = [
+  { id: 'all', label: 'All', emoji: '🌎', color: '#6C5CE7' },
+  { id: 'joy', label: 'Joy', emoji: '☀️', color: '#FFB800' },
+  { id: 'calm', label: 'Calm', emoji: '🌿', color: '#00CEC9' },
+  { id: 'love', label: 'Love', emoji: '💖', color: '#FD79A8' },
+  { id: 'sadness', label: 'Reflective', emoji: '💜', color: '#A29BFE' },
+  { id: 'anxiety', label: 'Heavy', emoji: '🌧️', color: '#4A90E2' },
+];
+
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const mapRef = useRef<any>(null);
-  const { isDark, colors: activeColors } = useTheme();
+  const { isDark, colors, setThemeMode } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -227,7 +236,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     if (nearbyApiBubbles && nearbyApiBubbles.length > 0) {
       const mapped: DisplayBubble[] = nearbyApiBubbles.map((item, idx) => ({
         id: item.id || `api-${idx}`,
-        authorName: item.is_incognito ? 'Anonymous' : (item.user_id || 'Traveler'),
+        authorName: item.is_incognito ? 'Anonymous Friend' : (item.user_id || 'Traveler'),
         auraScore: 250,
         emotion: item.primary_emotion || 'calm',
         secondaryEmotion: item.secondary_emotion,
@@ -252,7 +261,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Filter bubbles
   const filteredBubbles = useMemo(() => {
-    if (!selectedFilter) return allBubbles;
+    if (!selectedFilter || selectedFilter === 'all') return allBubbles;
     return allBubbles.filter(
       (b) => b.emotion.toLowerCase() === selectedFilter.toLowerCase()
     );
@@ -304,39 +313,56 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const activeBubblesCount = pulseData?.active_bubbles_count || allBubbles.length * 18;
 
   return (
-    <ScreenWrapper style={styles.container}>
-      {/* ── Sleek Top Navigation Bar ── */}
-      <View style={styles.topHeader}>
+    <ScreenWrapper backgroundColor={colors.background} style={styles.container}>
+      {/* ── Top Floating Navigation & Theme Bar ── */}
+      <View style={[styles.topHeader, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
         <View style={styles.headerTitles}>
-          <Typography variant="h2" weight="heavy" style={{ color: colors.textPrimary }}>
-            MoodSpace
-          </Typography>
+          <View style={styles.brandRow}>
+            <Typography style={{ fontSize: 18, marginRight: 6 }}>✨</Typography>
+            <Typography variant="h3" weight="heavy" style={{ color: colors.textPrimary }}>
+              MoodSpace
+            </Typography>
+          </View>
           <Typography variant="caption" style={{ color: colors.textMuted }}>
-            Live Emotional Map & Atmosphere
+            How is your heart feeling today?
           </Typography>
         </View>
 
         <View style={styles.headerActions}>
+          {/* Quick Theme Switcher Button (☀️ / 🌙) */}
           <TouchableOpacity
-            style={styles.headerActionPill}
+            style={[styles.headerIconButton, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            onPress={() => {
+              setThemeMode(isDark ? 'light' : 'dark');
+              haptics.selection();
+            }}
+            activeOpacity={0.7}
+          >
+            <Typography style={{ fontSize: 16 }}>{isDark ? '☀️' : '🌙'}</Typography>
+          </TouchableOpacity>
+
+          {/* Interactive Feature Guide Button */}
+          <TouchableOpacity
+            style={[styles.headerActionPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
             onPress={() => {
               setShowTourModal(true);
               haptics.light();
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="help-circle-outline" size={16} color={colors.primaryLight} />
-            <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight, marginLeft: 4 }}>
+            <Ionicons name="sparkles" size={14} color={colors.primary} />
+            <Typography variant="caption" weight="bold" style={{ color: colors.primary, marginLeft: 4 }}>
               Guide
             </Typography>
           </TouchableOpacity>
 
+          {/* Recenter Location Button */}
           <TouchableOpacity
-            style={styles.headerIconButton}
+            style={[styles.headerIconButton, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
             onPress={handleRecenter}
             activeOpacity={0.7}
           >
-            <Ionicons name="locate-outline" size={18} color={colors.textPrimary} />
+            <Ionicons name="locate" size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -346,9 +372,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ─── Hero Section: World Mood Map ─── */}
+        {/* ─── Hero Living Mood Map ─── */}
         <View
-          style={[styles.heroMapContainer, isFullMap && styles.fullMap]}
+          style={[
+            styles.heroMapContainer,
+            isFullMap ? styles.fullMap : { height: SCREEN_HEIGHT * 0.46 },
+            { borderColor: colors.glass.border },
+          ]}
           onTouchStart={() => setIsScrollEnabled(false)}
           onTouchEnd={() => setIsScrollEnabled(true)}
           onTouchCancel={() => setIsScrollEnabled(true)}
@@ -387,7 +417,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </MapContainer>
           ) : (
-            <View style={styles.ambientCanvas}>
+            <View style={[styles.ambientCanvas, { backgroundColor: colors.background }]}>
               <View style={styles.ambientGlow1} />
               <View style={styles.ambientGlow2} />
               {filteredBubbles.map((bubble) => (
@@ -415,71 +445,159 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Frosted Fade-out Bottom Gradient */}
           <LinearGradient
-            colors={['transparent', 'rgba(10, 11, 20, 0.7)', '#0A0B14']}
+            colors={['transparent', isDark ? 'rgba(10, 11, 20, 0.7)' : 'rgba(248, 249, 253, 0.7)', colors.background]}
             locations={[0, 0.7, 1]}
             style={styles.heroFadeMask}
             pointerEvents="none"
           />
 
-          {/* Floating Map Zoom & Action Controls */}
+          {/* Floating On-Screen Map Zoom & Action Controls */}
           <View style={styles.mapFloatingControls}>
             <TouchableOpacity
-              style={styles.mapControlBtn}
+              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
               onPress={() => handleZoom(true)}
               activeOpacity={0.8}
             >
-              <Ionicons name="add" size={18} color="#FFFFFF" />
+              <Ionicons name="add" size={18} color={colors.textPrimary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.mapControlBtn}
+              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
               onPress={() => handleZoom(false)}
               activeOpacity={0.8}
             >
-              <Ionicons name="remove" size={18} color="#FFFFFF" />
+              <Ionicons name="remove" size={18} color={colors.textPrimary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.mapControlBtn}
+              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
               onPress={handleRecenter}
               activeOpacity={0.8}
             >
-              <Ionicons name="locate" size={16} color="#00CEC9" />
+              <Ionicons name="locate" size={16} color={colors.primary} />
             </TouchableOpacity>
-          </View>
 
-          {/* Floating Map Status Chip */}
-          <View style={styles.mapStatusChip}>
-            <View style={styles.pulsingDot} />
-            <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
-              {activeBubblesCount} echoes worldwide
-            </Typography>
             <TouchableOpacity
+              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
               onPress={() => {
                 setIsFullMap(!isFullMap);
                 haptics.selection();
               }}
-              style={styles.expandMapButton}
+              activeOpacity={0.8}
             >
               <Ionicons
                 name={isFullMap ? 'contract-outline' : 'expand-outline'}
-                size={14}
+                size={16}
                 color={colors.textPrimary}
               />
             </TouchableOpacity>
           </View>
+
+          {/* Floating Live Echoes Status Chip */}
+          <View style={[styles.mapStatusChip, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
+            <View style={styles.pulsingDot} />
+            <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
+              {activeBubblesCount} echoes worldwide
+            </Typography>
+          </View>
+
+          {/* Floating Emotion Filter Bar over lower edge of map */}
+          <View style={styles.mapFilterOverlay}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScroll}
+            >
+              {EMOTION_FILTERS.map((f) => {
+                const isSelected = (!selectedFilter && f.id === 'all') || selectedFilter === f.id;
+                return (
+                  <TouchableOpacity
+                    key={f.id}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      haptics.selection();
+                      setSelectedFilter(f.id === 'all' ? null : f.id);
+                    }}
+                    style={[
+                      styles.filterPill,
+                      {
+                        backgroundColor: isSelected ? colors.primary : colors.glass.surface,
+                        borderColor: isSelected ? colors.primary : colors.glass.border,
+                      },
+                    ]}
+                  >
+                    <Typography style={{ fontSize: 13, marginRight: 4 }}>{f.emoji}</Typography>
+                    <Typography
+                      variant="caption"
+                      weight={isSelected ? 'bold' : 'medium'}
+                      style={{ color: isSelected ? '#FFFFFF' : colors.textSecondary }}
+                    >
+                      {f.label}
+                    </Typography>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
         </View>
 
-        {/* ─── Bento Grid Content Section ─── */}
+        {/* ─── Warm Community Experience Section ─── */}
         {!isFullMap && (
           <View style={styles.bentoSection}>
-            {/* 1. Trending Emotions Ticker */}
+            {/* 1. Interactive Emotion Check-in Prompt */}
+            <GlassCard variant="default" style={styles.quickPromptCard}>
+              <View style={styles.promptHeader}>
+                <Typography style={{ fontSize: 20 }}>💭</Typography>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Typography variant="body" weight="bold" style={{ color: colors.textPrimary }}>
+                    Share what's on your heart
+                  </Typography>
+                  <Typography variant="caption" style={{ color: colors.textMuted }}>
+                    Tap a feeling to drop a gentle bubble onto the map
+                  </Typography>
+                </View>
+              </View>
+
+              <View style={styles.quickEmotionRow}>
+                {[
+                  { emotion: 'joy', emoji: '☀️', label: 'Joy' },
+                  { emotion: 'calm', emoji: '🌿', label: 'Calm' },
+                  { emotion: 'love', emoji: '💖', label: 'Love' },
+                  { emotion: 'sadness', emoji: '💜', label: 'Deep' },
+                  { emotion: 'anxiety', emoji: '🌧️', label: 'Heavy' },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.emotion}
+                    activeOpacity={0.75}
+                    onPress={() => {
+                      haptics.medium();
+                      (navigation as any).navigate('CreateBubbleModal');
+                    }}
+                    style={[
+                      styles.quickEmotionPill,
+                      { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border },
+                    ]}
+                  >
+                    <Typography style={{ fontSize: 20 }}>{item.emoji}</Typography>
+                    <Typography
+                      variant="caption"
+                      weight="semibold"
+                      style={{ color: colors.textSecondary, marginTop: 4 }}
+                    >
+                      {item.label}
+                    </Typography>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </GlassCard>
+
+            {/* 2. Trending Emotions Ticker */}
             <TrendingMoodsTicker
               trends={SAMPLE_TRENDS}
               onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
             />
 
-            {/* 2. Bento Row: Streak & Community Aura Stat (Fixed equal proportions) */}
+            {/* 3. Bento Row: Streak & Community Aura Stat */}
             <View style={styles.bentoRow}>
               <View style={styles.bentoHalf}>
                 <StreakWidget currentStreak={7} maxStreak={30} />
@@ -487,7 +605,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
               <View style={styles.bentoHalf}>
                 <GlassCard variant="default" style={styles.auraMetricCard}>
-                  <Typography variant="overline" style={{ color: colors.textMuted, marginBottom: 4 }}>
+                  <Typography variant="caption" weight="bold" color={colors.primaryLight} style={{ marginBottom: 4 }}>
                     COMMUNITY AURA
                   </Typography>
                   <Typography variant="stat" style={{ color: colors.primaryLight }}>
@@ -500,7 +618,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
 
-            {/* 3. Mood Pulse Distribution Hero Tile */}
+            {/* 4. Mood Pulse Distribution Hero Tile */}
             <View style={styles.bentoFull}>
               <MoodPulseCard
                 data={SAMPLE_PULSE_DATA}
@@ -508,7 +626,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
 
-            {/* 4. Community Spotlight Hero Tile */}
+            {/* 5. Community Spotlight Hero Tile */}
             <View style={styles.bentoFull}>
               <CommunitySpotlight
                 name="Quiet Reflections"
@@ -523,9 +641,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
 
-            {/* 5. Recent Echoes Masonry Feed */}
+            {/* 6. Recent Echoes Masonry Feed */}
             <View style={styles.feedHeader}>
-              <Typography variant="overline" style={{ color: colors.textMuted }}>
+              <Typography variant="caption" weight="bold" color={colors.textMuted}>
                 RECENT COMMUNITY ECHOES
               </Typography>
               {selectedFilter && (
@@ -553,7 +671,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   >
                     <View style={styles.cardHeader}>
                       <View style={[styles.emotionDot, { backgroundColor: config.primary }]} />
-                      <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary, flex: 1 }}>
+                      <Typography
+                        variant="caption"
+                        weight="semibold"
+                        style={{ color: colors.textPrimary, flex: 1 }}
+                        numberOfLines={1}
+                      >
                         {bubble.authorName}
                       </Typography>
                       <Typography variant="caption">{config.emoji}</Typography>
@@ -562,16 +685,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     <Typography
                       variant="bodySmall"
                       style={{ color: colors.textSecondary, marginVertical: 8 }}
-                      numberOfLines={4}
+                      numberOfLines={3}
                     >
-                      {bubble.content}
+                      "{bubble.content}"
                     </Typography>
 
                     <View style={styles.cardFooter}>
-                      <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 11 }}>
-                        📍 {bubble.locationCity.split(',')[0]}
+                      <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 10 }}>
+                        {bubble.locationCity?.split(',')[0]}
                       </Typography>
-                      <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 11 }}>
+                      <Typography variant="caption" style={{ color: colors.secondary }}>
                         ❤️ {bubble.likesCount}
                       </Typography>
                     </View>
@@ -617,19 +740,26 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0B14',
   },
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 8 : 12,
     paddingBottom: 10,
+    marginHorizontal: 14,
+    marginTop: 4,
+    borderRadius: 20,
+    borderWidth: 1,
     zIndex: 10,
   },
   headerTitles: {
     flex: 1,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerActions: {
     flexDirection: 'row',
@@ -642,17 +772,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.3)',
   },
   headerIconButton: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: colors.glass.surface,
     borderWidth: 1,
-    borderColor: colors.glass.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -660,27 +786,27 @@ const styles = StyleSheet.create({
     paddingBottom: 110,
   },
   heroMapContainer: {
-    width: SCREEN_WIDTH - 32,
-    marginHorizontal: 16,
-    height: SCREEN_HEIGHT * 0.32,
+    width: SCREEN_WIDTH - 24,
+    marginHorizontal: 12,
+    marginTop: 10,
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 24,
+    borderRadius: 28,
     borderWidth: 1,
-    borderColor: colors.glass.border,
   },
   fullMap: {
     width: '100%',
     marginHorizontal: 0,
     borderRadius: 0,
-    height: SCREEN_HEIGHT * 0.82,
+    height: SCREEN_HEIGHT * 0.85,
+    marginTop: 0,
   },
   heroFadeMask: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: 50,
+    height: 60,
   },
   mapFloatingControls: {
     position: 'absolute',
@@ -691,32 +817,29 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   mapControlBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(18, 20, 32, 0.88)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
   },
   mapStatusChip: {
     position: 'absolute',
-    bottom: 12,
+    top: 14,
     left: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(18, 20, 32, 0.85)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
     gap: 8,
     zIndex: 10,
   },
@@ -724,17 +847,52 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.success,
+    backgroundColor: '#00B894',
   },
-  expandMapButton: {
-    padding: 3,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  mapFilterOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    right: 12,
+    zIndex: 15,
+  },
+  filterScroll: {
+    gap: 8,
+    paddingRight: 12,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 18,
+    borderWidth: 1,
   },
   bentoSection: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: 14,
+    paddingTop: 14,
     gap: 14,
+  },
+  quickPromptCard: {
+    padding: 16,
+  },
+  promptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  quickEmotionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  quickEmotionPill: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
   },
   bentoRow: {
     flexDirection: 'row',
@@ -758,8 +916,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
-    marginBottom: 2,
+    marginTop: 4,
   },
   clearFilterPill: {
     paddingHorizontal: 10,
@@ -791,7 +948,6 @@ const styles = StyleSheet.create({
   },
   ambientCanvas: {
     flex: 1,
-    backgroundColor: '#0A0B14',
     position: 'relative',
     overflow: 'hidden',
   },

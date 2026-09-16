@@ -316,7 +316,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => setShowTourModal(true)}
           >
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Interactive Feature Guide (7-Step Demo)</Typography>
+              <Typography variant="body" weight="semibold">View Feature Walkthrough (7-Step Interactive Demo)</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
                 Step-by-step interactive walkthrough with hands-on mini demos
               </Typography>
