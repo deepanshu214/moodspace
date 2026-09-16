@@ -19,9 +19,18 @@ import { theme } from '@/theme';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { AuraDisplay } from '../social/AuraDisplay';
+import { ReactionFloater } from './ReactionFloater';
+import { haptics } from '@/theme/haptics';
 import { Ionicons } from '@expo/vector-icons';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const EMPATHY_REACTIONS = [
+  { type: 'heart', label: 'Support', emoji: '❤️', icon: 'heart', color: '#FD79A8' },
+  { type: 'hug', label: 'Hug', emoji: '🤗', icon: 'hand-left', color: '#A29BFE' },
+  { type: 'empathy', label: 'With You', emoji: '🌊', icon: 'water', color: '#00CEC9' },
+  { type: 'celebrate', label: 'Celebrate', emoji: '✨', icon: 'sparkles', color: '#FFB800' },
+];
 
 export interface BubbleDetailSheetProps {
   visible: boolean;
@@ -57,21 +66,26 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   if (!bubble) return null;
 
   const [echoText, setEchoText] = useState('');
-  const [resonated, setResonated] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [floaterKey, setFloaterKey] = useState(0);
+  const [floaterEmoji, setFloaterEmoji] = useState('❤️');
   const [resonanceCount, setResonanceCount] = useState(bubble.likesCount || 0);
 
   const config = theme.getEmotionConfig(bubble.emotion);
   const heartScale = useSharedValue(1);
 
-  const handleResonate = () => {
-    if (resonated) {
-      setResonated(false);
+  const handleReactionPress = (rx: typeof EMPATHY_REACTIONS[0]) => {
+    haptics.medium();
+    if (selectedReaction === rx.type) {
+      setSelectedReaction(null);
       setResonanceCount((prev) => Math.max(0, prev - 1));
     } else {
-      setResonated(true);
-      setResonanceCount((prev) => prev + 1);
+      setSelectedReaction(rx.type);
+      setFloaterEmoji(rx.emoji);
+      setFloaterKey(Date.now());
+      setResonanceCount((prev) => (selectedReaction ? prev : prev + 1));
       heartScale.value = withSequence(
-        withSpring(1.4, { damping: 4, stiffness: 200 }),
+        withSpring(1.3, { damping: 4, stiffness: 220 }),
         withSpring(1, { damping: 10, stiffness: 150 })
       );
     }
@@ -88,7 +102,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   }));
 
   const isAnon = bubble.isAnonymous;
-  const authorTitle = isAnon ? 'Anonymous Spirit' : bubble.authorName;
+  const authorTitle = isAnon ? 'Anonymous Friend' : bubble.authorName;
 
   return (
     <Modal
@@ -218,35 +232,43 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
               </Typography>
             </View>
 
-            {/* Interaction Row (Resonate, Echo, Full View) */}
-            <View style={styles.interactionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={handleResonate}
-                style={[
-                  styles.actionButton,
-                  resonated && {
-                    backgroundColor: 'rgba(253, 121, 168, 0.2)',
-                    borderColor: '#FD79A8',
-                  },
-                ]}
-              >
-                <Animated.View style={animatedHeartStyle}>
-                  <Ionicons
-                    name={resonated ? 'heart' : 'heart-outline'}
-                    size={20}
-                    color={resonated ? '#FD79A8' : theme.colors.textSecondary}
-                  />
-                </Animated.View>
-                <Typography
-                  variant="caption"
-                  weight="bold"
-                  color={resonated ? '#FD79A8' : theme.colors.textSecondary}
-                  style={styles.actionCount}
-                >
-                  {resonanceCount} Resonance
-                </Typography>
-              </TouchableOpacity>
+            {/* Empathy Reaction Bar */}
+            <View style={styles.reactionSection}>
+              <Typography variant="overline" color={theme.colors.textMuted} style={{ marginBottom: 8 }}>
+                SEND WARMTH & EMPATHY ({resonanceCount})
+              </Typography>
+
+              <View style={styles.reactionGrid}>
+                {EMPATHY_REACTIONS.map((rx) => {
+                  const isSelected = selectedReaction === rx.type;
+                  return (
+                    <TouchableOpacity
+                      key={rx.type}
+                      activeOpacity={0.7}
+                      onPress={() => handleReactionPress(rx)}
+                      style={[
+                        styles.reactionPill,
+                        isSelected && {
+                          backgroundColor: `${rx.color}28`,
+                          borderColor: rx.color,
+                        },
+                      ]}
+                    >
+                      {isSelected && (
+                        <ReactionFloater emoji={floaterEmoji} triggerKey={floaterKey} />
+                      )}
+                      <Typography style={{ fontSize: 16, marginRight: 6 }}>{rx.emoji}</Typography>
+                      <Typography
+                        variant="caption"
+                        weight={isSelected ? 'bold' : 'semibold'}
+                        color={isSelected ? rx.color : theme.colors.textSecondary}
+                      >
+                        {rx.label}
+                      </Typography>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               {onNavigateDetails && (
                 <TouchableOpacity
@@ -420,11 +442,25 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     fontStyle: 'italic',
   },
-  interactionRow: {
+  reactionSection: {
+    marginBottom: 16,
+  },
+  reactionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  reactionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
   },
   actionButton: {
     flexDirection: 'row',

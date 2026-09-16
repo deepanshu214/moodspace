@@ -7,6 +7,7 @@ import { queryClient } from './src/api/queryClient';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/stores/authStore';
 import { OfflineBanner } from './src/components/common';
+import { ThemeProvider } from './src/context';
 
 export default function App() {
   const loadStoredSession = useAuthStore((s) => s.loadStoredSession);
@@ -19,8 +20,10 @@ export default function App() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <OfflineBanner />
-          <RootNavigator />
+          <ThemeProvider>
+            <OfflineBanner />
+            <RootNavigator />
+          </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

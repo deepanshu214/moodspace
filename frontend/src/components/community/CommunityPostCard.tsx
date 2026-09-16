@@ -57,7 +57,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
     }
   };
 
-  const displayName = isAnonymous ? 'Wandering Spirit' : authorName;
+  const displayName = isAnonymous ? 'Anonymous Member' : authorName;
   const emotionConfig = theme.getEmotionConfig(emotion);
 
   return (
@@ -67,7 +67,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
         <View style={styles.pinnedBanner}>
           <Ionicons name="pin" size={12} color={theme.colors.accent} />
           <Typography variant="caption" weight="bold" color={theme.colors.accent}>
-            Pinned Sanctuary Guideline
+            Pinned Guideline
           </Typography>
         </View>
       )}
@@ -91,7 +91,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
               {isAnonymous && (
                 <View style={styles.incognitoBadge}>
                   <Typography variant="caption" color="#A29BFE">
-                    Cloaked
+                    Private
                   </Typography>
                 </View>
               )}

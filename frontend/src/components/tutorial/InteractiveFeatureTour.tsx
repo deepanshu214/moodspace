@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  ScrollView,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -19,11 +20,10 @@ import Animated, {
   FadeOut,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, theme, springs, shadows } from '@/theme';
+import { colors, theme, shadows } from '@/theme';
 import { Typography } from '@/components/common/Typography';
-import { Button } from '@/components/common/Button';
+import { ReactionFloater } from '@/components/mood/ReactionFloater';
 import { haptics } from '@/theme/haptics';
 import { storage } from '@/utils/storage';
 
@@ -44,7 +44,8 @@ interface TourStep {
   emoji: string;
   color: string;
   description: string;
-  spotlightArea: {
+  dockPosition: 'top' | 'bottom'; // Top docked if target is bottom; bottom docked if target is top
+  spotlightTarget: {
     top?: number;
     bottom?: number;
     left: number;
@@ -52,131 +53,185 @@ interface TourStep {
     height: number;
     borderRadius: number;
   };
-  tooltipPosition: 'top' | 'bottom' | 'center';
-  tooltipOffsetTop?: number;
-  tooltipOffsetBottom?: number;
+  demoType: 'map' | 'emotion' | 'pulse' | 'reaction' | 'circle' | 'chat' | 'streak';
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
     id: 'map',
     stepNumber: 1,
-    totalSteps: 5,
-    title: 'Live Mood Map',
-    badge: 'Step 1 of 5 • Real-Time',
+    totalSteps: 7,
+    title: 'World Mood Map',
+    badge: 'Step 1 of 7 • Explore',
     emoji: '🗺️',
     color: '#00CEC9',
     description:
-      'Explore live mood bubbles from people around you and worldwide. Tap any bubble on the map to read their thoughts and see the atmosphere.',
-    spotlightArea: {
+      'Explore live mood bubbles from people around you and worldwide. Pinch or tap +/− to zoom, tap any bubble to read their reflection.',
+    dockPosition: 'bottom',
+    spotlightTarget: {
       top: Platform.OS === 'ios' ? 70 : 50,
       left: 16,
       width: SCREEN_WIDTH - 32,
-      height: SCREEN_HEIGHT * 0.32,
+      height: SCREEN_HEIGHT * 0.30,
       borderRadius: 24,
     },
-    tooltipPosition: 'top',
-    tooltipOffsetTop: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.42 : SCREEN_HEIGHT * 0.38,
+    demoType: 'map',
   },
   {
     id: 'checkin',
     stepNumber: 2,
-    totalSteps: 5,
+    totalSteps: 7,
     title: 'Check In Anytime (+)',
-    badge: 'Step 2 of 5 • Share Mood',
+    badge: 'Step 2 of 7 • Express',
     emoji: '✨',
     color: '#6C5CE7',
     description:
-      'Tap the center (+) button at the bottom to drop your mood bubble. Pick your feeling, adjust the intensity from 1 to 10, or post incognito.',
-    spotlightArea: {
+      'Tap the center (+) button anytime to drop your mood bubble. Pick how you feel, set the intensity from 1 to 10, or post incognito.',
+    dockPosition: 'top',
+    spotlightTarget: {
       bottom: Platform.OS === 'ios' ? 24 : 14,
       left: SCREEN_WIDTH / 2 - 34,
       width: 68,
       height: 68,
       borderRadius: 34,
     },
-    tooltipPosition: 'bottom',
-    tooltipOffsetBottom: Platform.OS === 'ios' ? 115 : 100,
+    demoType: 'emotion',
   },
   {
     id: 'pulse',
     stepNumber: 3,
-    totalSteps: 5,
-    title: 'Mood Pulse & Trends',
-    badge: 'Step 3 of 5 • Community',
+    totalSteps: 7,
+    title: 'Live Mood Pulse & Waves',
+    badge: 'Step 3 of 7 • Atmosphere',
     emoji: '🌊',
     color: '#FFB800',
     description:
-      'See live emotion trends across the community. Tap any emotion pill or bar to instantly filter the feed and map to that vibe.',
-    spotlightArea: {
-      top: SCREEN_HEIGHT * 0.44,
+      'See community mood distribution in real time. Tap any emotion pill to instantly filter the feed and map to that emotional vibe.',
+    dockPosition: 'bottom',
+    spotlightTarget: {
+      top: SCREEN_HEIGHT * 0.42,
       left: 16,
       width: SCREEN_WIDTH - 32,
-      height: 120,
+      height: 100,
       borderRadius: 20,
     },
-    tooltipPosition: 'top',
-    tooltipOffsetTop: SCREEN_HEIGHT * 0.44 + 135,
+    demoType: 'pulse',
   },
   {
-    id: 'echoes',
+    id: 'reactions',
     stepNumber: 4,
-    totalSteps: 5,
-    title: 'Echoes & Connections',
-    badge: 'Step 4 of 5 • Connect',
-    emoji: '💬',
+    totalSteps: 7,
+    title: 'Echoes & Warm Reactions',
+    badge: 'Step 4 of 7 • Empathy',
+    emoji: '💖',
     color: '#FD79A8',
     description:
-      'Discover people on the same emotional frequency. Connect with gentle souls, share thoughts, and chat in safe, respectful spaces.',
-    spotlightArea: {
+      'Read honest reflections and send support. Tap Support ❤️, Gentle Hug 🤗, With You 🌊, or Celebrate ✨ to share instant warmth.',
+    dockPosition: 'top',
+    spotlightTarget: {
       bottom: Platform.OS === 'ios' ? 24 : 14,
-      left: SCREEN_WIDTH * 0.58,
-      width: 72,
+      left: SCREEN_WIDTH * 0.32,
+      width: 64,
       height: 56,
       borderRadius: 20,
     },
-    tooltipPosition: 'bottom',
-    tooltipOffsetBottom: Platform.OS === 'ios' ? 110 : 95,
+    demoType: 'reaction',
   },
   {
-    id: 'aura',
+    id: 'circles',
     stepNumber: 5,
-    totalSteps: 5,
-    title: 'Your Aura & Streak',
-    badge: 'Step 5 of 5 • Mindful Habit',
-    emoji: '🔥',
+    totalSteps: 7,
+    title: 'Community Circles',
+    badge: 'Step 5 of 7 • Safe Spaces',
+    emoji: '🌱',
     color: '#00B894',
     description:
-      'Check in daily to build your reflection streak, unlock mindfulness milestone badges, and watch your Aura score grow.',
-    spotlightArea: {
+      'Join dedicated circles like Mindful Morning, Ocean Walks, or Late Night Reflections with people going through similar life moments.',
+    dockPosition: 'top',
+    spotlightTarget: {
       bottom: Platform.OS === 'ios' ? 24 : 14,
-      left: SCREEN_WIDTH * 0.76,
-      width: 72,
+      left: SCREEN_WIDTH * 0.58,
+      width: 64,
       height: 56,
       borderRadius: 20,
     },
-    tooltipPosition: 'bottom',
-    tooltipOffsetBottom: Platform.OS === 'ios' ? 110 : 95,
+    demoType: 'circle',
+  },
+  {
+    id: 'chats',
+    stepNumber: 6,
+    totalSteps: 7,
+    title: '1-on-1 Gentle Chats',
+    badge: 'Step 6 of 7 • Kindred Spirits',
+    emoji: '🕊️',
+    color: '#A29BFE',
+    description:
+      'Privately connect with someone on your emotional wavelength. Share comfort with icebreaker prompts in safe, respectful chats.',
+    dockPosition: 'top',
+    spotlightTarget: {
+      bottom: Platform.OS === 'ios' ? 24 : 14,
+      left: SCREEN_WIDTH * 0.58,
+      width: 64,
+      height: 56,
+      borderRadius: 20,
+    },
+    demoType: 'chat',
+  },
+  {
+    id: 'streak',
+    stepNumber: 7,
+    totalSteps: 7,
+    title: 'Daily Streak & Constellation',
+    badge: 'Step 7 of 7 • Mindful Rhythm',
+    emoji: '🔥',
+    color: '#FF7675',
+    description:
+      'Build a daily check-in habit, watch your monthly mood constellation fill with color, and grow your Aura score with mindful consistency.',
+    dockPosition: 'top',
+    spotlightTarget: {
+      bottom: Platform.OS === 'ios' ? 24 : 14,
+      left: SCREEN_WIDTH * 0.80,
+      width: 60,
+      height: 56,
+      borderRadius: 20,
+    },
+    demoType: 'streak',
   },
 ];
 
 export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
   visible,
   onClose,
+  onNavigateTab,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const pulseScale = useSharedValue(1);
+
+  // Interactive Demo Sandbox States
+  const [demoSelectedEmotion, setDemoSelectedEmotion] = useState('calm');
+  const [demoFloaterKey, setDemoFloaterKey] = useState(0);
+  const [demoFloaterEmoji, setDemoFloaterEmoji] = useState('❤️');
+  const [demoJoinedCircle, setDemoJoinedCircle] = useState(false);
+  const [demoStreakCount, setDemoStreakCount] = useState(7);
+  const [demoMessageSent, setDemoMessageSent] = useState(false);
+  const [demoBubbleTapped, setDemoBubbleTapped] = useState(false);
+
+  const pulseAnim = useSharedValue(1);
 
   useEffect(() => {
-    pulseScale.value = withRepeat(
-      withSequence(
-        withTiming(1.05, { duration: 900, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 900, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
-  }, []);
+    if (visible) {
+      setCurrentStepIndex(0);
+      pulseAnim.value = withRepeat(
+        withSequence(
+          withTiming(1.08, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 1000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [visible]);
+
+  if (!visible) return null;
 
   const step = TOUR_STEPS[currentStepIndex];
   const isLast = currentStepIndex === TOUR_STEPS.length - 1;
@@ -198,68 +253,259 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
   };
 
   const handleComplete = async () => {
-    haptics.success();
+    haptics.medium();
     try {
       await storage.setItem('hasCompletedInteractiveTour_v2', 'true');
     } catch {}
     onClose();
-    setCurrentStepIndex(0);
   };
 
-  const spotlightAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
+  const animatedSpotlightStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
   }));
 
-  if (!visible) return null;
+  const spotlightPositionStyle = {
+    top: step.spotlightTarget.top,
+    bottom: step.spotlightTarget.bottom,
+    left: step.spotlightTarget.left,
+    width: step.spotlightTarget.width,
+    height: step.spotlightTarget.height,
+    borderRadius: step.spotlightTarget.borderRadius,
+  };
+
+  // Render Interactive Sandbox based on current feature demoType
+  const renderInteractiveDemo = () => {
+    switch (step.demoType) {
+      case 'map':
+        return (
+          <View style={styles.demoCard}>
+            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              INTERACTIVE DEMO: TAP THE MOOD BUBBLE
+            </Typography>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setDemoBubbleTapped(!demoBubbleTapped);
+                haptics.light();
+              }}
+              style={[
+                styles.demoBubblePill,
+                demoBubbleTapped && { borderColor: '#00CEC9', backgroundColor: 'rgba(0, 206, 201, 0.2)' },
+              ]}
+            >
+              <Typography style={{ fontSize: 18 }}>🌊</Typography>
+              <Typography variant="caption" weight="bold" color={colors.textPrimary} style={{ marginLeft: 6 }}>
+                Tokyo • Peaceful Morning
+              </Typography>
+            </TouchableOpacity>
+            {demoBubbleTapped && (
+              <Typography variant="caption" color={colors.primaryLight} style={{ marginTop: 6, fontStyle: 'italic' }}>
+                "Listening to gentle raindrops against the window with hot tea."
+              </Typography>
+            )}
+          </View>
+        );
+
+      case 'emotion':
+        return (
+          <View style={styles.demoCard}>
+            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              TRY IT: PICK YOUR FEELING
+            </Typography>
+            <View style={styles.demoRow}>
+              {[
+                { name: 'calm', label: 'Calm', emoji: '🌿', color: '#00CEC9' },
+                { name: 'joy', label: 'Joy', emoji: '☀️', color: '#FFB800' },
+                { name: 'love', label: 'Love', emoji: '💖', color: '#FF6B81' },
+              ].map((em) => {
+                const active = demoSelectedEmotion === em.name;
+                return (
+                  <TouchableOpacity
+                    key={em.name}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setDemoSelectedEmotion(em.name);
+                      haptics.selection();
+                    }}
+                    style={[
+                      styles.demoPill,
+                      active && { borderColor: em.color, backgroundColor: `${em.color}25` },
+                    ]}
+                  >
+                    <Typography style={{ fontSize: 16 }}>{em.emoji}</Typography>
+                    <Typography variant="caption" weight="bold" color={active ? em.color : colors.textSecondary} style={{ marginLeft: 4 }}>
+                      {em.label}
+                    </Typography>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        );
+
+      case 'pulse':
+        return (
+          <View style={styles.demoCard}>
+            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              LIVE ATMOSPHERE BREAKDOWN
+            </Typography>
+            <View style={styles.demoPulseRow}>
+              <View style={[styles.demoPulseBar, { flex: 4, backgroundColor: '#00CEC9' }]} />
+              <View style={[styles.demoPulseBar, { flex: 3, backgroundColor: '#FFB800' }]} />
+              <View style={[styles.demoPulseBar, { flex: 2, backgroundColor: '#9C27B0' }]} />
+              <View style={[styles.demoPulseBar, { flex: 1, backgroundColor: '#4A90E2' }]} />
+            </View>
+            <Typography variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
+              40% Calm 🌿 • 30% Joy ☀️ • 20% Reflective 💜 • 10% Soft 🌧️
+            </Typography>
+          </View>
+        );
+
+      case 'reaction':
+        return (
+          <View style={styles.demoCard}>
+            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              TRY SENDING A REACTION
+            </Typography>
+            <View style={styles.demoRow}>
+              {[
+                { emoji: '❤️', label: 'Support' },
+                { emoji: '🤗', label: 'Hug' },
+                { emoji: '🌊', label: 'With You' },
+              ].map((rx) => (
+                <TouchableOpacity
+                  key={rx.label}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setDemoFloaterEmoji(rx.emoji);
+                    setDemoFloaterKey(Date.now());
+                    haptics.medium();
+                  }}
+                  style={styles.demoPill}
+                >
+                  <ReactionFloater emoji={demoFloaterEmoji} triggerKey={demoFloaterKey} />
+                  <Typography style={{ fontSize: 15 }}>{rx.emoji}</Typography>
+                  <Typography variant="caption" weight="semibold" color={colors.textPrimary} style={{ marginLeft: 4 }}>
+                    {rx.label}
+                  </Typography>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        );
+
+      case 'circle':
+        return (
+          <View style={styles.demoCard}>
+            <View style={styles.circleDemoRow}>
+              <Typography style={{ fontSize: 24 }}>🌱</Typography>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Typography variant="caption" weight="bold" color={colors.textPrimary}>
+                  Ocean Walks & Stillness
+                </Typography>
+                <Typography variant="caption" color={colors.textMuted}>
+                  482 kindred souls holding quiet space
+                </Typography>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  setDemoJoinedCircle(!demoJoinedCircle);
+                  haptics.light();
+                }}
+                style={[
+                  styles.joinBtn,
+                  demoJoinedCircle && { backgroundColor: 'rgba(0, 184, 148, 0.2)', borderColor: '#00B894' },
+                ]}
+              >
+                <Typography variant="caption" weight="bold" color={demoJoinedCircle ? '#00B894' : colors.primaryLight}>
+                  {demoJoinedCircle ? 'Joined ✓' : 'Join'}
+                </Typography>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+
+      case 'chat':
+        return (
+          <View style={styles.demoCard}>
+            <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 6 }}>
+              TRY GENTLE ICEBREAKER
+            </Typography>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setDemoMessageSent(true);
+                haptics.light();
+              }}
+              style={styles.icebreakerPill}
+            >
+              <Typography variant="caption" color={demoMessageSent ? colors.primaryLight : colors.textPrimary}>
+                {demoMessageSent
+                  ? 'Sent: "Sending you quiet comfort tonight 🕊️"'
+                  : 'Tap to send: "Sending you quiet comfort tonight 🕊️"'}
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        );
+
+      case 'streak':
+        return (
+          <View style={styles.demoCard}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setDemoStreakCount((c) => c + 1);
+                haptics.medium();
+              }}
+              style={styles.streakDemoRow}
+            >
+              <Typography style={{ fontSize: 26 }}>🔥</Typography>
+              <View style={{ marginLeft: 10 }}>
+                <Typography variant="body" weight="bold" color="#FF7675">
+                  {demoStreakCount} Days of Presence!
+                </Typography>
+                <Typography variant="caption" color={colors.textMuted}>
+                  Tap flame to celebrate mindful consistency
+                </Typography>
+              </View>
+            </TouchableOpacity>
+          </View>
+        );
+    }
+  };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleComplete}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        {/* Semi-transparent Dimmed Backdrop */}
-        <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
-
-        {/* ── Spotlight Target Highlight Ring ── */}
+        {/* ── Glowing Spotlight Ring Framing Target (Never Blocks Clicks) ── */}
         <Animated.View
           style={[
             styles.spotlightBox,
             {
-              top: step.spotlightArea.top,
-              bottom: step.spotlightArea.bottom,
-              left: step.spotlightArea.left,
-              width: step.spotlightArea.width,
-              height: step.spotlightArea.height,
-              borderRadius: step.spotlightArea.borderRadius,
               borderColor: step.color,
               shadowColor: step.color,
+              borderRadius: step.spotlightTarget.borderRadius,
             },
-            spotlightAnimatedStyle,
+            animatedSpotlightStyle,
+            spotlightPositionStyle,
           ]}
-        >
-          {/* Inner radial gradient ring */}
-          <View
-            style={[
-              styles.spotlightRing,
-              {
-                borderRadius: step.spotlightArea.borderRadius,
-                borderColor: 'rgba(255, 255, 255, 0.4)',
-              },
-            ]}
-          />
-        </Animated.View>
+        />
 
-        {/* ── Tooltip Guidance Card ── */}
+        {/* ── Guidance Tooltip Card (Smart Docked Away from Target) ── */}
         <Animated.View
           entering={FadeIn.duration(250)}
           exiting={FadeOut.duration(150)}
           style={[
             styles.tooltipCard,
-            step.tooltipPosition === 'top' && { top: step.tooltipOffsetTop },
-            step.tooltipPosition === 'bottom' && { bottom: step.tooltipOffsetBottom },
+            step.dockPosition === 'top'
+              ? { top: Platform.OS === 'ios' ? 70 : 50 }
+              : { bottom: Platform.OS === 'ios' ? 100 : 80 },
           ]}
         >
-          <BlurView intensity={50} tint="dark" style={styles.tooltipBlur}>
+          <BlurView intensity={55} tint="dark" style={styles.tooltipBlur}>
             <View style={styles.tooltipContent}>
-              {/* Header: Step Badge & Skip Button */}
+              {/* Header: Badge & Skip */}
               <View style={styles.cardHeader}>
                 <View style={[styles.badgePill, { backgroundColor: `${step.color}22`, borderColor: `${step.color}55` }]}>
                   <Typography variant="caption" weight="bold" style={{ color: step.color, fontSize: 11 }}>
@@ -269,14 +515,14 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
 
                 <TouchableOpacity onPress={handleComplete} style={styles.skipButton} activeOpacity={0.7}>
                   <Typography variant="caption" style={{ color: colors.textMuted }}>
-                    Skip Tour ✕
+                    Skip Guide ✕
                   </Typography>
                 </TouchableOpacity>
               </View>
 
               {/* Title with Emoji */}
               <View style={styles.titleRow}>
-                <Typography style={{ fontSize: 24, marginRight: 8 }}>{step.emoji}</Typography>
+                <Typography style={{ fontSize: 22, marginRight: 8 }}>{step.emoji}</Typography>
                 <Typography variant="h3" weight="bold" style={{ color: colors.textPrimary, flex: 1 }}>
                   {step.title}
                 </Typography>
@@ -287,14 +533,17 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
                 {step.description}
               </Typography>
 
-              {/* Progress Dots */}
+              {/* Interactive Sandbox Demo */}
+              {renderInteractiveDemo()}
+
+              {/* Step Progress Dots */}
               <View style={styles.dotsRow}>
                 {TOUR_STEPS.map((s, idx) => (
                   <View
                     key={s.id}
                     style={[
                       styles.dot,
-                      idx === currentStepIndex && [styles.activeDot, { backgroundColor: step.color, width: 22 }],
+                      idx === currentStepIndex && [styles.activeDot, { backgroundColor: step.color, width: 20 }],
                     ]}
                   />
                 ))}
@@ -309,7 +558,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
                     </Typography>
                   </TouchableOpacity>
                 ) : (
-                  <View style={{ width: 70 }} />
+                  <View style={{ width: 65 }} />
                 )}
 
                 <TouchableOpacity
@@ -333,7 +582,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 14, 0.82)',
+    backgroundColor: 'rgba(5, 7, 14, 0.70)',
   },
   spotlightBox: {
     position: 'absolute',
@@ -345,19 +594,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     pointerEvents: 'none',
   },
-  spotlightRing: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderWidth: 1,
-    opacity: 0.7,
-  },
   tooltipCard: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 16,
+    right: 16,
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
@@ -369,13 +609,13 @@ const styles = StyleSheet.create({
   },
   tooltipContent: {
     backgroundColor: 'rgba(18, 20, 32, 0.94)',
-    padding: 20,
+    padding: 18,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   badgePill: {
     paddingHorizontal: 10,
@@ -389,19 +629,87 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   descriptionText: {
     color: colors.textSecondary,
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: 10,
   },
-  dotsRow: {
+  demoCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 12,
+  },
+  demoRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  demoPill: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
+  },
+  demoBubblePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  demoPulseRow: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    gap: 3,
+  },
+  demoPulseBar: {
+    borderRadius: 4,
+  },
+  circleDemoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  joinBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 92, 231, 0.3)',
+  },
+  icebreakerPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  streakDemoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 6,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   dot: {
     width: 6,
@@ -411,6 +719,7 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     height: 6,
+    borderRadius: 3,
   },
   actionRow: {
     flexDirection: 'row',
@@ -418,14 +727,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   nextButton: {
+    paddingHorizontal: 20,
     paddingVertical: 10,
-    paddingHorizontal: 22,
-    borderRadius: 14,
+    borderRadius: 16,
+    ...shadows.soft,
   },
 });

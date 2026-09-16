@@ -27,6 +27,8 @@ import { useNearbyBubbles } from '@/hooks/useMood';
 import { MapContainer, Marker, PROVIDER_DEFAULT } from '@/components/map';
 import { storage } from '@/utils/storage';
 import { haptics } from '@/theme/haptics';
+import { useTheme } from '@/context';
+import { darkMapStyle, lightMapStyle } from '@/theme/mapStyle';
 
 import {
   BentoGrid,
@@ -189,12 +191,28 @@ const SAMPLE_PULSE_DATA = [
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const mapRef = useRef<any>(null);
+  const { isDark, colors: activeColors } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [showTourModal, setShowTourModal] = useState(false);
   const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
   const [isFullMap, setIsFullMap] = useState(false);
+  const [isScrollEnabled, setIsScrollEnabled] = useState(true);
+  const [currentRegion, setCurrentRegion] = useState(INITIAL_REGION);
+
+  const handleZoom = (zoomIn: boolean) => {
+    haptics.selection();
+    const factor = zoomIn ? 0.5 : 2.0;
+    const newRegion = {
+      latitude: currentRegion.latitude,
+      longitude: currentRegion.longitude,
+      latitudeDelta: Math.max(0.01, Math.min(70, (currentRegion.latitudeDelta || 0.15) * factor)),
+      longitudeDelta: Math.max(0.01, Math.min(70, (currentRegion.longitudeDelta || 0.15) * factor)),
+    };
+    setCurrentRegion(newRegion);
+    mapRef.current?.animateToRegion?.(newRegion, 300);
+  };
 
   // TanStack queries
   const { data: pulseData } = useAtmosphericPulse();
@@ -324,21 +342,28 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <ScrollView
+        scrollEnabled={isScrollEnabled}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ─── Hero Section: World Mood Map / Celestial Canvas ─── */}
-        <View style={[styles.heroMapContainer, isFullMap && styles.fullMap]}>
+        {/* ─── Hero Section: World Mood Map ─── */}
+        <View
+          style={[styles.heroMapContainer, isFullMap && styles.fullMap]}
+          onTouchStart={() => setIsScrollEnabled(false)}
+          onTouchEnd={() => setIsScrollEnabled(true)}
+          onTouchCancel={() => setIsScrollEnabled(true)}
+        >
           {Platform.OS !== 'web' ? (
             <MapContainer
               ref={mapRef}
               style={StyleSheet.absoluteFill}
               provider={PROVIDER_DEFAULT}
               initialRegion={INITIAL_REGION}
-              customMapStyle={theme.darkMapStyle}
-              userInterfaceStyle="dark"
+              customMapStyle={isDark ? darkMapStyle : lightMapStyle}
+              userInterfaceStyle={isDark ? 'dark' : 'light'}
               showsCompass={false}
               showsUserLocation
+              onRegionChangeComplete={(r: any) => setCurrentRegion(r)}
             >
               {filteredBubbles.map((bubble) => (
                 <Marker
@@ -362,14 +387,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </MapContainer>
           ) : (
-            <View style={styles.cosmicGridCanvas}>
-              <View style={styles.glowNebula1} />
-              <View style={styles.glowNebula2} />
+            <View style={styles.ambientCanvas}>
+              <View style={styles.ambientGlow1} />
+              <View style={styles.ambientGlow2} />
               {filteredBubbles.map((bubble) => (
                 <View
                   key={bubble.id}
                   style={[
-                    styles.celestialMarkerWrapper,
+                    styles.canvasMarkerWrapper,
                     { left: (bubble.canvasX || 100) * 0.8, top: (bubble.canvasY || 100) * 0.5 },
                   ]}
                 >
@@ -395,6 +420,33 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.heroFadeMask}
             pointerEvents="none"
           />
+
+          {/* Floating Map Zoom & Action Controls */}
+          <View style={styles.mapFloatingControls}>
+            <TouchableOpacity
+              style={styles.mapControlBtn}
+              onPress={() => handleZoom(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.mapControlBtn}
+              onPress={() => handleZoom(false)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="remove" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.mapControlBtn}
+              onPress={handleRecenter}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="locate" size={16} color="#00CEC9" />
+            </TouchableOpacity>
+          </View>
 
           {/* Floating Map Status Chip */}
           <View style={styles.mapStatusChip}>
@@ -630,6 +682,29 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 50,
   },
+  mapFloatingControls: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    flexDirection: 'column',
+    gap: 8,
+    zIndex: 20,
+  },
+  mapControlBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(18, 20, 32, 0.88)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
   mapStatusChip: {
     position: 'absolute',
     bottom: 12,
@@ -714,13 +789,13 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.05)',
     paddingTop: 8,
   },
-  cosmicGridCanvas: {
+  ambientCanvas: {
     flex: 1,
     backgroundColor: '#0A0B14',
     position: 'relative',
     overflow: 'hidden',
   },
-  glowNebula1: {
+  ambientGlow1: {
     position: 'absolute',
     top: '15%',
     left: '10%',
@@ -729,7 +804,7 @@ const styles = StyleSheet.create({
     borderRadius: 110,
     backgroundColor: 'rgba(108, 92, 231, 0.18)',
   },
-  glowNebula2: {
+  ambientGlow2: {
     position: 'absolute',
     bottom: '20%',
     right: '5%',
@@ -738,7 +813,7 @@ const styles = StyleSheet.create({
     borderRadius: 120,
     backgroundColor: 'rgba(0, 206, 201, 0.12)',
   },
-  celestialMarkerWrapper: {
+  canvasMarkerWrapper: {
     position: 'absolute',
   },
 });

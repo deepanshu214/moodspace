@@ -10,13 +10,15 @@ import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useLogout, useDeleteAccount } from '@/hooks/useAuth';
 import { usePrivacySettings, useUpdatePrivacySettings, MOCK_PRIVACY_SETTINGS } from '@/hooks/useUserStats';
-import { AppWalkthroughModal } from '@/components/tutorial';
+import { useTheme, ThemeMode } from '@/context';
 import { Ionicons } from '@expo/vector-icons';
 import { PrivacySettingsPayload } from '@/api/types';
+import { AppWalkthroughModal, InteractiveFeatureTour } from '@/components/tutorial';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Settings'>;
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
+  const { themeMode, setThemeMode, isDark } = useTheme();
   const { mutate: logoutUser, isPending: loggingOut } = useLogout();
   const { mutate: deleteUserAccount, isPending: deletingAccount } = useDeleteAccount();
 
@@ -28,6 +30,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [incognitoByDefault, setIncognitoByDefault] = useState(settings.incognito_by_default);
   const [locationFuzzing, setLocationFuzzing] = useState(settings.location_fuzzing);
   const [showTourModal, setShowTourModal] = useState(false);
+  const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
 
   const [visibility, setVisibility] = useState<'public' | 'connections_only' | 'private'>(
     settings.profile_visibility || 'public'
@@ -85,6 +88,52 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={{ width: 44 }} />
       </View>
 
+      {/* ── 0. APPEARANCE & THEME ── */}
+      <View style={styles.section}>
+        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+          APPEARANCE & THEME
+        </Typography>
+
+        <Card variant="elevated" style={styles.card}>
+          <View style={styles.themeSelectorRow}>
+            {(
+              [
+                { mode: 'dark', label: 'Dark', icon: 'moon' },
+                { mode: 'light', label: 'Light', icon: 'sunny' },
+                { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
+              ] as const
+            ).map((opt) => {
+              const active = themeMode === opt.mode;
+              return (
+                <TouchableOpacity
+                  key={opt.mode}
+                  activeOpacity={0.7}
+                  onPress={() => setThemeMode(opt.mode as ThemeMode)}
+                  style={[
+                    styles.themeOptionBtn,
+                    active && styles.themeOptionBtnActive,
+                  ]}
+                >
+                  <Ionicons
+                    name={opt.icon as any}
+                    size={20}
+                    color={active ? theme.colors.primaryLight : theme.colors.textMuted}
+                  />
+                  <Typography
+                    variant="caption"
+                    weight={active ? 'bold' : 'medium'}
+                    color={active ? theme.colors.primaryLight : theme.colors.textSecondary}
+                    style={{ marginTop: 4 }}
+                  >
+                    {opt.label}
+                  </Typography>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Card>
+      </View>
+
       {/* ── 1. PRIVACY & ANONYMITY ── */}
       <View style={styles.section}>
         <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
@@ -94,9 +143,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <Card variant="elevated" style={styles.card}>
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Default to Wandering Spirit</Typography>
+              <Typography variant="body" weight="semibold">Default to Anonymous Check-In</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Automatically cloak name & avatar on map bubbles & feed reflections
+                Hide your name & avatar on map bubbles and shared posts
               </Typography>
             </View>
             <Switch
@@ -111,7 +160,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={[styles.row, styles.dividerRow]}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Atmospheric Location Fuzzing</Typography>
+              <Typography variant="body" weight="semibold">Location Privacy Fuzzing</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
                 Jitter coordinates by ~500m to conceal exact residence
               </Typography>
@@ -267,12 +316,28 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => setShowTourModal(true)}
           >
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">View Feature Walkthrough</Typography>
+              <Typography variant="body" weight="semibold">Interactive Feature Guide (7-Step Demo)</Typography>
               <Typography variant="caption" color={theme.colors.textMuted}>
-                Review how to use the Mood Map, Check-ins, Circles, and Chats
+                Step-by-step interactive walkthrough with hands-on mini demos
               </Typography>
             </View>
-            <Ionicons name="help-circle-outline" size={22} color={theme.colors.primaryLight} />
+            <Ionicons name="sparkles" size={20} color={theme.colors.primaryLight} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity
+            style={styles.exportRow}
+            activeOpacity={0.75}
+            onPress={() => setShowWalkthroughModal(true)}
+          >
+            <View style={styles.rowText}>
+              <Typography variant="body" weight="semibold">Quick Overview Cards</Typography>
+              <Typography variant="caption" color={theme.colors.textMuted}>
+                Swipeable summary cards of core MoodSpace features
+              </Typography>
+            </View>
+            <Ionicons name="help-circle-outline" size={22} color={theme.colors.textMuted} />
           </TouchableOpacity>
         </Card>
       </View>
@@ -329,10 +394,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         MoodSpace v1.0.0 • Emotional Wellness Network
       </Typography>
 
-      {/* Feature Walkthrough Modal */}
-      <AppWalkthroughModal
+      {/* Interactive Feature Tour (with live sandboxes) */}
+      <InteractiveFeatureTour
         visible={showTourModal}
         onClose={() => setShowTourModal(false)}
+      />
+
+      {/* Feature Walkthrough Overview Modal */}
+      <AppWalkthroughModal
+        visible={showWalkthroughModal}
+        onClose={() => setShowWalkthroughModal(false)}
       />
     </ScreenWrapper>
   );
@@ -400,8 +471,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.border,
+    marginVertical: 12,
+  },
   btnStack: {
     gap: 12,
+  },
+  themeSelectorRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  themeOptionBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  themeOptionBtnActive: {
+    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+    borderColor: theme.colors.primaryLight,
   },
   versionText: {
     textAlign: 'center',

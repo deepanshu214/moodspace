@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
@@ -10,9 +10,13 @@ import { Avatar } from '@/components/common/Avatar';
 import { MoodTag } from '@/components/mood/MoodTag';
 import { GlassCard } from '@/components/common/GlassCard';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
-import { MoodStreakTracker } from '@/components/profile/MoodStreakTracker';
-import { MoodHistoryHeatmap } from '@/components/profile/MoodHistoryHeatmap';
-import { AuraScoreCard } from '@/components/profile/AuraScoreCard';
+import {
+  MoodStreakTracker,
+  MoodHistoryHeatmap,
+  AuraScoreCard,
+  EditProfileModal,
+} from '@/components/profile';
+import { storage } from '@/utils/storage';
 
 import { useAuthStore } from '@/stores/authStore';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -45,10 +49,29 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const updatePrivacyMutation = useUpdatePrivacySettings();
 
   const [incognitoLocal, setIncognitoLocal] = useState<boolean | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [customName, setCustomName] = useState<string | null>(null);
+  const [customBio, setCustomBio] = useState<string | null>(null);
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
 
-  const displayName = apiUser?.display_name || storeUser?.displayName || 'Elena Rostova';
-  const bio = apiUser?.bio || storeUser?.bio || 'Holding space for calm moments, deep ocean walks, and mindful connection.';
-  const avatarUrl = apiUser?.avatar_url || storeUser?.avatarUrl;
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const saved = await storage.getItem('user_profile_custom_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.displayName) setCustomName(parsed.displayName);
+          if (parsed.bio) setCustomBio(parsed.bio);
+          if (parsed.avatarUrl) setCustomAvatar(parsed.avatarUrl);
+        }
+      } catch {}
+    };
+    loadProfile();
+  }, []);
+
+  const displayName = customName || apiUser?.display_name || storeUser?.displayName || 'Elena Rostova';
+  const bio = customBio || apiUser?.bio || storeUser?.bio || 'Holding space for calm moments, deep ocean walks, and mindful connection.';
+  const avatarUrl = customAvatar || apiUser?.avatar_url || storeUser?.avatarUrl;
 
   const streak = streakData || MOCK_STREAK_INFO;
   const aura = auraData || MOCK_AURA_BREAKDOWN;
@@ -138,6 +161,20 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <Typography variant="bodySmall" color={colors.textSecondary} style={styles.bio}>
           {bio}
         </Typography>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            setShowEditModal(true);
+            haptics.light();
+          }}
+          style={styles.editProfileBtn}
+        >
+          <Ionicons name="pencil" size={13} color={colors.primaryLight} />
+          <Typography variant="caption" weight="bold" color={colors.primaryLight} style={{ marginLeft: 6 }}>
+            Edit Profile
+          </Typography>
+        </TouchableOpacity>
 
         {/* Glass Bento Stats Row */}
         <GlassCard variant="default" style={styles.statsCard}>
@@ -260,6 +297,21 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
       </View>
+
+      {/* ── Edit Profile Modal with Gallery Permission ── */}
+      <EditProfileModal
+        visible={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        currentName={displayName}
+        currentBio={bio}
+        currentAvatar={avatarUrl}
+        onSave={(updated) => {
+          setCustomName(updated.displayName);
+          setCustomBio(updated.bio);
+          if (updated.avatarUrl) setCustomAvatar(updated.avatarUrl);
+          storage.setItem('user_profile_custom_v1', JSON.stringify(updated));
+        }}
+      />
     </ScreenWrapper>
   );
 };
@@ -318,6 +370,18 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     lineHeight: 20,
     marginBottom: 16,
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 92, 231, 0.25)',
+    marginTop: 10,
+    marginBottom: 4,
   },
   statsCard: {
     width: '100%',
