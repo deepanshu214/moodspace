@@ -15,15 +15,16 @@ interface ThemeContextType {
 const STORAGE_KEY = 'moodspace_theme_mode_v1';
 
 const ThemeContext = createContext<ThemeContextType>({
-  themeMode: 'dark',
-  isDark: true,
-  colors: darkColors,
+  themeMode: 'light',
+  isDark: false,
+  colors: lightColors,
   setThemeMode: () => {},
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('light');
+
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -33,7 +34,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setThemeModeState(saved as ThemeMode);
         }
       } catch {
-        // Fallback to dark
+        // Fallback to light
       }
     };
     loadTheme();

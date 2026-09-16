@@ -12,16 +12,9 @@ import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 import * as Location from 'expo-location';
 import { getUserPostedBubbles, UserPostBubble } from '@/utils/userPosts';
+
 
 import { HomeStackParamList, MainTabParamList } from '@/navigation/types';
 import { theme, getEmotionConfig } from '@/theme';
@@ -207,20 +200,7 @@ const EMOTION_FILTERS = [
   { id: 'anxiety', label: 'Heavy', emoji: '🌧️', color: '#A78BFA' },
 ];
 
-const FEELING_DIAL_OPTIONS = [
-  { id: 'cozy', emoji: '☕', label: 'Cozy', quote: 'Taking things slow with warm sips and quiet thoughts.' },
-  { id: 'radiant', emoji: '✨', label: 'Radiant', quote: 'A gentle burst of good energy, ready to share warmth with friends.' },
-  { id: 'peaceful', emoji: '🕊️', label: 'Peaceful', quote: 'A deep breath in. Everything is settling right where it should.' },
-  { id: 'tender', emoji: '🌧️', label: 'Tender', quote: 'Holding gentle space for soft feelings. Giving yourself all the time you need.' },
-  { id: 'inspired', emoji: '🎨', label: 'Inspired', quote: 'Curious about little beauty and noticing sparks of wonder all around.' },
-];
 
-const DAILY_COMFORT_NOTES = [
-  { id: 1, text: "You don't have to carry everything all at once. One gentle step at a time is enough.", author: 'A gentle friend' },
-  { id: 2, text: "Rest is not a reward you earn. It is a quiet gift you give yourself.", author: 'Peaceful thought' },
-  { id: 3, text: "Someone smiled today because you exist in their world. Keep glowing.", author: 'Heartfelt note' },
-  { id: 4, text: "Whatever pace you're walking at today is completely okay. You are doing enough.", author: 'Warm comfort' },
-];
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const mapRef = useRef<any>(null);
@@ -234,79 +214,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [isScrollEnabled, setIsScrollEnabled] = useState(true);
   const [currentRegion, setCurrentRegion] = useState(INITIAL_REGION);
 
-  // Interactive Feeling Dial State
-  const [selectedFeelingDial, setSelectedFeelingDial] = useState('cozy');
-
-  // Daily Comfort Note State
-  const [comfortNoteIndex, setComfortNoteIndex] = useState(0);
-
-  const cycleComfortNote = () => {
-    haptics.light();
-    setComfortNoteIndex((prev) => (prev + 1) % DAILY_COMFORT_NOTES.length);
-  };
-
-  // Mindful Breathing Orb State & Animation
-  const [isBreathingActive, setIsBreathingActive] = useState(true);
-  const [breathPhaseText, setBreathPhaseText] = useState('Inhale calm... ✨');
-  const breathScale = useSharedValue(1);
-  const breathGlow = useSharedValue(0.25);
-
-  useEffect(() => {
-    if (isBreathingActive) {
-      breathScale.value = withRepeat(
-        withSequence(
-          withTiming(1.25, { duration: 3800, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1.25, { duration: 1800, easing: Easing.linear }),
-          withTiming(1.0, { duration: 3800, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        false
-      );
-      breathGlow.value = withRepeat(
-        withSequence(
-          withTiming(0.6, { duration: 3800, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.6, { duration: 1800, easing: Easing.linear }),
-          withTiming(0.2, { duration: 3800, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        false
-      );
-
-      const interval = setInterval(() => {
-        setBreathPhaseText((current) => {
-          if (current.includes('Inhale')) return 'Hold stillness... 🕊️';
-          if (current.includes('Hold')) return 'Exhale noise... 🌿';
-          return 'Inhale calm... ✨';
-        });
-      }, 3200);
-
-      return () => clearInterval(interval);
-    } else {
-      breathScale.value = withTiming(1.0, { duration: 400 });
-      breathGlow.value = withTiming(0.15, { duration: 400 });
-    }
-  }, [isBreathingActive]);
-
-  const toggleBreathing = () => {
-    haptics.medium();
-    setIsBreathingActive((prev) => !prev);
-  };
-
-  const breathingOrbStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: breathScale.value }],
-  }));
-
-  const breathingGlowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: breathScale.value * 1.3 }],
-    opacity: breathGlow.value,
-  }));
-
-  const activeFeeling = useMemo(
-    () => FEELING_DIAL_OPTIONS.find((f) => f.id === selectedFeelingDial) || FEELING_DIAL_OPTIONS[0],
-    [selectedFeelingDial]
-  );
-
-  const currentComfortNote = DAILY_COMFORT_NOTES[comfortNoteIndex];
 
   const handleZoom = (zoomIn: boolean) => {
     haptics.selection();
@@ -675,246 +582,107 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* ─── Warm Community Experience Section ─── */}
+        {/* ─── Feel-Good Community Section ─── */}
         {!isFullMap && (
           <View style={styles.bentoSection}>
-            {/* 1. Interactive Emotion Check-in Prompt */}
-            <GlassCard variant="default" style={styles.quickPromptCard}>
-              <View style={styles.promptHeader}>
-                <Typography style={{ fontSize: 20 }}>💭</Typography>
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Typography variant="body" weight="bold" style={{ color: colors.textPrimary }}>
-                    Share what's on your heart
+
+            {/* ① Quick Emotion Share — simple, inviting, one line */}
+            <View style={[styles.quickShareBar, {
+              backgroundColor: colors.primary,
+              shadowColor: colors.primary,
+            }]}>
+              <View style={styles.quickShareLeft}>
+                <Typography style={{ fontSize: 22 }}>✨</Typography>
+                <View style={{ marginLeft: 10 }}>
+                  <Typography variant="body" weight="bold" style={{ color: '#FFFFFF' }}>
+                    What's your vibe right now?
                   </Typography>
-                  <Typography variant="caption" style={{ color: colors.textMuted }}>
-                    Tap a feeling to drop a gentle bubble onto the map
+                  <Typography variant="caption" style={{ color: 'rgba(255,255,255,0.80)' }}>
+                    Drop a mood bubble on the map
                   </Typography>
                 </View>
               </View>
+              <TouchableOpacity
+                onPress={() => {
+                  haptics.medium();
+                  (navigation as any).navigate('CreateBubbleModal');
+                }}
+                style={styles.quickShareBtn}
+                activeOpacity={0.82}
+              >
+                <Typography variant="caption" weight="bold" style={{ color: colors.primary }}>
+                  Share
+                </Typography>
+              </TouchableOpacity>
+            </View>
 
-              <View style={styles.quickEmotionRow}>
-                {[
-                  { emotion: 'joy', emoji: '☀️', label: 'Joy' },
-                  { emotion: 'calm', emoji: '🌿', label: 'Calm' },
-                  { emotion: 'love', emoji: '💖', label: 'Love' },
-                  { emotion: 'sadness', emoji: '💜', label: 'Deep' },
-                  { emotion: 'anxiety', emoji: '🌧️', label: 'Heavy' },
-                ].map((item) => (
+            {/* ② Emotion pills — horizontal quick-filter row */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.emotionPillsRow}
+            >
+              {[
+                { emotion: 'joy', emoji: '☀️', label: 'Joy', color: '#F7B731' },
+                { emotion: 'calm', emoji: '🌿', label: 'Calm', color: '#26D0CE' },
+                { emotion: 'love', emoji: '💖', label: 'Love', color: '#FF85A1' },
+                { emotion: 'excitement', emoji: '🎉', label: 'Hype', color: '#FF6B35' },
+                { emotion: 'sadness', emoji: '💜', label: 'Blue', color: '#4776E6' },
+                { emotion: 'loneliness', emoji: '🕊️', label: 'Quiet', color: '#8E54E9' },
+              ].map((item) => {
+                const isActive = selectedFilter === item.emotion;
+                return (
                   <TouchableOpacity
                     key={item.emotion}
                     activeOpacity={0.75}
                     onPress={() => {
-                      haptics.medium();
-                      (navigation as any).navigate('CreateBubbleModal');
+                      haptics.selection();
+                      setSelectedFilter(isActive ? null : item.emotion);
                     }}
                     style={[
-                      styles.quickEmotionPill,
-                      { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border },
+                      styles.emotionPillChip,
+                      {
+                        backgroundColor: isActive ? item.color : colors.surface,
+                        borderColor: isActive ? item.color : colors.border,
+                        shadowColor: isActive ? item.color : 'transparent',
+                      },
                     ]}
                   >
-                    <Typography style={{ fontSize: 20 }}>{item.emoji}</Typography>
+                    <Typography style={{ fontSize: 18 }}>{item.emoji}</Typography>
                     <Typography
                       variant="caption"
-                      weight="semibold"
-                      style={{ color: colors.textSecondary, marginTop: 4 }}
+                      weight={isActive ? 'bold' : 'medium'}
+                      style={{ color: isActive ? '#FFFFFF' : colors.textSecondary, marginTop: 3, fontSize: 11 }}
                     >
                       {item.label}
                     </Typography>
                   </TouchableOpacity>
-                ))}
-              </View>
-            </GlassCard>
+                );
+              })}
+            </ScrollView>
 
-            {/* 2. Interactive "How's Your Heart Feeling?" Feeling Dial */}
-            <GlassCard variant="default" style={styles.feelingDialCard}>
-              <View style={styles.feelingDialHeader}>
-                <View style={styles.feelingTitleRow}>
-                  <Typography style={{ fontSize: 18 }}>☕</Typography>
-                  <Typography variant="body" weight="bold" style={{ color: colors.textPrimary, marginLeft: 8 }}>
-                    How's your heart feeling?
-                  </Typography>
-                </View>
-                <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight }}>
-                  Tap to tune in
-                </Typography>
-              </View>
-
-              <View style={styles.feelingPillsRow}>
-                {FEELING_DIAL_OPTIONS.map((item) => {
-                  const isSelected = selectedFeelingDial === item.id;
-                  return (
-                    <TouchableOpacity
-                      key={item.id}
-                      activeOpacity={0.75}
-                      onPress={() => {
-                        setSelectedFeelingDial(item.id);
-                        haptics.selection();
-                      }}
-                      style={[
-                        styles.feelingPill,
-                        {
-                          backgroundColor: isSelected ? colors.primary : colors.surfaceElevated,
-                          borderColor: isSelected ? colors.primaryLight : colors.glass.border,
-                        },
-                      ]}
-                    >
-                      <Typography style={{ fontSize: 18 }}>{item.emoji}</Typography>
-                      <Typography
-                        variant="caption"
-                        weight={isSelected ? 'bold' : 'medium'}
-                        style={{ color: isSelected ? '#FFFFFF' : colors.textSecondary, marginTop: 4, fontSize: 11 }}
-                      >
-                        {item.label}
-                      </Typography>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Dynamic Feeling Reflection Card */}
-              {activeFeeling && (
-                <View style={[styles.feelingQuoteBox, { backgroundColor: isDark ? 'rgba(25, 21, 34, 0.65)' : 'rgba(255, 255, 255, 0.85)', borderColor: colors.glass.border }]}>
-                  <Typography variant="bodySmall" style={{ color: colors.textPrimary, fontStyle: 'italic', lineHeight: 20 }}>
-                    "{activeFeeling.quote}"
-                  </Typography>
-                  <TouchableOpacity
-                    activeOpacity={0.75}
-                    onPress={() => {
-                      haptics.medium();
-                      (navigation as any).navigate('CreateBubbleModal');
-                    }}
-                    style={styles.shareFeelingBtn}
-                  >
-                    <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight }}>
-                      Share this reflection with friends +
-                    </Typography>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </GlassCard>
-
-            {/* 3. Mindful Breathing & Comfort Note Interactive Row */}
-            <View style={styles.interactiveRow}>
-              {/* Mindful Breathing Orb */}
-              <GlassCard variant="default" style={styles.breathingCard}>
-                <View style={styles.breathingHeader}>
-                  <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight, letterSpacing: 0.3 }}>
-                    BREATHE & SETTLE
-                  </Typography>
-                  <Typography variant="caption" style={{ color: colors.accent, fontSize: 10, fontWeight: 'bold' }}>
-                    {isBreathingActive ? 'Syncing' : 'Paused'}
-                  </Typography>
-                </View>
-
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={toggleBreathing}
-                  style={styles.breathingOrbContainer}
-                >
-                  <Animated.View style={[styles.breathingGlow, breathingGlowStyle, { backgroundColor: colors.accent }]} />
-                  <Animated.View style={[styles.breathingOrb, breathingOrbStyle, { borderColor: colors.glass.borderGlow }]}>
-                    <LinearGradient
-                      colors={[colors.accent, colors.primary]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.breathingGradient}
-                    >
-                      <Typography style={{ fontSize: 24 }}>🫁</Typography>
-                    </LinearGradient>
-                  </Animated.View>
-                </TouchableOpacity>
-
-                <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary, textAlign: 'center', marginTop: 4 }}>
-                  {breathPhaseText}
-                </Typography>
-                <Typography variant="caption" style={{ color: colors.textMuted, textAlign: 'center', fontSize: 10 }}>
-                  Tap orb to {isBreathingActive ? 'pause' : 'resume'}
-                </Typography>
-              </GlassCard>
-
-              {/* Daily Comfort Note */}
-              <GlassCard variant="default" style={styles.comfortNoteCard}>
-                <View style={styles.comfortNoteHeader}>
-                  <Typography variant="caption" weight="bold" style={{ color: colors.secondary, letterSpacing: 0.3 }}>
-                    💌 COMFORT NOTE
-                  </Typography>
-                  <TouchableOpacity onPress={cycleComfortNote} activeOpacity={0.7}>
-                    <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight, fontSize: 11 }}>
-                      Next ↻
-                    </Typography>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={cycleComfortNote}
-                  style={styles.comfortNoteBody}
-                >
-                  <Typography
-                    variant="bodySmall"
-                    style={{ color: colors.textPrimary, fontStyle: 'italic', lineHeight: 18 }}
-                  >
-                    "{currentComfortNote.text}"
-                  </Typography>
-
-                  <View style={styles.comfortNoteFooter}>
-                    <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 10 }}>
-                      — {currentComfortNote.author}
-                    </Typography>
-                    <Typography variant="caption" style={{ color: colors.secondary, fontSize: 10 }}>
-                      Tap for more 💛
-                    </Typography>
-                  </View>
-                </TouchableOpacity>
-              </GlassCard>
-            </View>
-
-            {/* 4. Trending Emotions Ticker */}
+            {/* ③ Trending Emotions Ticker */}
             <TrendingMoodsTicker
               trends={SAMPLE_TRENDS}
               onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
             />
 
-            {/* 5. Bento Row: Streak & Community Heartbeat */}
+            {/* ④ Stats Row: Streak + Pulse */}
             <View style={styles.bentoRow}>
               <View style={styles.bentoHalf}>
                 <StreakWidget currentStreak={7} maxStreak={30} />
               </View>
-
               <View style={styles.bentoHalf}>
-                <GlassCard variant="default" style={styles.auraMetricCard}>
-                  <View style={styles.heartbeatHeader}>
-                    <Typography style={{ fontSize: 14 }}>💛</Typography>
-                    <Typography variant="caption" weight="bold" color={colors.primaryLight} style={{ marginLeft: 4 }}>
-                      COMMUNITY HEARTBEAT
-                    </Typography>
-                  </View>
-                  <Typography variant="stat" style={{ color: colors.primaryLight }}>
-                    7.8
-                  </Typography>
-                  <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary, marginTop: 2 }}>
-                    Mostly Calm & Joy ✨
-                  </Typography>
-                  <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 10, marginTop: 4 }}>
-                    68% resting peacefully
-                  </Typography>
-                  {/* Accessibility note for compatibility */}
-                  <View style={{ opacity: 0, height: 0, overflow: 'hidden' }}>
-                    <Typography variant="caption">COMMUNITY AURA 7.8</Typography>
-                  </View>
-                </GlassCard>
+                <View style={[styles.bentoFull]}>
+                  <MoodPulseCard
+                    data={SAMPLE_PULSE_DATA}
+                    onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
+                  />
+                </View>
               </View>
             </View>
 
-            {/* 4. Mood Pulse Distribution Hero Tile */}
-            <View style={styles.bentoFull}>
-              <MoodPulseCard
-                data={SAMPLE_PULSE_DATA}
-                onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
-              />
-            </View>
-
-            {/* 5. Community Spotlight Hero Tile */}
+            {/* ⑤ Community Spotlight */}
             <View style={styles.bentoFull}>
               <CommunitySpotlight
                 name="Quiet Reflections"
@@ -929,17 +697,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
 
-            {/* 6. Recent Echoes Masonry Feed */}
+            {/* ⑥ Recent Echoes Feed */}
             <View style={styles.feedHeader}>
-              <Typography variant="caption" weight="bold" color={colors.textMuted}>
-                RECENT COMMUNITY ECHOES
+              <Typography variant="caption" weight="bold" style={{ color: colors.textMuted, letterSpacing: 1 }}>
+                RECENT ECHOES 🌍
               </Typography>
               {selectedFilter && (
                 <TouchableOpacity
                   onPress={() => setSelectedFilter(null)}
-                  style={styles.clearFilterPill}
+                  style={[styles.clearFilterPill, { backgroundColor: colors.surfaceHighlight }]}
                 >
-                  <Typography variant="caption" style={{ color: colors.primaryLight }}>
+                  <Typography variant="caption" style={{ color: colors.primary }}>
                     Clear {selectedFilter} ✕
                   </Typography>
                 </TouchableOpacity>
@@ -1159,136 +927,51 @@ const styles = StyleSheet.create({
   bentoSection: {
     paddingHorizontal: 14,
     paddingTop: 14,
-    gap: 14,
+    gap: 16,
   },
-  quickPromptCard: {
-    padding: 16,
-  },
-  promptHeader: {
+  // Quick Vibe Share Bar — full-width coral pill
+  quickShareBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  quickEmotionRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.30,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  quickEmotionPill: {
+  quickShareLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  quickShareBtn: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  // Horizontal emotion pill chips
+  emotionPillsRow: {
+    gap: 10,
+    paddingRight: 14,
+    paddingBottom: 2,
+  },
+  emotionPillChip: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  feelingDialCard: {
-    padding: 16,
-  },
-  feelingDialHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  feelingTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  feelingPillsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 6,
-  },
-  feelingPill: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  feelingQuoteBox: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  shareFeelingBtn: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  interactiveRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  breathingCard: {
-    flex: 1,
-    padding: 14,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 180,
-  },
-  breathingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
-  breathingOrbContainer: {
-    width: 74,
-    height: 74,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  breathingGlow: {
-    position: 'absolute',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  breathingOrb: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    overflow: 'hidden',
+    borderRadius: 18,
     borderWidth: 1.5,
-  },
-  breathingGradient: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  comfortNoteCard: {
-    flex: 1,
-    padding: 14,
-    justifyContent: 'space-between',
-    minHeight: 180,
-  },
-  comfortNoteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  comfortNoteBody: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  comfortNoteFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-  },
-  heartbeatHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
+    minWidth: 60,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   bentoRow: {
     flexDirection: 'row',
@@ -1301,13 +984,6 @@ const styles = StyleSheet.create({
   bentoFull: {
     width: '100%',
   },
-  auraMetricCard: {
-    flex: 1,
-    minHeight: 140,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
   feedHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1318,8 +994,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
   },
+
   feedCard: {
     padding: 14,
   },
