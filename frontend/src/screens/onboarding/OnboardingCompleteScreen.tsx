@@ -11,6 +11,7 @@ import Animated, {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { AuraDisplay } from '@/components/social/AuraDisplay';
@@ -20,6 +21,7 @@ import { useAuthStore } from '@/stores/authStore';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingComplete'>;
 
 export const OnboardingCompleteScreen: React.FC<Props> = () => {
+  const { colors } = useTheme();
   const { user, completeOnboarding } = useAuthStore();
   const scale = useSharedValue(1);
 
@@ -45,7 +47,7 @@ export const OnboardingCompleteScreen: React.FC<Props> = () => {
   return (
     <ScreenWrapper style={styles.container}>
       <View style={styles.content}>
-        <Animated.View style={[styles.orb, animatedOrbStyle]}>
+        <Animated.View style={[styles.orb, { backgroundColor: colors.surfaceElevated }, animatedOrbStyle]}>
           <Typography variant="display">✨</Typography>
         </Animated.View>
 
@@ -55,7 +57,7 @@ export const OnboardingCompleteScreen: React.FC<Props> = () => {
 
         <Typography
           variant="bodyLarge"
-          color={theme.colors.textSecondary}
+          color={colors.textSecondary}
           align="center"
           style={styles.subtitle}
         >
@@ -95,7 +97,6 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 2.5,
     borderColor: theme.colors.primaryLight,
     alignItems: 'center',

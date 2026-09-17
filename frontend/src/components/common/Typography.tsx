@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text as RNText, TextProps as RNTextProps, StyleSheet, TextStyle } from 'react-native';
 import { theme, TypographyVariant } from '@/theme';
+import { useTheme } from '@/context';
 
 export interface TypographyProps extends RNTextProps {
   variant?: TypographyVariant;
@@ -19,8 +20,9 @@ export const Typography: React.FC<TypographyProps> = ({
   children,
   ...rest
 }) => {
+  const { colors } = useTheme();
   const variantStyle = theme.typography.variants[variant] || theme.typography.variants.body;
-  const textColor = color || theme.colors.textPrimary;
+  const textColor = color || colors.textPrimary;
   const fontWeight = weight ? theme.typography.weights[weight] : variantStyle.fontWeight;
 
   const combinedStyle: TextStyle = StyleSheet.flatten([

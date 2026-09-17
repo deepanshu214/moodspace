@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Avatar } from '@/components/common/Avatar';
 import { Badge } from '@/components/common/Badge';
@@ -29,6 +30,7 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
   conversation,
   onPress,
 }) => {
+  const { colors } = useTheme();
   const { other_participant, last_message, unread_count, is_echo_match, resonance_score } =
     conversation;
 
@@ -40,7 +42,11 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
     <TouchableOpacity
       activeOpacity={0.75}
       onPress={onPress}
-      style={[styles.row, isUnread && styles.rowUnread]}
+      style={[
+        styles.row,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        isUnread && { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight },
+      ]}
     >
       {/* Avatar with presence dot */}
       <Avatar
@@ -68,8 +74,8 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
             {/* Echo match badge */}
             {is_echo_match && (
               <View style={styles.echoBadge}>
-                <Ionicons name="sparkles" size={10} color={theme.colors.secondary} />
-                <Typography variant="caption" color={theme.colors.secondary} style={styles.echoLabel}>
+                <Ionicons name="sparkles" size={10} color={colors.secondaryInk} />
+                <Typography variant="caption" color={colors.secondaryInk} style={styles.echoLabel}>
                   Echo
                 </Typography>
               </View>
@@ -79,7 +85,7 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
           {/* Time + unread count */}
           <View style={styles.rightCol}>
             {last_message && (
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {formatTime(last_message.created_at)}
               </Typography>
             )}
@@ -92,14 +98,14 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
           {last_message ? (
             <>
               {last_message.message_type === 'icebreaker' && (
-                <Ionicons name="chatbubble-ellipses-outline" size={12} color={theme.colors.textMuted} style={styles.msgIcon} />
+                <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.textMuted} style={styles.msgIcon} />
               )}
               {last_message.message_type === 'mood_share' && (
-                <Ionicons name="heart-outline" size={12} color={theme.colors.textMuted} style={styles.msgIcon} />
+                <Ionicons name="heart-outline" size={12} color={colors.textMuted} style={styles.msgIcon} />
               )}
               <Typography
                 variant="bodySmall"
-                color={isUnread ? theme.colors.textPrimary : theme.colors.textSecondary}
+                color={isUnread ? colors.textPrimary : colors.textSecondary}
                 numberOfLines={1}
                 style={styles.snippet}
               >
@@ -107,7 +113,7 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
               </Typography>
             </>
           ) : (
-            <Typography variant="bodySmall" color={theme.colors.textMuted} style={styles.snippet}>
+            <Typography variant="bodySmall" color={colors.textMuted} style={styles.snippet}>
               Say hi with an icebreaker ✨
             </Typography>
           )}
@@ -117,7 +123,7 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
             <View style={[styles.resonancePill, emotionCfg && { backgroundColor: emotionCfg.background }]}>
               <Typography
                 variant="caption"
-                color={emotionCfg?.primary ?? theme.colors.primaryLight}
+                color={emotionCfg?.primary ?? colors.primaryLight}
                 style={styles.resonanceText}
               >
                 {resonance_score}% ✦
@@ -137,14 +143,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
-  rowUnread: {
-    backgroundColor: theme.colors.surfaceElevated,
-    borderColor: theme.colors.borderLight,
-  },
+  rowUnread: {},
   content: {
     flex: 1,
     marginLeft: theme.spacing.md,

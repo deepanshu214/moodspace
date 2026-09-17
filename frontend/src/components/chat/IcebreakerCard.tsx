@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { Icebreaker, IcebreakerCategory } from '@/api/types';
@@ -27,16 +28,21 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
   onRefresh,
   isSelected,
 }) => {
+  const { colors } = useTheme();
   const meta = CATEGORY_META[icebreaker.category] ?? {
     icon: 'chatbubble-outline',
-    color: theme.colors.primaryLight,
+    color: colors.accentInk,
   };
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => onSelect(icebreaker)}
-      style={[styles.card, isSelected && styles.cardSelected]}
+      style={[
+        styles.card,
+        { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+        isSelected && { borderColor: colors.success, backgroundColor: 'rgba(0, 184, 148, 0.06)' },
+      ]}
     >
       {/* Category pill */}
       <View style={[styles.categoryPill, { backgroundColor: meta.color + '20' }]}>
@@ -53,7 +59,7 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
       {/* Prompt */}
       <Typography
         variant="bodySmall"
-        color={theme.colors.textPrimary}
+        color={colors.textPrimary}
         style={styles.prompt}
       >
         "{icebreaker.prompt}"
@@ -63,7 +69,7 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
       {icebreaker.follow_up && (
         <Typography
           variant="caption"
-          color={theme.colors.textMuted}
+          color={colors.textMuted}
           style={styles.followUp}
         >
           Follow-up: {icebreaker.follow_up}
@@ -92,8 +98,8 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
       {/* Selection indicator */}
       {isSelected && (
         <View style={styles.selectedBadge}>
-          <Ionicons name="checkmark-circle" size={16} color={theme.colors.success} />
-          <Typography variant="caption" color={theme.colors.success} style={styles.selectedText}>
+          <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+          <Typography variant="caption" color={colors.success} style={styles.selectedText}>
             Selected
           </Typography>
         </View>
@@ -104,16 +110,10 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     gap: 8,
-  },
-  cardSelected: {
-    borderColor: theme.colors.success,
-    backgroundColor: 'rgba(0, 184, 148, 0.06)',
   },
   categoryPill: {
     flexDirection: 'row',

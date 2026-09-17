@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -19,6 +20,7 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'EditProfile'>;
 const EMOTION_PRESETS = ['calm', 'joy', 'anxiety', 'love', 'sadness', 'excitement'];
 
 export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { user } = useAuthStore();
   const [displayName, setDisplayName] = useState(user?.displayName || 'Elena Rostova');
   const [bio, setBio] = useState(user?.bio || 'Holding space for calm moments, deep ocean walks.');
@@ -61,7 +63,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
       {/* Top Bar Header */}
       <View style={styles.topBar}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
@@ -80,7 +82,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
       {/* Avatar & Emotion Tone Picker */}
       <View style={styles.avatarSection}>
         <Avatar name={displayName} size="xl" emotion={selectedEmotion} />
-        <Typography variant="caption" color={theme.colors.textMuted} style={styles.toneLabel}>
+        <Typography variant="caption" color={colors.textMuted} style={styles.toneLabel}>
           Select your ambient aura hue:
         </Typography>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
@@ -102,7 +104,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Typography
                   variant="caption"
                   weight={isSelected ? 'bold' : 'medium'}
-                  color={isSelected ? config.primary : theme.colors.textSecondary}
+                  color={isSelected ? config.primary : colors.textSecondary}
                 >
                   {config.label}
                 </Typography>
@@ -136,7 +138,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
             maxLength={160}
             style={styles.bioInput}
           />
-          <Typography variant="caption" color={theme.colors.textMuted} style={styles.bioCounter}>
+          <Typography variant="caption" color={colors.textMuted} style={styles.bioCounter}>
             {bio.length}/160 characters
           </Typography>
         </View>

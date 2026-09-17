@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -15,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingDOB'>;
 
 export const OnboardingDOBScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { user, setUser } = useAuthStore();
   const [dob, setDob] = useState(user?.dateOfBirth || '2000-05-20');
   const [dobError, setDobError] = useState<string | null>(null);
@@ -31,13 +33,13 @@ export const OnboardingDOBScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topProgress}>
-        <Typography variant="caption" color={theme.colors.primaryLight} weight="bold">
+        <Typography variant="caption" color={colors.accentInk} weight="bold">
           STEP 2 OF 3
         </Typography>
         <Typography variant="h2" weight="bold" style={styles.title}>
           Age Confirmation
         </Typography>
-        <Typography variant="body" color={theme.colors.textSecondary}>
+        <Typography variant="body" color={colors.textSecondary}>
           MoodSpace is dedicated to adults 18 and older to foster an emotionally safe, mature
           community.
         </Typography>
@@ -54,12 +56,12 @@ export const OnboardingDOBScreen: React.FC<Props> = ({ navigation }) => {
           }}
           error={dobError || undefined}
           helperText="Format: YYYY-MM-DD (e.g. 1998-04-12)"
-          leftIcon={<Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />}
+          leftIcon={<Ionicons name="calendar-outline" size={18} color={colors.textMuted} />}
         />
 
         <Card variant="flat" style={styles.privacyNoticeCard}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.accent} />
-          <Typography variant="caption" color={theme.colors.textSecondary} style={styles.noticeText}>
+          <Ionicons name="shield-checkmark-outline" size={20} color={colors.accent} />
+          <Typography variant="caption" color={colors.textSecondary} style={styles.noticeText}>
             Your exact birthdate is encrypted and never displayed publicly on your profile or
             floating bubbles.
           </Typography>

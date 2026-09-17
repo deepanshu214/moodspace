@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Pressable,
   ActivityIndicator,
@@ -7,17 +7,28 @@ import {
   ViewStyle,
   StyleProp,
   GestureResponderEvent,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withRepeat,
+  withTiming,
+  withSequence,
+  Easing,
+  interpolateColor,
+  SharedValue,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { haptics } from '@/theme/haptics';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'glass' | 'aurora';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -35,6 +46,8 @@ export interface ButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export const Button: React.FC<ButtonProps> = ({
   title,
   variant = 'primary',
@@ -49,17 +62,45 @@ export const Button: React.FC<ButtonProps> = ({
   onPress,
   style,
 }) => {
+  const { colors, isDark } = useTheme();
   const isDisabled = disabled || loading;
   const scale = useSharedValue(1);
+  const shimmerTranslateX = useSharedValue(-SCREEN_WIDTH);
+  const colorPhase = useSharedValue(0);
 
-  const handlePressIn = () => {
+  useEffect(() => {
+    if (loading) {
+      shimmerTranslateX.value = withRepeat(
+        withTiming(SCREEN_WIDTH, { duration: 1500, easing: Easing.linear }),
+        -1,
+        false
+      );
+    } else {
+      shimmerTranslateX.value = -SCREEN_WIDTH;
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (variant === 'aurora') {
+      colorPhase.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [variant]);
+
+  const handlePressIn = (e: GestureResponderEvent) => {
     if (!isDisabled) {
-      scale.value = withSpring(0.96, theme.springs.snappy);
+      scale.value = withSpring(0.96, theme.springs.stiff);
       haptics.light();
     }
   };
 
-  const handlePressOut = () => {
+  const handlePressOut = (e: GestureResponderEvent) => {
     if (!isDisabled) {
       scale.value = withSpring(1, theme.springs.bouncy);
     }
@@ -69,6 +110,10 @@ export const Button: React.FC<ButtonProps> = ({
     transform: [{ scale: scale.value }],
   }));
 
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shimmerTranslateX.value }],
+  }));
+
   const getContainerStyle = (): ViewStyle => {
     let base: ViewStyle = {
       flexDirection: 'row',
@@ -76,6 +121,7 @@ export const Button: React.FC<ButtonProps> = ({
       justifyContent: 'center',
       borderRadius: pill ? theme.radius.round : theme.radius.md,
       alignSelf: fullWidth ? 'stretch' : 'flex-start',
+      overflow: 'hidden',
     };
 
     switch (size) {
@@ -97,35 +143,43 @@ export const Button: React.FC<ButtonProps> = ({
         break;
     }
 
-    if (customColor) {
+    if (customColor && variant !== 'glass' && variant !== 'aurora') {
       base.backgroundColor = variant === 'outline' ? 'transparent' : customColor;
       if (variant === 'outline') {
         base.borderWidth = 1.5;
         base.borderColor = customColor;
       }
+      if (isDisabled) base.opacity = 0.5;
       return base;
     }
 
     switch (variant) {
       case 'secondary':
-        base.backgroundColor = theme.colors.surfaceElevated;
+        base.backgroundColor = colors.surfaceElevated;
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = colors.border;
         break;
       case 'outline':
         base.backgroundColor = 'transparent';
         base.borderWidth = 1.5;
-        base.borderColor = theme.colors.primary;
+        base.borderColor = colors.primary;
         break;
       case 'ghost':
         base.backgroundColor = 'transparent';
         break;
       case 'danger':
-        base.backgroundColor = theme.colors.error;
+        base.backgroundColor = colors.error;
+        break;
+      case 'glass':
+        base.borderWidth = 1;
+        base.borderColor = colors.glass.border;
+        break;
+      case 'aurora':
+        // Gradient background handled by inner element
         break;
       case 'primary':
       default:
-        base.backgroundColor = theme.colors.primary;
+        base.backgroundColor = colors.primary;
         break;
     }
 
@@ -138,16 +192,21 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextColor = (): string => {
     if (customColor && variant === 'outline') return customColor;
-    if (customColor && variant !== 'outline') return theme.colors.textPrimary;
+    if (customColor && variant !== 'outline') return colors.textPrimary;
 
     switch (variant) {
       case 'secondary':
-        return theme.colors.textPrimary;
+      case 'glass':
+        return colors.textPrimary;
       case 'outline':
       case 'ghost':
-        return theme.colors.primaryLight;
-      case 'danger':
+        // primaryLight is a pastel peach — unreadable on cream, so ink down in light mode.
+        return isDark ? colors.primaryLight : colors.primaryDark;
+      case 'aurora':
       case 'primary':
+        // Pastel coral / pastel aurora fills always want espresso ink, never white.
+        return '#2D241E';
+      case 'danger':
       default:
         return '#FFFFFF';
     }
@@ -165,6 +224,31 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const renderBackground = () => {
+    if (variant === 'glass') {
+      const Container = Platform.OS === 'android' ? View : BlurView;
+      const containerProps = Platform.OS === 'android' 
+        ? { style: [StyleSheet.absoluteFill, { backgroundColor: colors.glass.surface }] }
+        : { intensity: 25, tint: 'dark' as const, style: StyleSheet.absoluteFill };
+      
+      return (
+        <Container {...containerProps}>
+          {Platform.OS !== 'android' && (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glass.surface }]} />
+          )}
+        </Container>
+      );
+    }
+    
+    if (variant === 'aurora') {
+      return (
+        <AnimatedGradientView style={StyleSheet.absoluteFill} colorPhase={colorPhase} />
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <Animated.View style={[animatedStyle, fullWidth && styles.fullWidth]}>
       <Pressable
@@ -174,23 +258,73 @@ export const Button: React.FC<ButtonProps> = ({
         onPressOut={handlePressOut}
         style={[getContainerStyle(), style as any]}
       >
-        {loading ? (
-          <ActivityIndicator size="small" color={getTextColor()} />
-        ) : (
-          <View style={styles.contentRow}>
-            {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
-            <Typography
-              variant={getTextVariant()}
-              weight="semibold"
-              color={getTextColor()}
-            >
-              {title}
-            </Typography>
-            {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        {renderBackground()}
+
+        {loading && (
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Animated.View style={[styles.shimmer, shimmerStyle]}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
           </View>
         )}
+
+        <View style={styles.contentRow} pointerEvents="none">
+          {!loading && leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+          <Typography
+            variant={getTextVariant()}
+            weight="semibold"
+            color={getTextColor()}
+            style={loading ? styles.hiddenText : undefined}
+          >
+            {title}
+          </Typography>
+          {!loading && rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        </View>
       </Pressable>
     </Animated.View>
+  );
+};
+
+const AnimatedGradientView = ({ style, colorPhase }: { style: any, colorPhase: SharedValue<number> }) => {
+  // Brand aurora — coral / gold / candy pink, matching theme.colors.aurora.default.
+  // Two diagonals of the SAME on-brand stops (order rotated) crossfade to create a
+  // living shimmer without ever drifting into off-brand hues.
+  const [c0, c1, c2] = theme.colors.aurora.default;
+  const auroraColorsA: readonly [string, string, string] = [c0, c1, c2];
+  const auroraColorsB: readonly [string, string, string] = [c2, c0, c1];
+
+  const style1 = useAnimatedStyle(() => ({
+    opacity: 1 - colorPhase.value
+  }));
+
+  const style2 = useAnimatedStyle(() => ({
+    opacity: colorPhase.value
+  }));
+
+  return (
+    <View style={style}>
+      <Animated.View style={[StyleSheet.absoluteFill, style1]}>
+         <LinearGradient
+            colors={auroraColorsA}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+         />
+      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, style2]}>
+         <LinearGradient
+            colors={auroraColorsB}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+         />
+      </Animated.View>
+    </View>
   );
 };
 
@@ -202,11 +336,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
   leftIcon: {
     marginRight: theme.spacing.sm,
   },
   rightIcon: {
     marginLeft: theme.spacing.sm,
+  },
+  shimmer: {
+    width: '50%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+  },
+  hiddenText: {
+    opacity: 0,
   },
 });

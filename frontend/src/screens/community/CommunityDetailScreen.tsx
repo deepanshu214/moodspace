@@ -10,6 +10,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -97,6 +98,7 @@ const FALLBACK_POSTS: FallbackPost[] = [
 const POST_FILTER_TABS = ['All Echoes', 'Reflections', 'Discussions', 'Wins'];
 
 export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) => {
+  const { colors } = useTheme();
   const { communityId, communityName, category = 'Mindfulness', dominantEmotion = 'calm' } = route.params;
 
   const [isJoined, setIsJoined] = useState(true);
@@ -164,11 +166,11 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
-          <Ionicons name="arrow-back" size={20} color={theme.colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.headerTitleWrap}>
-          <Typography variant="body" weight="bold" color={theme.colors.textPrimary} numberOfLines={1}>
+          <Typography variant="body" weight="bold" color={colors.textPrimary} numberOfLines={1}>
             {communityName}
           </Typography>
           <Typography variant="caption" color={emotionConfig.primary}>
@@ -187,7 +189,7 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
           <Typography
             variant="caption"
             weight="bold"
-            color={isJoined ? theme.colors.textMuted : '#FFFFFF'}
+            color={isJoined ? colors.textMuted : '#FFFFFF'}
           >
             {isJoined ? 'Joined' : 'Join'}
           </Typography>
@@ -202,7 +204,7 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={theme.colors.primaryLight}
+            tintColor={colors.primaryLight}
           />
         }
         ListHeaderComponent={
@@ -223,26 +225,26 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
               >
                 <View style={styles.guidelinesTitleRow}>
                   <Ionicons name="shield-checkmark" size={16} color="#A29BFE" />
-                  <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary} style={styles.guidelinesTitleText}>
+                  <Typography variant="bodySmall" weight="bold" color={colors.textPrimary} style={styles.guidelinesTitleText}>
                     Sanctuary Safe Space Charter
                   </Typography>
                 </View>
                 <Ionicons
                   name={guidelinesExpanded ? 'chevron-up' : 'chevron-down'}
                   size={16}
-                  color={theme.colors.textMuted}
+                  color={colors.textMuted}
                 />
               </TouchableOpacity>
 
               {guidelinesExpanded && (
                 <View style={styles.guidelinesBody}>
-                  <Typography variant="caption" color={theme.colors.textSecondary} style={styles.guidelineRow}>
+                  <Typography variant="caption" color={colors.textSecondary} style={styles.guidelineRow}>
                     🕊️ Speak your authentic truth without fear of ridicule or unsolicited advice.
                   </Typography>
-                  <Typography variant="caption" color={theme.colors.textSecondary} style={styles.guidelineRow}>
+                  <Typography variant="caption" color={colors.textSecondary} style={styles.guidelineRow}>
                     🛡️ Shield sensitive trauma or distress with the Content Warning option.
                   </Typography>
-                  <Typography variant="caption" color={theme.colors.textSecondary} style={styles.guidelineRow}>
+                  <Typography variant="caption" color={colors.textSecondary} style={styles.guidelineRow}>
                     🤍 Offer silent empathy and resonant echoes to uphold communal grounding.
                   </Typography>
                 </View>
@@ -266,7 +268,7 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                     <Typography
                       variant="caption"
                       weight={isActive ? 'bold' : 'medium'}
-                      color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                      color={isActive ? '#FFFFFF' : colors.textSecondary}
                     >
                       {tab}
                     </Typography>
@@ -331,7 +333,6 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   headerBar: {
     flexDirection: 'row',

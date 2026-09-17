@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { FeedCard } from '@/components/social/FeedCard';
@@ -115,6 +116,7 @@ const DEFAULT_POSTS: FeedPostItem[] = [
 ];
 
 export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [feedMode, setFeedMode] = useState<'resonant' | 'chronological'>('resonant');
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
@@ -167,7 +169,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
           <Typography variant="h3" weight="bold">
             Emotional Stream
           </Typography>
-          <Typography variant="caption" color={theme.colors.textMuted}>
+          <Typography variant="caption" color={colors.textMuted}>
             Echoes and resonances from the collective
           </Typography>
         </View>
@@ -182,12 +184,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
             <Ionicons
               name="sparkles"
               size={13}
-              color={feedMode === 'resonant' ? '#FFFFFF' : theme.colors.textMuted}
+              color={feedMode === 'resonant' ? '#FFFFFF' : colors.textMuted}
             />
             <Typography
               variant="caption"
               weight="bold"
-              color={feedMode === 'resonant' ? '#FFFFFF' : theme.colors.textMuted}
+              color={feedMode === 'resonant' ? '#FFFFFF' : colors.textMuted}
             >
               Resonant
             </Typography>
@@ -201,12 +203,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
             <Ionicons
               name="time-outline"
               size={13}
-              color={feedMode === 'chronological' ? '#FFFFFF' : theme.colors.textMuted}
+              color={feedMode === 'chronological' ? '#FFFFFF' : colors.textMuted}
             />
             <Typography
               variant="caption"
               weight="bold"
-              color={feedMode === 'chronological' ? '#FFFFFF' : theme.colors.textMuted}
+              color={feedMode === 'chronological' ? '#FFFFFF' : colors.textMuted}
             >
               Latest
             </Typography>
@@ -237,7 +239,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
                 <Typography
                   variant="caption"
                   weight={isSelected ? 'bold' : 'medium'}
-                  color={isSelected ? '#FFFFFF' : theme.colors.textSecondary}
+                  color={isSelected ? '#FFFFFF' : colors.textSecondary}
                 >
                   {item.label}
                 </Typography>
@@ -257,7 +259,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={theme.colors.primaryLight}
+            tintColor={colors.primaryLight}
           />
         }
         renderItem={({ item: post }) => (

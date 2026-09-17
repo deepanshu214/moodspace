@@ -7,9 +7,10 @@ import {
   ViewStyle,
 } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 
-export type IconButtonVariant = 'default' | 'filled' | 'outlined' | 'ghost';
+export type IconButtonVariant = 'default' | 'filled' | 'outlined' | 'ghost' | 'glass';
 export type IconButtonSize = 'sm' | 'md' | 'lg';
 
 export interface IconButtonProps extends TouchableOpacityProps {
@@ -32,6 +33,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
   style,
   ...rest
 }) => {
+  const { colors } = useTheme();
   const getDimensions = (): { width: number; height: number; radius: number } => {
     switch (size) {
       case 'sm':
@@ -62,21 +64,26 @@ export const IconButton: React.FC<IconButtonProps> = ({
 
     switch (variant) {
       case 'filled':
-        base.backgroundColor = theme.colors.surfaceElevated;
+        base.backgroundColor = colors.surfaceElevated;
         break;
       case 'outlined':
         base.backgroundColor = 'transparent';
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = colors.border;
         break;
       case 'ghost':
         base.backgroundColor = 'transparent';
         break;
+      case 'glass':
+        base.backgroundColor = colors.glass.surface;
+        base.borderWidth = 1;
+        base.borderColor = colors.glass.border;
+        break;
       case 'default':
       default:
-        base.backgroundColor = theme.colors.surface;
+        base.backgroundColor = colors.surface;
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = colors.border;
         break;
     }
 

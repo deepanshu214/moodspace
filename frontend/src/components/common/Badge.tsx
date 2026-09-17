@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 
 export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'neutral';
@@ -22,22 +23,23 @@ export const Badge: React.FC<BadgeProps> = ({
   color,
   style,
 }) => {
+  const { colors } = useTheme();
   const getBackgroundColor = (): string => {
     if (color) return color;
     switch (variant) {
       case 'primary':
-        return theme.colors.primary;
+        return colors.primary;
       case 'success':
-        return theme.colors.success;
+        return colors.success;
       case 'warning':
-        return theme.colors.warning;
+        return colors.warning;
       case 'error':
-        return theme.colors.error;
+        return colors.error;
       case 'neutral':
-        return theme.colors.surfaceHighlight;
+        return colors.surfaceHighlight;
       case 'secondary':
       default:
-        return theme.colors.secondary;
+        return colors.secondary;
     }
   };
 

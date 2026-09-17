@@ -17,6 +17,7 @@ export interface GlowOrbProps {
   scaleRange?: [number, number];
   opacityRange?: [number, number];
   style?: StyleProp<ViewStyle>;
+  wandering?: boolean;
 }
 
 export const GlowOrb: React.FC<GlowOrbProps> = ({
@@ -25,10 +26,13 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
   duration = 3200,
   scaleRange = [0.9, 1.15],
   opacityRange = [0.35, 0.65],
+  wandering = false,
   style,
 }) => {
   const scale = useSharedValue(scaleRange[0]);
   const opacity = useSharedValue(opacityRange[0]);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
     scale.value = withRepeat(
@@ -60,10 +64,37 @@ export const GlowOrb: React.FC<GlowOrbProps> = ({
       -1,
       true
     );
-  }, [duration, scaleRange, opacityRange]);
+
+    if (wandering) {
+      translateX.value = withRepeat(
+        withSequence(
+          withTiming(20, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(-20, { duration: 4000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+
+      translateY.value = withRepeat(
+        withSequence(
+          withTiming(-20, { duration: 4200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(20, { duration: 4200, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    } else {
+      translateX.value = withTiming(0);
+      translateY.value = withTiming(0);
+    }
+  }, [duration, scaleRange, opacityRange, wandering]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      { scale: scale.value },
+      { translateX: translateX.value },
+      { translateY: translateY.value }
+    ],
     opacity: opacity.value,
   }));
 

@@ -9,7 +9,9 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -36,14 +38,16 @@ export const Avatar: React.FC<AvatarProps> = ({
   isAnonymous = false,
   style,
 }) => {
-  const pulseScale = useSharedValue(1);
+  const { colors } = useTheme();
+  const pulseScale = useSharedValue(0.8);
+  const rotation = useSharedValue(0);
 
   useEffect(() => {
     if (showPresence && isOnline) {
       pulseScale.value = withRepeat(
         withSequence(
-          withTiming(1.25, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1.0, { duration: 1200, easing: Easing.inOut(Easing.ease) })
+          withTiming(1.2, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.8, { duration: 1500, easing: Easing.inOut(Easing.ease) })
         ),
         -1,
         true
@@ -51,29 +55,39 @@ export const Avatar: React.FC<AvatarProps> = ({
     }
   }, [showPresence, isOnline]);
 
+  useEffect(() => {
+    if (emotion) {
+      rotation.value = withRepeat(
+        withTiming(360, { duration: 4000, easing: Easing.linear }),
+        -1,
+        false
+      );
+    }
+  }, [emotion]);
+
   const animatedDotStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
   }));
 
+  const animatedRingStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
   const getDimensions = (): number => {
     switch (size) {
-      case 'xs':
-        return 26;
-      case 'sm':
-        return 34;
-      case 'lg':
-        return 60;
-      case 'xl':
-        return 84;
+      case 'xs': return 26;
+      case 'sm': return 34;
+      case 'lg': return 60;
+      case 'xl': return 84;
       case 'md':
-      default:
-        return 44;
+      default: return 44;
     }
   };
 
   const dimension = getDimensions();
   const radius = dimension / 2;
   const emotionConfig = emotion ? theme.getEmotionConfig(emotion) : null;
+  const gradientPair = emotionConfig?.gradientPair || [colors.border, colors.border];
 
   const getInitials = (text?: string): string => {
     if (!text) return '';
@@ -85,7 +99,18 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { width: dimension + (emotionConfig ? 4 : 0), height: dimension + (emotionConfig ? 4 : 0) }, style]}>
+      {emotionConfig && (
+        <Animated.View style={[StyleSheet.absoluteFill, animatedRingStyle, { borderRadius: radius + 2, overflow: 'hidden' }]}>
+          <LinearGradient
+            colors={gradientPair}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+      
       <View
         style={[
           styles.avatarWrapper,
@@ -93,9 +118,9 @@ export const Avatar: React.FC<AvatarProps> = ({
             width: dimension,
             height: dimension,
             borderRadius: radius,
-            borderColor: emotionConfig ? emotionConfig.primary : theme.colors.border,
+            backgroundColor: isAnonymous ? '#201A30' : colors.surfaceElevated,
             borderWidth: emotionConfig ? 2 : 1,
-            backgroundColor: isAnonymous ? '#201A30' : theme.colors.surfaceElevated,
+            borderColor: emotionConfig ? colors.background : colors.border,
           },
         ]}
       >
@@ -103,12 +128,12 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Ionicons
             name="planet-outline"
             size={dimension * 0.52}
-            color={theme.colors.primaryLight}
+            color={colors.accentInk}
           />
         ) : source ? (
           <Image
             source={{ uri: source }}
-            style={{ width: dimension, height: dimension, borderRadius: radius }}
+            style={{ width: dimension - 2, height: dimension - 2, borderRadius: radius - 1 }}
             contentFit="cover"
             transition={200}
           />
@@ -116,7 +141,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Typography
             variant={size === 'xs' || size === 'sm' ? 'caption' : size === 'xl' ? 'h2' : 'body'}
             weight="bold"
-            color={emotionConfig ? emotionConfig.primary : theme.colors.primaryLight}
+            color={emotionConfig ? emotionConfig.primary : colors.primaryLight}
           >
             {getInitials(name)}
           </Typography>
@@ -124,7 +149,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Ionicons
             name="person"
             size={dimension * 0.5}
-            color={theme.colors.textMuted}
+            color={colors.textMuted}
           />
         )}
       </View>
@@ -134,10 +159,12 @@ export const Avatar: React.FC<AvatarProps> = ({
           style={[
             styles.presenceDot,
             {
-              backgroundColor: isOnline ? theme.colors.success : theme.colors.textDisabled,
+              backgroundColor: isOnline ? colors.success : colors.textDisabled,
               width: Math.max(8, dimension * 0.22),
               height: Math.max(8, dimension * 0.22),
               borderRadius: dimension * 0.11,
+              borderColor: colors.background,
+              shadowColor: colors.success,
             },
             isOnline ? animatedDotStyle : null,
           ]}
@@ -163,6 +190,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     borderWidth: 2,
-    borderColor: theme.colors.background,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

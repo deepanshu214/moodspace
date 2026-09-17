@@ -10,13 +10,16 @@ import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useLogout, useDeleteAccount } from '@/hooks/useAuth';
 import { usePrivacySettings, useUpdatePrivacySettings, MOCK_PRIVACY_SETTINGS } from '@/hooks/useUserStats';
-import { AppWalkthroughModal } from '@/components/tutorial';
+import { useTheme, ThemeMode } from '@/context';
 import { Ionicons } from '@expo/vector-icons';
 import { PrivacySettingsPayload } from '@/api/types';
+import { AppWalkthroughModal, InteractiveFeatureTour } from '@/components/tutorial';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Settings'>;
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const { themeMode, setThemeMode, isDark } = useTheme();
   const { mutate: logoutUser, isPending: loggingOut } = useLogout();
   const { mutate: deleteUserAccount, isPending: deletingAccount } = useDeleteAccount();
 
@@ -28,6 +31,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [incognitoByDefault, setIncognitoByDefault] = useState(settings.incognito_by_default);
   const [locationFuzzing, setLocationFuzzing] = useState(settings.location_fuzzing);
   const [showTourModal, setShowTourModal] = useState(false);
+  const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
 
   const [visibility, setVisibility] = useState<'public' | 'connections_only' | 'private'>(
     settings.profile_visibility || 'public'
@@ -75,7 +79,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       {/* ── Top Bar ── */}
       <View style={styles.topBar}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
@@ -85,18 +89,64 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={{ width: 44 }} />
       </View>
 
+      {/* ── 0. APPEARANCE & THEME ── */}
+      <View style={styles.section}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
+          APPEARANCE & THEME
+        </Typography>
+
+        <Card variant="elevated" style={styles.card}>
+          <View style={styles.themeSelectorRow}>
+            {(
+              [
+                { mode: 'dark', label: 'Dark', icon: 'moon' },
+                { mode: 'light', label: 'Light', icon: 'sunny' },
+                { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
+              ] as const
+            ).map((opt) => {
+              const active = themeMode === opt.mode;
+              return (
+                <TouchableOpacity
+                  key={opt.mode}
+                  activeOpacity={0.7}
+                  onPress={() => setThemeMode(opt.mode as ThemeMode)}
+                  style={[
+                    styles.themeOptionBtn,
+                    active && styles.themeOptionBtnActive,
+                  ]}
+                >
+                  <Ionicons
+                    name={opt.icon as any}
+                    size={20}
+                    color={active ? colors.primaryLight : colors.textMuted}
+                  />
+                  <Typography
+                    variant="caption"
+                    weight={active ? 'bold' : 'medium'}
+                    color={active ? colors.primaryLight : colors.textSecondary}
+                    style={{ marginTop: 4 }}
+                  >
+                    {opt.label}
+                  </Typography>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Card>
+      </View>
+
       {/* ── 1. PRIVACY & ANONYMITY ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           PRIVACY & ANONYMITY
         </Typography>
 
         <Card variant="elevated" style={styles.card}>
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Default to Wandering Spirit</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
-                Automatically cloak name & avatar on map bubbles & feed reflections
+              <Typography variant="body" weight="semibold">Default to Anonymous Check-In</Typography>
+              <Typography variant="caption" color={colors.textMuted}>
+                Hide your name & avatar on map bubbles and shared posts
               </Typography>
             </View>
             <Switch
@@ -105,14 +155,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 setIncognitoByDefault(val);
                 handleUpdateSetting('incognito_by_default', val);
               }}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
 
-          <View style={[styles.row, styles.dividerRow]}>
+          <View style={[styles.row, styles.dividerRow, { borderTopColor: colors.border }]}>
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">Atmospheric Location Fuzzing</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="body" weight="semibold">Location Privacy Fuzzing</Typography>
+              <Typography variant="caption" color={colors.textMuted}>
                 Jitter coordinates by ~500m to conceal exact residence
               </Typography>
             </View>
@@ -122,15 +172,15 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 setLocationFuzzing(val);
                 handleUpdateSetting('location_fuzzing', val);
               }}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
 
 
-          <View style={[styles.row, styles.dividerRow]}>
+          <View style={[styles.row, styles.dividerRow, { borderTopColor: colors.border }]}>
             <View style={styles.rowText}>
               <Typography variant="body" weight="semibold">Allow 1-on-1 Matching</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Let people feeling similar emotions connect with you in private chats
               </Typography>
             </View>
@@ -140,12 +190,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 setEchoMatching(val);
                 handleUpdateSetting('allow_echo_matching', val);
               }}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
 
           {/* Profile Visibility Selector */}
-          <View style={styles.dividerRow}>
+          <View style={[styles.dividerRow, { borderTopColor: colors.border }]}>
             <Typography variant="body" weight="semibold" style={{ marginBottom: 6 }}>
               Profile Visibility
             </Typography>
@@ -158,12 +208,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                     setVisibility(opt);
                     handleUpdateSetting('profile_visibility', opt);
                   }}
-                  style={[styles.visPill, visibility === opt && styles.visPillActive]}
+                  style={[
+                    styles.visPill,
+                    { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+                    visibility === opt && styles.visPillActive,
+                  ]}
                 >
                   <Typography
                     variant="caption"
                     weight={visibility === opt ? 'bold' : 'medium'}
-                    color={visibility === opt ? '#FFFFFF' : theme.colors.textSecondary}
+                    color={visibility === opt ? '#FFFFFF' : colors.textSecondary}
                   >
                     {opt === 'public' ? 'Public' : opt === 'connections_only' ? 'Connections' : 'Private'}
                   </Typography>
@@ -176,7 +230,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 2. NOTIFICATIONS & REMINDERS ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           NOTIFICATIONS & REMINDERS
         </Typography>
 
@@ -184,28 +238,28 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.row}>
             <View style={styles.rowText}>
               <Typography variant="body" weight="semibold">Friendly Reactions</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Alert me when someone sends hugs, smiles, or comments
               </Typography>
             </View>
             <Switch
               value={empathyAlerts}
               onValueChange={setEmpathyAlerts}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
 
-          <View style={[styles.row, styles.dividerRow]}>
+          <View style={[styles.row, styles.dividerRow, { borderTopColor: colors.border }]}>
             <View style={styles.rowText}>
               <Typography variant="body" weight="semibold">Daily Check-in Reminder</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Gentle reminder at 8:00 PM to record your day's mood
               </Typography>
             </View>
             <Switch
               value={dailyReminder}
               onValueChange={setDailyReminder}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
         </Card>
@@ -213,7 +267,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 3. SENSORY EXPERIENCE ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           SOUND & VIBRATION
         </Typography>
 
@@ -221,7 +275,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.row}>
             <View style={styles.rowText}>
               <Typography variant="body" weight="semibold">Vibration Feedback</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Vibrate gently when tapping buttons, reactions, and mood bubbles
               </Typography>
             </View>
@@ -231,14 +285,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 setHaptics(val);
                 handleUpdateSetting('haptics_enabled', val);
               }}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
 
-          <View style={[styles.row, styles.dividerRow]}>
+          <View style={[styles.row, styles.dividerRow, { borderTopColor: colors.border }]}>
             <View style={styles.rowText}>
               <Typography variant="body" weight="semibold">Sound Effects</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Play subtle sound chime when posting a mood
               </Typography>
             </View>
@@ -248,7 +302,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 setSoundEffects(val);
                 handleUpdateSetting('sound_effects_enabled', val);
               }}
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              trackColor={{ false: colors.border, true: colors.primary }}
             />
           </View>
         </Card>
@@ -256,7 +310,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 4. APP TOUR & FEATURE GUIDE ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           APP TOUR & GUIDES
         </Typography>
 
@@ -267,19 +321,35 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => setShowTourModal(true)}
           >
             <View style={styles.rowText}>
-              <Typography variant="body" weight="semibold">View Feature Walkthrough</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
-                Review how to use the Mood Map, Check-ins, Circles, and Chats
+              <Typography variant="body" weight="semibold">View Feature Walkthrough (7-Step Interactive Demo)</Typography>
+              <Typography variant="caption" color={colors.textMuted}>
+                Step-by-step interactive walkthrough with hands-on mini demos
               </Typography>
             </View>
-            <Ionicons name="help-circle-outline" size={22} color={theme.colors.primaryLight} />
+            <Ionicons name="sparkles" size={20} color={colors.accentInk} />
+          </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <TouchableOpacity
+            style={styles.exportRow}
+            activeOpacity={0.75}
+            onPress={() => setShowWalkthroughModal(true)}
+          >
+            <View style={styles.rowText}>
+              <Typography variant="body" weight="semibold">Quick Overview Cards</Typography>
+              <Typography variant="caption" color={colors.textMuted}>
+                Swipeable summary cards of core MoodSpace features
+              </Typography>
+            </View>
+            <Ionicons name="help-circle-outline" size={22} color={colors.textMuted} />
           </TouchableOpacity>
         </Card>
       </View>
 
       {/* ── 5. DATA EXPORT ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           DOWNLOAD YOUR DATA
         </Typography>
 
@@ -291,18 +361,18 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           >
             <View style={styles.rowText}>
               <Typography variant="body" weight="semibold">Export My Mood History</Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Download a copy of your mood check-ins and reflections
               </Typography>
             </View>
-            <Ionicons name="download-outline" size={20} color={theme.colors.primaryLight} />
+            <Ionicons name="download-outline" size={20} color={colors.accentInk} />
           </TouchableOpacity>
         </Card>
       </View>
 
       {/* ── 6. ACCOUNT ACTIONS ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           ACCOUNT ACTIONS
         </Typography>
 
@@ -312,7 +382,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             variant="secondary"
             loading={loggingOut}
             onPress={handleLogout}
-            leftIcon={<Ionicons name="log-out-outline" size={18} color={theme.colors.textPrimary} />}
+            leftIcon={<Ionicons name="log-out-outline" size={18} color={colors.textPrimary} />}
           />
 
           <Button
@@ -325,14 +395,20 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
 
-      <Typography variant="caption" color={theme.colors.textMuted} style={styles.versionText}>
+      <Typography variant="caption" color={colors.textMuted} style={styles.versionText}>
         MoodSpace v1.0.0 • Emotional Wellness Network
       </Typography>
 
-      {/* Feature Walkthrough Modal */}
-      <AppWalkthroughModal
+      {/* Interactive Feature Tour (with live sandboxes) */}
+      <InteractiveFeatureTour
         visible={showTourModal}
         onClose={() => setShowTourModal(false)}
+      />
+
+      {/* Feature Walkthrough Overview Modal */}
+      <AppWalkthroughModal
+        visible={showWalkthroughModal}
+        onClose={() => setShowWalkthroughModal(false)}
       />
     </ScreenWrapper>
   );
@@ -341,7 +417,6 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
   },
   topBar: {
     flexDirection: 'row',
@@ -358,10 +433,6 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   row: {
     flexDirection: 'row',
@@ -370,7 +441,6 @@ const styles = StyleSheet.create({
   },
   dividerRow: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
@@ -387,9 +457,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: theme.radius.round,
-    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   visPillActive: {
     backgroundColor: theme.colors.primary,
@@ -400,8 +468,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  divider: {
+    height: 1,
+    marginVertical: 12,
+  },
   btnStack: {
     gap: 12,
+  },
+  themeSelectorRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  themeOptionBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+  },
+  themeOptionBtnActive: {
+    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+    borderColor: theme.colors.primaryLight,
   },
   versionText: {
     textAlign: 'center',

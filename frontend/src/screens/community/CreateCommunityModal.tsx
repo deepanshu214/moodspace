@@ -13,6 +13,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -53,6 +54,7 @@ const PRIVACY_OPTIONS = [
 ];
 
 export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Mindfulness');
   const [description, setDescription] = useState('');
@@ -106,10 +108,10 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             style={styles.closeBtn}
           >
-            <Ionicons name="close" size={22} color={theme.colors.textPrimary} />
+            <Ionicons name="close" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <Typography variant="body" weight="bold" color={theme.colors.textPrimary}>
+          <Typography variant="body" weight="bold" color={colors.textPrimary}>
             Form a Community Sanctuary
           </Typography>
 
@@ -123,10 +125,10 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
           {/* Section: Circle Name */}
           <View style={styles.fieldSection}>
             <View style={styles.labelRow}>
-              <Typography variant="caption" weight="bold" color={theme.colors.textSecondary}>
+              <Typography variant="caption" weight="bold" color={colors.textSecondary}>
                 SANCTUARY NAME
               </Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {name.length}/50
               </Typography>
             </View>
@@ -134,14 +136,14 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
               value={name}
               onChangeText={(text) => setName(text.slice(0, 50))}
               placeholder="e.g. Quiet Solitude & Tea"
-              placeholderTextColor={theme.colors.textMuted}
-              style={styles.textInput}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.textInput, { color: colors.textPrimary }]}
             />
           </View>
 
           {/* Section: Category Selector */}
           <View style={styles.fieldSection}>
-            <Typography variant="caption" weight="bold" color={theme.colors.textSecondary} style={styles.sectionLabel}>
+            <Typography variant="caption" weight="bold" color={colors.textSecondary} style={styles.sectionLabel}>
               CHOOSE SANCTUARY SPHERE
             </Typography>
             <View style={styles.chipsRow}>
@@ -160,7 +162,7 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
                     <Typography
                       variant="caption"
                       weight={isSelected ? 'bold' : 'medium'}
-                      color={isSelected ? '#FFFFFF' : theme.colors.textSecondary}
+                      color={isSelected ? '#FFFFFF' : colors.textSecondary}
                     >
                       {cat}
                     </Typography>
@@ -173,10 +175,10 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
           {/* Section: Description */}
           <View style={styles.fieldSection}>
             <View style={styles.labelRow}>
-              <Typography variant="caption" weight="bold" color={theme.colors.textSecondary}>
+              <Typography variant="caption" weight="bold" color={colors.textSecondary}>
                 SACRED INTENTION & PURPOSE
               </Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {description.length}/500
               </Typography>
             </View>
@@ -184,46 +186,46 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
               value={description}
               onChangeText={(text) => setDescription(text.slice(0, 500))}
               placeholder="Describe who belongs here and what feelings this sanctuary holds space for..."
-              placeholderTextColor={theme.colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={4}
-              style={[styles.textInput, styles.textArea]}
+              style={[styles.textInput, styles.textArea, { color: colors.textPrimary }]}
             />
           </View>
 
           {/* Section: Sanctuary Guidelines */}
           <View style={styles.fieldSection}>
-            <Typography variant="caption" weight="bold" color={theme.colors.textSecondary} style={styles.sectionLabel}>
+            <Typography variant="caption" weight="bold" color={colors.textSecondary} style={styles.sectionLabel}>
               GUIDELINES & RESPECT PROTOCOLS (OPTIONAL)
             </Typography>
             <TextInput
               value={rules}
               onChangeText={setRules}
               placeholder="e.g. Gentle listening only, non-judgmental presence..."
-              placeholderTextColor={theme.colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
-              style={[styles.textInput, styles.textAreaSmall]}
+              style={[styles.textInput, styles.textAreaSmall, { color: colors.textPrimary }]}
             />
           </View>
 
           {/* Section: Welcome Message */}
           <View style={styles.fieldSection}>
-            <Typography variant="caption" weight="bold" color={theme.colors.textSecondary} style={styles.sectionLabel}>
+            <Typography variant="caption" weight="bold" color={colors.textSecondary} style={styles.sectionLabel}>
               WELCOME BLESSING (OPTIONAL)
             </Typography>
             <TextInput
               value={welcomeMessage}
               onChangeText={setWelcomeMessage}
               placeholder="A gentle welcome note shown to souls when they join..."
-              placeholderTextColor={theme.colors.textMuted}
-              style={styles.textInput}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.textInput, { color: colors.textPrimary }]}
             />
           </View>
 
           {/* Section: Privacy Selector */}
           <View style={styles.fieldSection}>
-            <Typography variant="caption" weight="bold" color={theme.colors.textSecondary} style={styles.sectionLabel}>
+            <Typography variant="caption" weight="bold" color={colors.textSecondary} style={styles.sectionLabel}>
               SANCTUARY ACCESS & PRIVACY
             </Typography>
             {PRIVACY_OPTIONS.map((opt) => {
@@ -242,14 +244,14 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
                     <Ionicons
                       name={opt.icon as any}
                       size={20}
-                      color={isSelected ? theme.colors.primaryLight : theme.colors.textMuted}
+                      color={isSelected ? colors.primaryLight : colors.textMuted}
                     />
                   </View>
                   <View style={styles.privacyTextWrap}>
-                    <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
+                    <Typography variant="bodySmall" weight="bold" color={colors.textPrimary}>
                       {opt.title}
                     </Typography>
-                    <Typography variant="caption" color={theme.colors.textMuted}>
+                    <Typography variant="caption" color={colors.textMuted}>
                       {opt.desc}
                     </Typography>
                   </View>
@@ -279,7 +281,6 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   headerBar: {
     flexDirection: 'row',
@@ -317,7 +318,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: theme.colors.textPrimary,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,

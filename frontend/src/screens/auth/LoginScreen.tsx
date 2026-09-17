@@ -2,22 +2,27 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
-import { theme } from '@/theme';
+import { theme, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { IconButton } from '@/components/common/IconButton';
 import { Toast } from '@/components/common/Toast';
 import { Modal } from '@/components/common/Modal';
+import { GlassCard } from '@/components/common/GlassCard';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { AuroraBackground } from '@/components/effects/AuroraBackground';
 import { useLogin } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/authStore';
 import { validation } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
+import { haptics } from '@/theme/haptics';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -36,21 +41,26 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setPasswordError(pErr);
 
     if (eErr || pErr) {
+      haptics.warning();
       return;
     }
 
     try {
+      haptics.medium();
       await loginMutation.mutateAsync({
         email: email.trim(),
         password,
       });
+      haptics.success();
     } catch (err: any) {
+      haptics.error();
       setToastMessage(err?.message || 'Login failed. Please check your email and password.');
       setShowToast(true);
     }
   };
 
   const handleGuestLogin = async () => {
+    haptics.selection();
     await authLogin('demo-guest-token', {
       id: 'usr-guest-1',
       email: 'guest@moodspace.app',
@@ -60,176 +70,196 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <ScreenWrapper scrollable contentContainerStyle={styles.container}>
-      <Toast
-        visible={showToast}
-        type="error"
-        message={toastMessage}
-        onDismiss={() => setShowToast(false)}
-      />
+    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
+      {/* Background Aurora */}
+      <AuroraBackground emotion="calm" />
 
-      <IconButton
-        icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
-        variant="ghost"
-        onPress={() => navigation.goBack()}
-        style={styles.backBtn}
-      />
-
-      <View style={styles.header}>
-        <Typography variant="h1" weight="bold">
-          Welcome Back
-        </Typography>
-        <Typography variant="body" color={theme.colors.textSecondary} style={styles.subtitle}>
-          Sign in to share how you're feeling and see how friends are doing.
-        </Typography>
-      </View>
-
-      <View style={styles.form}>
-        <Input
-          label="Email Address"
-          placeholder="your@email.com"
-          value={email}
-          onChangeText={(val) => {
-            setEmail(val);
-            if (emailError) setEmailError(null);
-          }}
-          error={emailError || undefined}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          leftIcon={<Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />}
+      <ScreenWrapper scrollable contentContainerStyle={styles.container}>
+        <Toast
+          visible={showToast}
+          type="error"
+          message={toastMessage}
+          onDismiss={() => setShowToast(false)}
         />
 
-        <Input
-          label="Password"
-          placeholder="••••••••"
-          value={password}
-          onChangeText={(val) => {
-            setPassword(val);
-            if (passwordError) setPasswordError(null);
-          }}
-          error={passwordError || undefined}
-          isPassword
-          leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.colors.textMuted} />}
+        <IconButton
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
+          variant="glass"
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
         />
 
-        <TouchableOpacity
-          style={styles.forgotBtn}
-          activeOpacity={0.7}
-          onPress={() => setForgotModalVisible(true)}
-        >
-          <Typography variant="caption" color={theme.colors.primaryLight} weight="semibold">
-            Forgot Password?
+        <View style={styles.header}>
+          <Typography variant="display" weight="heavy" style={{ color: colors.textPrimary }}>
+            Welcome Back
           </Typography>
-        </TouchableOpacity>
-
-        <Button
-          title="Sign In"
-          variant="primary"
-          fullWidth
-          size="lg"
-          loading={loginMutation.isPending}
-          onPress={handleLogin}
-          style={styles.submitBtn}
-        />
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Typography variant="caption" color={theme.colors.textMuted} style={styles.dividerText}>
-            OR
+          <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
+            Sign in to share your feelings and connect with nearby friends.
           </Typography>
-          <View style={styles.dividerLine} />
         </View>
 
-        <Button
-          title="Explore as Guest (No Login Needed)"
-          variant="outline"
-          fullWidth
-          size="lg"
-          onPress={handleGuestLogin}
-          style={styles.guestBtn}
-        />
-      </View>
+        <GlassCard variant="default" style={styles.formCard}>
+          <View style={styles.form}>
+            <Input
+              label="Email Address"
+              placeholder="your@email.com"
+              value={email}
+              onChangeText={(val) => {
+                setEmail(val);
+                if (emailError) setEmailError(null);
+              }}
+              error={emailError || undefined}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              leftIcon={<Ionicons name="mail-outline" size={18} color={colors.textMuted} />}
+            />
 
-      <View style={styles.footer}>
-        <Typography variant="bodySmall" color={theme.colors.textSecondary}>
-          Don't have an account?{' '}
-        </Typography>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')} activeOpacity={0.7}>
-          <Typography variant="bodySmall" weight="bold" color={theme.colors.primaryLight}>
-            Sign Up
+            <Input
+              label="Password"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={(val) => {
+                setPassword(val);
+                if (passwordError) setPasswordError(null);
+              }}
+              error={passwordError || undefined}
+              isPassword
+              leftIcon={<Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />}
+            />
+
+            <TouchableOpacity
+              style={styles.forgotBtn}
+              activeOpacity={0.7}
+              onPress={() => {
+                setForgotModalVisible(true);
+                haptics.light();
+              }}
+            >
+              <Typography variant="caption" color={colors.accentInk} weight="semibold">
+                Forgot Password?
+              </Typography>
+            </TouchableOpacity>
+
+            <Button
+              title="Sign In"
+              variant="aurora"
+              fullWidth
+              size="lg"
+              loading={loginMutation.isPending}
+              onPress={handleLogin}
+              style={styles.submitBtn}
+            />
+
+            <View style={styles.divider}>
+              <View style={[styles.dividerLine, { backgroundColor: colors.glass.border }]} />
+              <Typography variant="caption" color={colors.textMuted} style={styles.dividerText}>
+                OR
+              </Typography>
+              <View style={[styles.dividerLine, { backgroundColor: colors.glass.border }]} />
+            </View>
+
+            <Button
+              title="Explore as Guest (No Login Needed)"
+              variant="glass"
+              fullWidth
+              size="lg"
+              onPress={handleGuestLogin}
+              style={[styles.guestBtn, { borderColor: colors.glass.borderLight }]}
+            />
+          </View>
+        </GlassCard>
+
+        <View style={styles.footer}>
+          <Typography variant="bodySmall" color={colors.textSecondary}>
+            Don't have an account?{' '}
           </Typography>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Register');
+              haptics.selection();
+            }}
+            activeOpacity={0.7}
+          >
+            <Typography variant="bodySmall" weight="bold" color={colors.accentInk}>
+              Sign Up
+            </Typography>
+          </TouchableOpacity>
+        </View>
 
-      {/* Forgot Password Modal */}
-      <Modal
-        visible={forgotModalVisible}
-        title="Reset Password"
-        onClose={() => setForgotModalVisible(false)}
-        footer={
-          <Button
-            title="Got it"
-            variant="primary"
-            fullWidth
-            onPress={() => setForgotModalVisible(false)}
-          />
-        }
-      >
-        <Typography variant="body" color={theme.colors.textSecondary}>
-          We sent a password reset link to {email || 'your registered email'}. Follow the instructions in the email to set a new password.
-        </Typography>
-      </Modal>
-    </ScreenWrapper>
+        {/* Forgot Password Modal */}
+        <Modal
+          visible={forgotModalVisible}
+          title="Reset Password"
+          onClose={() => setForgotModalVisible(false)}
+          footer={
+            <Button
+              title="Got it"
+              variant="primary"
+              fullWidth
+              onPress={() => setForgotModalVisible(false)}
+            />
+          }
+        >
+          <Typography variant="body" color={colors.textSecondary}>
+            We sent a password reset link to {email || 'your registered email'}. Follow the instructions in the email to set a new password.
+          </Typography>
+        </Modal>
+      </ScreenWrapper>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    flex: 1,
+  },
   container: {
-    padding: theme.spacing.xl,
+    padding: 20,
     flexGrow: 1,
     justifyContent: 'space-between',
   },
   backBtn: {
     alignSelf: 'flex-start',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   header: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 20,
   },
   subtitle: {
-    marginTop: 6,
+    marginTop: 8,
     lineHeight: 22,
+  },
+  formCard: {
+    padding: 20,
+    borderRadius: 24,
   },
   form: {
     width: '100%',
   },
   forgotBtn: {
     alignSelf: 'flex-end',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   submitBtn: {
-    marginTop: theme.spacing.xs,
+    marginTop: 4,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: theme.spacing.lg,
+    marginVertical: 18,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: theme.colors.border,
   },
   dividerText: {
-    marginHorizontal: theme.spacing.md,
+    marginHorizontal: 12,
   },
-  guestBtn: {
-    borderColor: theme.colors.borderLight,
-  },
+  guestBtn: {},
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: 16,
   },
 });

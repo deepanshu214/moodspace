@@ -16,12 +16,22 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { AuraDisplay } from '../social/AuraDisplay';
+import { ReactionFloater } from './ReactionFloater';
+import { haptics } from '@/theme/haptics';
 import { Ionicons } from '@expo/vector-icons';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const EMPATHY_REACTIONS = [
+  { type: 'heart', label: 'Support', emoji: '❤️', icon: 'heart', color: '#FD79A8' },
+  { type: 'hug', label: 'Hug', emoji: '🤗', icon: 'hand-left', color: '#A29BFE' },
+  { type: 'empathy', label: 'With You', emoji: '🌊', icon: 'water', color: '#00CEC9' },
+  { type: 'celebrate', label: 'Celebrate', emoji: '✨', icon: 'sparkles', color: '#FFB800' },
+];
 
 export interface BubbleDetailSheetProps {
   visible: boolean;
@@ -54,24 +64,30 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   onSendEcho,
   onNavigateDetails,
 }) => {
+  const { colors } = useTheme();
   if (!bubble) return null;
 
   const [echoText, setEchoText] = useState('');
-  const [resonated, setResonated] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [floaterKey, setFloaterKey] = useState(0);
+  const [floaterEmoji, setFloaterEmoji] = useState('❤️');
   const [resonanceCount, setResonanceCount] = useState(bubble.likesCount || 0);
 
   const config = theme.getEmotionConfig(bubble.emotion);
   const heartScale = useSharedValue(1);
 
-  const handleResonate = () => {
-    if (resonated) {
-      setResonated(false);
+  const handleReactionPress = (rx: typeof EMPATHY_REACTIONS[0]) => {
+    haptics.medium();
+    if (selectedReaction === rx.type) {
+      setSelectedReaction(null);
       setResonanceCount((prev) => Math.max(0, prev - 1));
     } else {
-      setResonated(true);
-      setResonanceCount((prev) => prev + 1);
+      setSelectedReaction(rx.type);
+      setFloaterEmoji(rx.emoji);
+      setFloaterKey(Date.now());
+      setResonanceCount((prev) => (selectedReaction ? prev : prev + 1));
       heartScale.value = withSequence(
-        withSpring(1.4, { damping: 4, stiffness: 200 }),
+        withSpring(1.3, { damping: 4, stiffness: 220 }),
         withSpring(1, { damping: 10, stiffness: 150 })
       );
     }
@@ -88,7 +104,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   }));
 
   const isAnon = bubble.isAnonymous;
-  const authorTitle = isAnon ? 'Anonymous Spirit' : bubble.authorName;
+  const authorTitle = isAnon ? 'Anonymous Friend' : bubble.authorName;
 
   return (
     <Modal
@@ -132,10 +148,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                   />
                 )}
                 <View style={styles.authorTexts}>
-                  <Typography variant="body" weight="bold" color={theme.colors.textPrimary}>
+                  <Typography variant="body" weight="bold" color={colors.textPrimary}>
                     {authorTitle}
                   </Typography>
-                  <Typography variant="caption" color={theme.colors.textMuted}>
+                  <Typography variant="caption" color={colors.textMuted}>
                     {bubble.timestamp || 'Moments ago'}
                   </Typography>
                 </View>
@@ -149,8 +165,8 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             {/* Context Weather Capsule (if available) */}
             {(bubble.locationCity || bubble.weatherCondition) && (
               <View style={styles.weatherPill}>
-                <Ionicons name="location-sharp" size={12} color={theme.colors.primaryLight} />
-                <Typography variant="caption" color={theme.colors.textSecondary} style={styles.weatherText}>
+                <Ionicons name="location-sharp" size={12} color={colors.accentInk} />
+                <Typography variant="caption" color={colors.textSecondary} style={styles.weatherText}>
                   {bubble.locationCity || 'Nearby'}
                   {bubble.weatherCondition ? ` • ${bubble.weatherCondition}` : ''}
                   {bubble.weatherTemp ? ` (${bubble.weatherTemp}°C)` : ''}
@@ -180,7 +196,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
 
                 {bubble.secondaryEmotion && (
                   <View style={styles.secondaryPill}>
-                    <Typography variant="caption" color={theme.colors.textSecondary}>
+                    <Typography variant="caption" color={colors.textSecondary}>
                       + {bubble.secondaryEmotion}
                     </Typography>
                   </View>
@@ -211,42 +227,50 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             <View style={styles.contentBox}>
               <Typography
                 variant="body"
-                color={theme.colors.textPrimary}
+                color={colors.textPrimary}
                 style={styles.reflectionText}
               >
                 "{bubble.content}"
               </Typography>
             </View>
 
-            {/* Interaction Row (Resonate, Echo, Full View) */}
-            <View style={styles.interactionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={handleResonate}
-                style={[
-                  styles.actionButton,
-                  resonated && {
-                    backgroundColor: 'rgba(253, 121, 168, 0.2)',
-                    borderColor: '#FD79A8',
-                  },
-                ]}
-              >
-                <Animated.View style={animatedHeartStyle}>
-                  <Ionicons
-                    name={resonated ? 'heart' : 'heart-outline'}
-                    size={20}
-                    color={resonated ? '#FD79A8' : theme.colors.textSecondary}
-                  />
-                </Animated.View>
-                <Typography
-                  variant="caption"
-                  weight="bold"
-                  color={resonated ? '#FD79A8' : theme.colors.textSecondary}
-                  style={styles.actionCount}
-                >
-                  {resonanceCount} Resonance
-                </Typography>
-              </TouchableOpacity>
+            {/* Empathy Reaction Bar */}
+            <View style={styles.reactionSection}>
+              <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 8 }}>
+                SEND WARMTH & EMPATHY ({resonanceCount})
+              </Typography>
+
+              <View style={styles.reactionGrid}>
+                {EMPATHY_REACTIONS.map((rx) => {
+                  const isSelected = selectedReaction === rx.type;
+                  return (
+                    <TouchableOpacity
+                      key={rx.type}
+                      activeOpacity={0.7}
+                      onPress={() => handleReactionPress(rx)}
+                      style={[
+                        styles.reactionPill,
+                        isSelected && {
+                          backgroundColor: `${rx.color}28`,
+                          borderColor: rx.color,
+                        },
+                      ]}
+                    >
+                      {isSelected && (
+                        <ReactionFloater emoji={floaterEmoji} triggerKey={floaterKey} />
+                      )}
+                      <Typography style={{ fontSize: 16, marginRight: 6 }}>{rx.emoji}</Typography>
+                      <Typography
+                        variant="caption"
+                        weight={isSelected ? 'bold' : 'semibold'}
+                        color={isSelected ? rx.color : colors.textSecondary}
+                      >
+                        {rx.label}
+                      </Typography>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               {onNavigateDetails && (
                 <TouchableOpacity
@@ -257,10 +281,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                   }}
                   style={styles.detailLinkBtn}
                 >
-                  <Typography variant="caption" weight="semibold" color={theme.colors.primaryLight}>
+                  <Typography variant="caption" weight="semibold" color={colors.accentInk}>
                     Open Full Thread
                   </Typography>
-                  <Ionicons name="arrow-forward" size={14} color={theme.colors.primaryLight} />
+                  <Ionicons name="arrow-forward" size={14} color={colors.accentInk} />
                 </TouchableOpacity>
               )}
             </View>
@@ -269,10 +293,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             <View style={styles.replyBar}>
               <TextInput
                 placeholder="Send a comforting echo..."
-                placeholderTextColor={theme.colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={echoText}
                 onChangeText={setEchoText}
-                style={styles.replyInput}
+                style={[styles.replyInput, { color: colors.textPrimary }]}
               />
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -280,6 +304,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                 disabled={!echoText.trim()}
                 style={[
                   styles.replySendBtn,
+                  { backgroundColor: colors.primary },
                   !echoText.trim() && { opacity: 0.4 },
                 ]}
               >
@@ -420,11 +445,25 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     fontStyle: 'italic',
   },
-  interactionRow: {
+  reactionSection: {
+    marginBottom: 16,
+  },
+  reactionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  reactionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
   },
   actionButton: {
     flexDirection: 'row',
@@ -458,7 +497,6 @@ const styles = StyleSheet.create({
   },
   replyInput: {
     flex: 1,
-    color: theme.colors.textPrimary,
     fontSize: 14,
     fontFamily: theme.typography.fontFamily,
     paddingVertical: 6,
@@ -467,7 +505,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

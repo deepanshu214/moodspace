@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
@@ -33,11 +34,12 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
   onPass,
   isConnecting,
 }) => {
+  const { colors } = useTheme();
   const emotionCfg = theme.getEmotionConfig(match.current_emotion);
   const isAnon = match.is_anonymous;
 
   return (
-    <View style={[styles.card, { borderColor: emotionCfg.primary + '40' }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: emotionCfg.primary + '40' }]}>
       {/* Emotion glow strip */}
       <View style={[styles.emotionStrip, { backgroundColor: emotionCfg.background }]}>
         <Typography variant="caption" color={emotionCfg.primary} style={styles.emotionLabel}>
@@ -63,16 +65,16 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
           </Typography>
           {match.city && !isAnon && (
             <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={13} color={theme.colors.textMuted} />
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Ionicons name="location-outline" size={13} color={colors.textMuted} />
+              <Typography variant="caption" color={colors.textMuted}>
                 {match.city}
               </Typography>
             </View>
           )}
           {match.mutual_communities !== undefined && match.mutual_communities > 0 && (
             <View style={styles.locationRow}>
-              <Ionicons name="people-outline" size={13} color={theme.colors.textMuted} />
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Ionicons name="people-outline" size={13} color={colors.textMuted} />
+              <Typography variant="caption" color={colors.textMuted}>
                 {match.mutual_communities} mutual sanctuar{match.mutual_communities === 1 ? 'y' : 'ies'}
               </Typography>
             </View>
@@ -83,7 +85,7 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
       {/* Resonance score bar */}
       <View style={styles.resonanceSection}>
         <View style={styles.resonanceHeader}>
-          <Typography variant="bodySmall" color={theme.colors.textSecondary}>
+          <Typography variant="bodySmall" color={colors.textSecondary}>
             Resonance Score
           </Typography>
           <Typography
@@ -94,7 +96,7 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
             {match.resonance_score}%
           </Typography>
         </View>
-        <View style={styles.resonanceBar}>
+        <View style={[styles.resonanceBar, { backgroundColor: colors.surfaceElevated }]}>
           <View
             style={[
               styles.resonanceFill,
@@ -113,13 +115,13 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
           {match.match_reasons.slice(0, 3).map((reason) => {
             const meta = REASON_LABELS[reason];
             return (
-              <View key={reason} style={styles.reasonPill}>
+              <View key={reason} style={[styles.reasonPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <Ionicons
                   name={meta.icon as any}
                   size={11}
-                  color={theme.colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Typography variant="caption" color={theme.colors.textSecondary} style={styles.reasonText}>
+                <Typography variant="caption" color={colors.textSecondary} style={styles.reasonText}>
                   {meta.label}
                 </Typography>
               </View>
@@ -130,9 +132,9 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
 
       {/* Icebreaker suggestion */}
       {match.icebreaker && (
-        <View style={styles.icebreaker}>
-          <Ionicons name="chatbubble-ellipses-outline" size={14} color={theme.colors.primaryLight} />
-          <Typography variant="bodySmall" color={theme.colors.textSecondary} style={styles.icebreakerText}>
+        <View style={[styles.icebreaker, { borderLeftColor: colors.primaryLight }]}>
+          <Ionicons name="chatbubble-ellipses-outline" size={14} color={colors.accentInk} />
+          <Typography variant="bodySmall" color={colors.textSecondary} style={styles.icebreakerText}>
             💬 "{match.icebreaker.prompt}"
           </Typography>
         </View>
@@ -142,10 +144,10 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
       <View style={styles.actions}>
         <TouchableOpacity
           onPress={() => onPass(match)}
-          style={styles.passBtn}
+          style={[styles.passBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
           activeOpacity={0.7}
         >
-          <Ionicons name="close" size={22} color={theme.colors.textMuted} />
+          <Ionicons name="close" size={22} color={colors.textMuted} />
         </TouchableOpacity>
 
         <Button
@@ -161,7 +163,6 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.xl,
     borderWidth: 1,
     overflow: 'hidden',
@@ -205,7 +206,6 @@ const styles = StyleSheet.create({
   },
   resonanceBar: {
     height: 6,
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.round,
     overflow: 'hidden',
   },
@@ -223,13 +223,11 @@ const styles = StyleSheet.create({
   reasonPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.round,
     paddingHorizontal: 10,
     paddingVertical: 4,
     gap: 4,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   reasonText: {
     fontSize: 11,
@@ -243,7 +241,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     borderLeftWidth: 3,
-    borderLeftColor: theme.colors.primaryLight,
     gap: 8,
   },
   icebreakerText: {
@@ -262,9 +259,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },

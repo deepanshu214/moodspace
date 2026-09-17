@@ -7,10 +7,19 @@ import {
   TouchableOpacity,
   Pressable,
   ViewStyle,
+  Platform,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+} from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -37,9 +46,12 @@ export const Input = forwardRef<TextInput, InputProps>(({
   editable = true,
   ...rest
 }, ref) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const internalInputRef = useRef<TextInput>(null);
+  
+  const focusAnimation = useSharedValue(0);
 
   useImperativeHandle(ref, () => internalInputRef.current as TextInput);
 
@@ -51,21 +63,40 @@ export const Input = forwardRef<TextInput, InputProps>(({
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
+    focusAnimation.value = withTiming(1, { duration: 300 });
     onFocus?.(e);
   };
 
   const handleBlur = (e: any) => {
     setIsFocused(false);
+    focusAnimation.value = withTiming(0, { duration: 300 });
     onBlur?.(e);
   };
 
   const hasError = !!error;
 
-  const getBorderColor = (): string => {
-    if (hasError) return theme.colors.error;
-    if (isFocused) return theme.colors.primary;
-    return theme.colors.border;
-  };
+  const animatedBorderStyle = useAnimatedStyle(() => {
+    const errorColor = colors.error;
+    const defaultBorderColor = colors.glass.border;
+    const focusedColor = colors.primaryLight;
+    
+    return {
+      borderColor: hasError 
+        ? errorColor 
+        : interpolateColor(
+            focusAnimation.value,
+            [0, 1],
+            [defaultBorderColor, focusedColor]
+          ),
+      shadowColor: focusedColor,
+      shadowOpacity: interpolateColor(focusAnimation.value, [0, 1], [0, 0.4]),
+    };
+  });
+
+  const Container = Platform.OS === 'android' ? View : BlurView;
+  const containerProps = Platform.OS === 'android' 
+    ? { style: [StyleSheet.absoluteFill, { backgroundColor: editable ? colors.glass.surface : colors.backgroundSecondary }] }
+    : { intensity: 25, tint: 'dark' as const, style: StyleSheet.absoluteFill };
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -73,72 +104,76 @@ export const Input = forwardRef<TextInput, InputProps>(({
         <Typography
           variant="bodySmall"
           weight="medium"
-          color={hasError ? theme.colors.error : theme.colors.textSecondary}
+          color={hasError ? colors.error : colors.textSecondary}
           style={styles.label}
         >
           {label}
         </Typography>
       )}
 
-      <Pressable
-        onPress={handleContainerPress}
-        style={[
-          styles.inputWrapper,
-          {
-            borderColor: getBorderColor(),
-            backgroundColor: editable ? theme.colors.surface : theme.colors.backgroundSecondary,
-          },
-          isFocused && styles.focusedGlow,
-        ]}
-      >
-        {leftIcon && (
-          <View pointerEvents="none" style={styles.iconSlotLeft}>
-            {leftIcon}
-          </View>
-        )}
+      <Pressable onPress={handleContainerPress} style={styles.pressableWrapper}>
+        <Animated.View style={[styles.inputWrapper, animatedBorderStyle]}>
+          <Container {...containerProps}>
+             {Platform.OS !== 'android' && (
+               <View style={[StyleSheet.absoluteFill, { backgroundColor: editable ? colors.glass.surface : colors.backgroundSecondary }]} />
+             )}
+          </Container>
 
-        <TextInput
-          ref={internalInputRef}
-          style={[
-            styles.textInput,
-            {
-              color: editable ? theme.colors.textPrimary : theme.colors.textDisabled,
-              fontFamily: theme.typography.fontFamily,
-            },
-            style,
-          ]}
-          placeholderTextColor={theme.colors.textMuted}
-          secureTextEntry={isPassword ? !showPassword : secureTextEntry}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          editable={editable}
-          {...rest}
-        />
+          <View style={styles.contentRow} pointerEvents="box-none">
+            {leftIcon && (
+              <View pointerEvents="none" style={styles.iconSlotLeft}>
+                {leftIcon}
+              </View>
+            )}
 
-        {isPassword ? (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.iconSlotRight}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color={theme.colors.textSecondary}
+            <TextInput
+              ref={internalInputRef}
+              style={[
+                styles.textInput,
+                {
+                  color: editable ? colors.textPrimary : colors.textDisabled,
+                  fontFamily: theme.typography.fontFamily,
+                },
+                style,
+              ]}
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry={isPassword ? !showPassword : secureTextEntry}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              editable={editable}
+              {...rest}
             />
-          </TouchableOpacity>
-        ) : (
-          rightIcon && <View style={styles.iconSlotRight}>{rightIcon}</View>
-        )}
+
+            {isPassword ? (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.iconSlotRight}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            ) : (
+              rightIcon && (
+                <View pointerEvents="none" style={styles.iconSlotRight}>
+                  {rightIcon}
+                </View>
+              )
+            )}
+          </View>
+        </Animated.View>
       </Pressable>
 
       {error ? (
-        <Typography variant="caption" color={theme.colors.error} style={styles.feedbackText}>
+        <Typography variant="caption" color={colors.error} style={styles.feedbackText}>
           {error}
         </Typography>
       ) : helperText ? (
-        <Typography variant="caption" color={theme.colors.textMuted} style={styles.feedbackText}>
+        <Typography variant="caption" color={colors.textMuted} style={styles.feedbackText}>
           {helperText}
         </Typography>
       ) : null}
@@ -156,20 +191,23 @@ const styles = StyleSheet.create({
   label: {
     marginBottom: theme.spacing.xs,
   },
+  pressableWrapper: {
+    width: '100%',
+  },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1,
     borderRadius: theme.radius.md,
     minHeight: 52,
-    paddingHorizontal: theme.spacing.md,
-  },
-  focusedGlow: {
-    borderColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
+    overflow: 'hidden',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 52,
+    paddingHorizontal: theme.spacing.md,
   },
   textInput: {
     flex: 1,

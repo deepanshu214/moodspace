@@ -5,39 +5,68 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+
 import { MainTabParamList } from './types';
 import { HomeNavigator } from './HomeNavigator';
 import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
 import { ChatNavigator } from './ChatNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
-import { theme } from '@/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { theme, colors, springs, shadows } from '@/theme';
 import { haptics } from '@/theme/haptics';
+
+import { useTheme } from '@/context';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const EmptyScreen = () => <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+const EmptyScreen = () => {
+  const { colors } = useTheme();
+  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+};
 
 interface CenterFabButtonProps {
   onPress: () => void;
 }
 
 const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
+  const pulseScale = useSharedValue(1);
+
+  React.useEffect(() => {
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.12, { duration: 1600, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.9, theme.springs.snappy);
+    scale.value = withSpring(0.9, springs.stiff);
     haptics.medium();
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, theme.springs.bouncy);
+    scale.value = withSpring(1, springs.bouncy);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+  }));
+
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: 0.25,
   }));
 
   return (
@@ -47,42 +76,69 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
       onPressOut={handlePressOut}
       style={styles.centerBtnContainer}
     >
-      <Animated.View style={[styles.centerFab, animatedStyle]}>
-        <Ionicons name="add" size={28} color="#FFFFFF" />
+      <Animated.View style={[styles.centerFabGlow, pulseAnimatedStyle, { backgroundColor: colors.primary }]} />
+      <Animated.View style={[styles.centerFab, animatedStyle, { borderColor: colors.glass.border }]}>
+        <LinearGradient
+          colors={[colors.primary, colors.secondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.centerFabGradient}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </LinearGradient>
       </Animated.View>
     </Pressable>
   );
 };
 
 export const MainTabNavigator: React.FC = () => {
+  const { colors, isDark } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: theme.colors.primaryLight,
-        tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(22, 17, 34, 0.94)',
-          borderTopColor: 'rgba(255, 255, 255, 0.08)',
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 68,
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          borderWidth: 0,
+          borderRadius: 32,
+          marginHorizontal: 16,
+          marginBottom: Platform.OS === 'ios' ? 24 : 14,
+          height: Platform.OS === 'ios' ? 76 : 66,
           paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          paddingBottom: Platform.OS === 'ios' ? 16 : 8,
           position: 'absolute',
-          elevation: 8,
+          elevation: 16,
+          ...shadows.medium,
         },
-        tabBarBackground: () =>
-          Platform.OS === 'ios' ? (
-            <BlurView
-              tint="dark"
-              intensity={45}
-              style={StyleSheet.absoluteFill}
+        tabBarBackground: () => (
+          <View style={[styles.tabBackgroundWrapper, { borderColor: colors.glass.border }]}>
+            {Platform.OS === 'ios' ? (
+              <BlurView
+                tint={isDark ? 'dark' : 'light'}
+                intensity={85}
+                style={StyleSheet.absoluteFill}
+              />
+            ) : null}
+            <View
+              style={[
+                styles.tabDarkBackdrop,
+                {
+                  backgroundColor: isDark ? 'rgba(12, 14, 23, 0.88)' : 'rgba(255, 255, 255, 0.90)',
+                },
+              ]}
             />
-          ) : null,
+          </View>
+        ),
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
+          letterSpacing: 0.3,
+          marginTop: 2,
         },
       }}
     >
@@ -93,27 +149,21 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'map' : 'map-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'map' : 'map-outline'} size={21} color={color} />
           ),
         }}
       />
 
-      {/* 2. NOTIFICATIONS */}
+      {/* 2. ACTIVITY */}
       <Tab.Screen
         name="NotificationsTab"
         component={NotificationsScreen}
         options={{
-          tabBarLabel: 'Alerts',
-          tabBarBadge: 3,
-          tabBarBadgeStyle: {
-            backgroundColor: theme.colors.secondary,
-            color: '#FFFFFF',
-            fontSize: 10,
-          },
+          tabBarLabel: 'Activity',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'notifications' : 'notifications-outline'}
-              size={22}
+              size={21}
               color={color}
             />
           ),
@@ -139,11 +189,11 @@ export const MainTabNavigator: React.FC = () => {
         name="ChatsTab"
         component={ChatNavigator}
         options={{
-          tabBarLabel: 'Echoes',
+          tabBarLabel: 'Chats',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
-              size={22}
+              size={21}
               color={color}
             />
           ),
@@ -155,9 +205,9 @@ export const MainTabNavigator: React.FC = () => {
         name="ProfileTab"
         component={ProfileNavigator}
         options={{
-          tabBarLabel: 'Aura',
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -166,20 +216,51 @@ export const MainTabNavigator: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  tabBackgroundWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  tabDarkBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(12, 14, 23, 0.88)',
+  },
   centerBtnContainer: {
-    top: -16,
+    top: -12,
     justifyContent: 'center',
     alignItems: 'center',
+    width: 58,
+    height: 58,
+  },
+  centerFabGlow: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
   },
   centerFab: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: theme.colors.primary,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    ...shadows.glow(colors.primary, 0.5),
+  },
+  centerFabGradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.glow(theme.colors.primary, 0.5),
-    borderWidth: 2.5,
-    borderColor: theme.colors.background,
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 
 export interface DividerProps {
@@ -13,15 +14,17 @@ export interface DividerProps {
 export const Divider: React.FC<DividerProps> = ({
   label,
   vertical = false,
-  color = theme.colors.border,
+  color,
   style,
 }) => {
+  const { colors } = useTheme();
+  const dividerColor = color ?? colors.border;
   if (vertical) {
     return (
       <View
         style={[
           styles.verticalDivider,
-          { backgroundColor: color },
+          { backgroundColor: dividerColor },
           style,
         ]}
       />
@@ -31,11 +34,11 @@ export const Divider: React.FC<DividerProps> = ({
   if (label) {
     return (
       <View style={[styles.labeledContainer, style]}>
-        <View style={[styles.line, { backgroundColor: color }]} />
-        <Typography variant="caption" color={theme.colors.textMuted} style={styles.labelText}>
+        <View style={[styles.line, { backgroundColor: dividerColor }]} />
+        <Typography variant="caption" color={colors.textMuted} style={styles.labelText}>
           {label}
         </Typography>
-        <View style={[styles.line, { backgroundColor: color }]} />
+        <View style={[styles.line, { backgroundColor: dividerColor }]} />
       </View>
     );
   }
@@ -44,7 +47,7 @@ export const Divider: React.FC<DividerProps> = ({
     <View
       style={[
         styles.horizontalDivider,
-        { backgroundColor: color },
+        { backgroundColor: dividerColor },
         style,
       ]}
     />

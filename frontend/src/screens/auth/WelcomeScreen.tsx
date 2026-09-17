@@ -1,115 +1,180 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
-import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { AuroraBackground } from '@/components/effects/AuroraBackground';
+import { ParticleCanvas } from '@/components/effects/ParticleCanvas';
+import { MoodSpaceLogo } from '@/components/common/MoodSpaceLogo';
 import { useAuthStore } from '@/stores/authStore';
+import { haptics } from '@/theme/haptics';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
+const EMOTION_PREVIEW = [
+  { emoji: '☀️', label: 'Joy', color: '#FFE082', ink: '#B07D18' },
+  { emoji: '🌿', label: 'Calm', color: '#A7D7C5', ink: '#3F8B72' },
+  { emoji: '💖', label: 'Love', color: '#F8BBD0', ink: '#C2557E' },
+  { emoji: '⚡', label: 'Excited', color: '#E1BEE7', ink: '#8E5C99' },
+];
+
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { toggleDemoAuth } = useAuthStore();
 
   return (
-    <ScreenWrapper style={styles.container}>
-      <View style={styles.content}>
+    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
+      <AuroraBackground emotion="joy" />
+      <ParticleCanvas count={22} />
+
+      <ScreenWrapper style={styles.container} backgroundColor="transparent">
+        {/* ── Hero ── */}
         <View style={styles.heroSection}>
-          <View style={styles.orb}>
-            <Typography variant="display">🌌</Typography>
-          </View>
-          <Typography variant="h1" weight="heavy" align="center" style={styles.title}>
-            Welcome to MoodSpace
+          <MoodSpaceLogo size={128} showBackground animated />
+
+          <Typography
+            variant="display"
+            weight="heavy"
+            align="center"
+            style={[styles.title, { color: colors.textPrimary }]}
+          >
+            MoodSpace
           </Typography>
+
           <Typography
             variant="bodyLarge"
-            color={theme.colors.textSecondary}
             align="center"
-            style={styles.subtitle}
+            style={[styles.tagline, { color: colors.textSecondary }]}
           >
-            A friendly place to share how you're feeling, track your daily moods, and connect with people who understand.
+            Drop your mood on the map.{'\n'}Feel the world pulse back.
           </Typography>
+
+          {/* Emotion preview chips */}
+          <View style={styles.moodChipsRow}>
+            {EMOTION_PREVIEW.map((em) => (
+              <View
+                key={em.label}
+                style={[
+                  styles.moodChip,
+                  { backgroundColor: em.color, borderColor: em.ink + '44' },
+                ]}
+              >
+                <Typography style={{ fontSize: 14 }}>{em.emoji}</Typography>
+                <Typography
+                  variant="caption"
+                  weight="bold"
+                  style={{ color: em.ink, marginLeft: 4 }}
+                >
+                  {em.label}
+                </Typography>
+              </View>
+            ))}
+          </View>
         </View>
 
-        <View style={styles.actionsSection}>
+        {/* ── CTA Card ── */}
+        <View
+          style={[
+            styles.ctaCard,
+            { backgroundColor: colors.glass.surface, borderColor: colors.glass.borderGlow },
+          ]}
+        >
           <Button
-            title="Create Account"
-            variant="primary"
+            title="Begin Your Journey"
+            variant="aurora"
             fullWidth
             size="lg"
-            onPress={() => navigation.navigate('Register')}
+            onPress={() => {
+              navigation.navigate('Register');
+              haptics.selection();
+            }}
             style={styles.primaryBtn}
           />
           <Button
-            title="I Already Have an Account"
-            variant="secondary"
+            title="Welcome Back"
+            variant="glass"
             fullWidth
             size="md"
-            onPress={() => navigation.navigate('Login')}
-            style={styles.secondaryBtn}
+            onPress={() => {
+              navigation.navigate('Login');
+              haptics.selection();
+            }}
           />
-
+          <View style={[styles.dividerRow, { borderTopColor: colors.glass.border }]}>
+            <Typography variant="caption" align="center" style={{ color: colors.textMuted }}>
+              No account? No problem.
+            </Typography>
+          </View>
           <Button
-            title="Explore as Guest (No Sign-Up Needed)"
+            title="Explore as Guest"
             variant="ghost"
             fullWidth
             size="sm"
-            onPress={toggleDemoAuth}
-            style={styles.demoBtn}
+            onPress={() => {
+              toggleDemoAuth();
+              haptics.selection();
+            }}
           />
         </View>
-      </View>
-    </ScreenWrapper>
+      </ScreenWrapper>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    padding: theme.spacing.xl,
+    paddingHorizontal: 20,
     justifyContent: 'space-between',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xl,
   },
   heroSection: {
-    alignItems: 'center',
-    marginTop: theme.spacing.xxxl,
-  },
-  orb: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.colors.surfaceElevated,
-    borderWidth: 2,
-    borderColor: theme.colors.primaryLight,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.xl,
-    ...theme.shadows.glow(theme.colors.primary, 0.4),
+    paddingTop: 20,
   },
   title: {
-    marginBottom: theme.spacing.sm,
+    marginTop: 20,
+    marginBottom: 10,
+    letterSpacing: -0.5,
   },
-  subtitle: {
-    maxWidth: 300,
-    lineHeight: 24,
+  tagline: {
+    lineHeight: 26,
+    maxWidth: 280,
+    textAlign: 'center',
+    marginBottom: 24,
   },
-  actionsSection: {
-    width: '100%',
-    gap: 12,
+  moodChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
   },
-  primaryBtn: {
-    marginBottom: 4,
+  moodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
   },
-  secondaryBtn: {
-    marginBottom: 4,
+  ctaCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    gap: 10,
+    marginBottom: 20,
   },
-  demoBtn: {
-    marginTop: 4,
+  primaryBtn: {},
+  dividerRow: {
+    borderTopWidth: 1,
+    paddingTop: 10,
+    marginTop: 2,
   },
 });

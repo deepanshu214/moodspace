@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { View } from 'react-native';
 
 export const PROVIDER_DEFAULT = 'default';
+export const PROVIDER_GOOGLE = 'google';
 
 export const Marker: React.FC<any> = ({ children, style }) => {
   return <View style={style}>{children}</View>;

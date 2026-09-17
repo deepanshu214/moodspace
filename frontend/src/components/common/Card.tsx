@@ -13,6 +13,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { haptics } from '@/theme/haptics';
 
 export type CardVariant = 'elevated' | 'flat' | 'outlined' | 'glass';
@@ -36,6 +37,7 @@ export const Card: React.FC<CardProps> = ({
   style,
   children,
 }) => {
+  const { colors } = useTheme();
   const emotionConfig = emotion ? theme.getEmotionConfig(emotion) : null;
   const scale = useSharedValue(1);
 
@@ -66,12 +68,12 @@ export const Card: React.FC<CardProps> = ({
 
     switch (variant) {
       case 'flat':
-        base.backgroundColor = theme.colors.surface;
+        base.backgroundColor = colors.surface;
         break;
       case 'outlined':
         base.backgroundColor = 'transparent';
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = colors.border;
         break;
       case 'glass':
         base.backgroundColor = 'rgba(23, 24, 34, 0.75)';
@@ -80,9 +82,9 @@ export const Card: React.FC<CardProps> = ({
         break;
       case 'elevated':
       default:
-        base.backgroundColor = theme.colors.surfaceElevated;
+        base.backgroundColor = colors.surfaceElevated;
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = colors.border;
         Object.assign(base, theme.shadows.card);
         break;
     }

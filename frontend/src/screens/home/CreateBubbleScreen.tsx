@@ -9,17 +9,23 @@ import {
   Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+
 import { RootStackParamList } from '@/navigation/types';
-import { theme } from '@/theme';
+import { theme, getEmotionConfig, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { IconButton } from '@/components/common/IconButton';
 import { MoodTag } from '@/components/mood/MoodTag';
-import { Chip } from '@/components/common/Chip';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { AuroraBackground } from '@/components/effects/AuroraBackground';
 import { LocationPickerModal, LocationData } from '@/components/location';
 import { useMoodCheckin } from '@/hooks/useMood';
-import { Ionicons } from '@expo/vector-icons';
+import { useAuthStore } from '@/stores/authStore';
+import { saveUserPostedBubble } from '@/utils/userPosts';
+import { haptics } from '@/theme/haptics';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateBubbleModal'>;
 
@@ -48,6 +54,7 @@ const INTENSITY_DESCRIPTORS: Record<number, string> = {
 };
 
 export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [content, setContent] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState('calm');
   const [intensity, setIntensity] = useState(7);
@@ -59,7 +66,8 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   const [weatherCondition] = useState('Clear Sky');
   const [weatherTemp] = useState(24);
 
-  const emotionConfig = theme.getEmotionConfig(selectedEmotion);
+  const { user } = useAuthStore();
+  const emotionConfig = getEmotionConfig(selectedEmotion);
   const { mutate: submitCheckin, isPending } = useMoodCheckin();
 
   // Smart sentiment suggestion based on content
@@ -84,8 +92,40 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
     return null;
   }, [content]);
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!content.trim()) return;
+
+    haptics.medium();
+
+    const newLat = latitude + (Math.random() - 0.5) * 0.005;
+    const newLng = longitude + (Math.random() - 0.5) * 0.005;
+
+    // Locally persist user post immediately so they can always view what they posted
+    const newBubble = {
+      id: `my-post-${Date.now()}`,
+      authorName: isAnonymous ? 'Anonymous Friend' : (user?.displayName || 'Elena Rostova'),
+      auraScore: 450,
+      emotion: selectedEmotion,
+      secondaryEmotion: selectedEmotion.charAt(0).toUpperCase() + selectedEmotion.slice(1),
+      intensity,
+      content: content.trim(),
+      locationCity: locationName,
+      weatherCondition,
+      weatherTemp,
+      timestamp: 'Just now',
+      createdAt: new Date().toISOString(),
+      likesCount: 0,
+      commentsCount: 0,
+      isAnonymous,
+      latitude: newLat,
+      longitude: newLng,
+    };
+
+    try {
+      await saveUserPostedBubble(newBubble);
+    } catch (e) {
+      console.warn('[CreateBubble] Failed to save user post locally:', e);
+    }
 
     submitCheckin(
       {
@@ -96,15 +136,15 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         city: locationName,
         weather_condition: weatherCondition,
         weather_temp: weatherTemp,
-        latitude: latitude + (Math.random() - 0.5) * 0.005,
-        longitude: longitude + (Math.random() - 0.5) * 0.005,
+        latitude: newLat,
+        longitude: newLng,
       },
       {
         onSuccess: () => {
+          haptics.success();
           navigation.goBack();
         },
         onError: () => {
-          // Graceful fallback for local experience
           navigation.goBack();
         },
       }
@@ -118,326 +158,333 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <ScreenWrapper scrollable contentContainerStyle={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardView}
-      >
-        {/* Dynamic Atmosphere Aura Background */}
-        <View
-          style={[
-            styles.atmosphereGlow,
-            { backgroundColor: emotionConfig.glow },
-          ]}
-        />
+    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
+      {/* Emotion-reactive Aurora Background */}
+      <AuroraBackground emotion={selectedEmotion} />
 
-        {/* Header Bar */}
-        <View style={styles.header}>
-          <IconButton
-            icon={<Ionicons name="close" size={24} color={theme.colors.textPrimary} />}
-            variant="ghost"
-            onPress={() => navigation.goBack()}
-          />
-          <View style={styles.headerTitleBox}>
-            <Typography variant="title" weight="bold">
-              Share Your Mood
-            </Typography>
-            <Typography variant="caption" color={theme.colors.textMuted}>
-              Pick your feeling and drop a bubble on the map
-            </Typography>
-          </View>
-          <Button
-            title="Post Mood"
-            variant="primary"
-            size="sm"
-            loading={isPending}
-            disabled={!content.trim()}
-            onPress={handlePublish}
-            style={[
-              styles.releaseBtn,
-              { backgroundColor: emotionConfig.primary },
-            ]}
-          />
-        </View>
-
-        {/* Ambient Context Capsule (Location & Climate) */}
-        <View style={styles.contextPillRow}>
-          <TouchableOpacity
-            style={[styles.contextPill, styles.locationPillInteractive]}
-            onPress={() => setShowLocationPicker(true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="location-outline" size={13} color={emotionConfig.primary} />
-            <Typography variant="caption" weight="semibold" color={theme.colors.textPrimary}>
-              {locationName} ▾
-            </Typography>
-          </TouchableOpacity>
-          <View style={styles.contextPill}>
-            <Ionicons name="cloudy-night-outline" size={13} color={theme.colors.accent} />
-            <Typography variant="caption" color={theme.colors.textSecondary}>
-              {weatherCondition} • {weatherTemp}°C
-            </Typography>
-          </View>
-        </View>
-
-        {/* Reflection Input Card */}
-        <View
-          style={[
-            styles.inputCard,
-            { borderColor: 'rgba(255, 255, 255, 0.12)' },
-          ]}
+      <ScreenWrapper scrollable contentContainerStyle={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}
         >
-          <TextInput
-            placeholder="How are you feeling right now? Share your thoughts..."
-            placeholderTextColor={theme.colors.textMuted}
-            value={content}
-            onChangeText={setContent}
-            multiline
-            style={styles.textArea}
-            maxLength={350}
-          />
-          <View style={styles.inputFooter}>
-            <Typography variant="caption" color={theme.colors.textMuted}>
-              {350 - content.length} characters remaining
-            </Typography>
-          </View>
-        </View>
-
-        {/* AI Emotion Detection Suggestion */}
-        {detectedSentiment && detectedSentiment.emotion !== selectedEmotion && (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setSelectedEmotion(detectedSentiment.emotion)}
-            style={styles.aiSuggestionBox}
-          >
-            <Ionicons name="sparkles" size={16} color={theme.colors.primaryLight} />
-            <View style={styles.aiSuggestionContent}>
-              <Typography variant="caption" color={theme.colors.textSecondary}>
-                Detected vibe:{' '}
-                <Typography variant="caption" weight="bold" color={theme.colors.primaryLight}>
-                  {theme.getEmotionConfig(detectedSentiment.emotion).label}
-                </Typography>
+          {/* Header Bar */}
+          <View style={styles.header}>
+            <IconButton
+              icon={<Ionicons name="close" size={24} color={colors.textPrimary} />}
+              variant="ghost"
+              onPress={() => navigation.goBack()}
+            />
+            <View style={styles.headerTitleBox}>
+              <Typography variant="h3" weight="bold">
+                Share Your Mood
               </Typography>
-              <Typography variant="caption" color={theme.colors.textMuted} style={styles.aiReason}>
-                {detectedSentiment.reason} • Tap to switch
+              <Typography variant="caption" color={colors.textMuted}>
+                Pick your feeling and drop a bubble on the map
               </Typography>
             </View>
-          </TouchableOpacity>
-        )}
-
-        {/* Primary Emotion Selection Carousel */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
-              How does it feel?
-            </Typography>
-            <Typography variant="caption" color={emotionConfig.primary} weight="bold">
-              {emotionConfig.label} {emotionConfig.emoji}
-            </Typography>
+            <Button
+              title="Post Mood"
+              variant="aurora"
+              size="sm"
+              loading={isPending}
+              disabled={!content.trim()}
+              onPress={handlePublish}
+            />
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.emotionScroll}
+          {/* Ambient Context Capsule (Location & Climate) */}
+          <View style={styles.contextPillRow}>
+            <TouchableOpacity
+              style={[
+                styles.contextPill,
+                { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
+                styles.locationPillInteractive,
+              ]}
+              onPress={() => {
+                setShowLocationPicker(true);
+                haptics.light();
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="location-outline" size={13} color={emotionConfig.primary} />
+              <Typography variant="caption" weight="semibold" color={colors.textPrimary}>
+                {locationName} ▾
+              </Typography>
+            </TouchableOpacity>
+            <View style={[styles.contextPill, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
+              <Ionicons name="cloudy-night-outline" size={13} color={colors.accent} />
+              <Typography variant="caption" color={colors.textSecondary}>
+                {weatherCondition} • {weatherTemp}°C
+              </Typography>
+            </View>
+          </View>
+
+          {/* Reflection Glass Input Card */}
+          <View
+            style={[
+              styles.inputCard,
+              { backgroundColor: colors.glass.surface },
+              shadows.glassGlow(emotionConfig.primary, 0.15),
+              { borderColor: emotionConfig.border },
+            ]}
           >
-            {EMOTIONS.map((emo) => (
-              <MoodTag
-                key={emo}
-                emotion={emo}
-                selected={selectedEmotion === emo}
-                onPress={() => setSelectedEmotion(emo)}
-                style={styles.emotionTag}
-              />
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Tactile Intensity Gauge */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
-              How strong is this feeling?
-            </Typography>
-            <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
-              Level {intensity}: {INTENSITY_DESCRIPTORS[intensity]}
-            </Typography>
+            <TextInput
+              placeholder="How are you feeling right now? Share your thoughts..."
+              placeholderTextColor={colors.textMuted}
+              value={content}
+              onChangeText={setContent}
+              multiline
+              style={[styles.textArea, { color: colors.textPrimary }]}
+              maxLength={350}
+            />
+            <View style={styles.inputFooter}>
+              <Typography variant="caption" color={colors.textMuted}>
+                {350 - content.length} characters remaining
+              </Typography>
+            </View>
           </View>
 
-          <View style={styles.intensitySelectorRow}>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => {
-              const isActive = intensity === val;
-              return (
-                <TouchableOpacity
-                  key={val}
-                  activeOpacity={0.7}
-                  onPress={() => setIntensity(val)}
-                  style={[
-                    styles.intensityPill,
-                    isActive && {
-                      backgroundColor: emotionConfig.primary,
-                      borderColor: '#FFFFFF',
-                      transform: [{ scale: 1.15 }],
-                      shadowColor: emotionConfig.primary,
-                      shadowOpacity: 0.6,
-                      shadowRadius: 8,
-                    },
-                  ]}
-                >
-                  <Typography
-                    variant="caption"
-                    weight="bold"
-                    color={isActive ? '#FFFFFF' : theme.colors.textMuted}
-                  >
-                    {val}
+          {/* AI Emotion Detection Suggestion */}
+          {detectedSentiment && detectedSentiment.emotion !== selectedEmotion && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                setSelectedEmotion(detectedSentiment.emotion);
+                haptics.selection();
+              }}
+              style={styles.aiSuggestionBox}
+            >
+              <Ionicons name="sparkles" size={16} color={colors.accentInk} />
+              <View style={styles.aiSuggestionContent}>
+                <Typography variant="caption" color={colors.textSecondary}>
+                  Detected vibe:{' '}
+                  <Typography variant="caption" weight="bold" color={colors.accentInk}>
+                    {getEmotionConfig(detectedSentiment.emotion).label}
                   </Typography>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+                </Typography>
+                <Typography variant="caption" color={colors.textMuted} style={styles.aiReason}>
+                  {detectedSentiment.reason} • Tap to switch
+                </Typography>
+              </View>
+            </TouchableOpacity>
+          )}
 
-        {/* Privacy & Incognito Cloak */}
-        <View style={styles.section}>
-          <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary} style={styles.sectionLabel}>
-            Who can see this?
-          </Typography>
+          {/* Primary Emotion Selection Carousel */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Typography variant="overline" color={colors.textMuted}>
+                HOW DOES IT FEEL?
+              </Typography>
+              <Typography variant="caption" color={emotionConfig.primary} weight="bold">
+                {emotionConfig.label} {emotionConfig.emoji}
+              </Typography>
+            </View>
 
-          <View style={styles.privacyOptionGrid}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setIsAnonymous(false)}
-              style={[
-                styles.privacyCard,
-                !isAnonymous && styles.privacyCardActive,
-              ]}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.emotionScroll}
             >
-              <View style={styles.privacyHeader}>
-                <Ionicons
-                  name="earth"
-                  size={18}
-                  color={!isAnonymous ? theme.colors.primaryLight : theme.colors.textMuted}
+              {EMOTIONS.map((emo) => (
+                <MoodTag
+                  key={emo}
+                  emotion={emo}
+                  selected={selectedEmotion === emo}
+                  onPress={() => {
+                    setSelectedEmotion(emo);
+                    haptics.selection();
+                  }}
+                  style={styles.emotionTag}
                 />
-                <Typography
-                  variant="bodySmall"
-                  weight="semibold"
-                  color={!isAnonymous ? '#FFFFFF' : theme.colors.textSecondary}
-                >
-                  Public (With your name)
-                </Typography>
-              </View>
-              <Typography variant="caption" color={theme.colors.textMuted}>
-                Your name and avatar are visible to the community.
-              </Typography>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setIsAnonymous(true)}
-              style={[
-                styles.privacyCard,
-                isAnonymous && styles.privacyCardActiveGhost,
-              ]}
-            >
-              <View style={styles.privacyHeader}>
-                <Typography variant="body">👻</Typography>
-                <Typography
-                  variant="bodySmall"
-                  weight="semibold"
-                  color={isAnonymous ? '#A29BFE' : theme.colors.textSecondary}
-                >
-                  Anonymous
-                </Typography>
-              </View>
-              <Typography variant="caption" color={theme.colors.textMuted}>
-                Your name and profile are hidden. Safe and private.
-              </Typography>
-            </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-        </View>
-      </KeyboardAvoidingView>
 
+          {/* Tactile Intensity Gauge */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Typography variant="overline" color={colors.textMuted}>
+                INTENSITY LEVEL
+              </Typography>
+              <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
+                {intensity}/10 — {INTENSITY_DESCRIPTORS[intensity]}
+              </Typography>
+            </View>
+
+            <View style={[styles.intensitySelectorRow, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => {
+                const isActive = intensity === val;
+                return (
+                  <TouchableOpacity
+                    key={val}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setIntensity(val);
+                      haptics.selection();
+                    }}
+                    style={[
+                      styles.intensityPill,
+                      isActive && {
+                        backgroundColor: emotionConfig.primary,
+                        borderColor: '#FFFFFF',
+                        transform: [{ scale: 1.15 }],
+                        shadowColor: emotionConfig.primary,
+                        shadowOpacity: 0.6,
+                        shadowRadius: 8,
+                      },
+                    ]}
+                  >
+                    <Typography
+                      variant="caption"
+                      weight="bold"
+                      color={isActive ? '#FFFFFF' : colors.textMuted}
+                    >
+                      {val}
+                    </Typography>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Privacy & Incognito Cloak */}
+          <View style={styles.section}>
+            <Typography variant="overline" color={colors.textMuted} style={styles.sectionLabel}>
+              VISIBILITY
+            </Typography>
+
+            <View style={styles.privacyOptionGrid}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setIsAnonymous(false);
+                  haptics.light();
+                }}
+                style={[
+                  styles.privacyCard,
+                  { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
+                  !isAnonymous && styles.privacyCardActive,
+                ]}
+              >
+                <View style={styles.privacyHeader}>
+                  <Ionicons
+                    name="earth"
+                    size={18}
+                    color={!isAnonymous ? colors.primaryLight : colors.textMuted}
+                  />
+                  <Typography
+                    variant="bodySmall"
+                    weight="semibold"
+                    color={!isAnonymous ? '#FFFFFF' : colors.textSecondary}
+                  >
+                    Public (With your name)
+                  </Typography>
+                </View>
+                <Typography variant="caption" color={colors.textMuted}>
+                  Your name and avatar are visible to the community.
+                </Typography>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setIsAnonymous(true);
+                  haptics.light();
+                }}
+                style={[
+                  styles.privacyCard,
+                  { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
+                  isAnonymous && styles.privacyCardActiveGhost,
+                ]}
+              >
+                <View style={styles.privacyHeader}>
+                  <Ionicons
+                    name="eye-off"
+                    size={18}
+                    color={isAnonymous ? colors.accent : colors.textMuted}
+                  />
+                  <Typography
+                    variant="bodySmall"
+                    weight="semibold"
+                    color={isAnonymous ? '#FFFFFF' : colors.textSecondary}
+                  >
+                    Incognito (Anonymous)
+                  </Typography>
+                </View>
+                <Typography variant="caption" color={colors.textMuted}>
+                  Posted as a mystery traveler. Only your emotion is shown.
+                </Typography>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </ScreenWrapper>
+
+      {/* Worldwide Location Picker Modal */}
       <LocationPickerModal
         visible={showLocationPicker}
         currentLocationName={locationName}
         onSelectLocation={handleLocationSelect}
         onClose={() => setShowLocationPicker(false)}
       />
-    </ScreenWrapper>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    flex: 1,
+  },
   container: {
-    padding: theme.spacing.lg,
-    paddingBottom: 80,
-    position: 'relative',
-    backgroundColor: '#07080D',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 48,
   },
   keyboardView: {
     flex: 1,
-  },
-  atmosphereGlow: {
-    position: 'absolute',
-    top: -100,
-    left: -50,
-    right: -50,
-    height: 350,
-    borderRadius: 200,
-    opacity: 0.18,
-    pointerEvents: 'none',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   headerTitleBox: {
-    alignItems: 'center',
-  },
-  releaseBtn: {
-    paddingHorizontal: 16,
-    borderRadius: theme.radius.pill,
+    flex: 1,
+    marginHorizontal: 12,
   },
   contextPillRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   contextPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: theme.radius.pill,
-    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   locationPillInteractive: {
     borderColor: 'rgba(108, 92, 231, 0.4)',
     backgroundColor: 'rgba(108, 92, 231, 0.12)',
   },
   inputCard: {
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
-    borderRadius: theme.radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
-    padding: theme.spacing.lg,
-    minHeight: 150,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.card,
+    padding: 18,
+    minHeight: 140,
+    marginBottom: 12,
   },
   textArea: {
     flex: 1,
     fontSize: 16,
     lineHeight: 24,
-    color: theme.colors.textPrimary,
-    fontFamily: theme.typography.fontFamily,
     textAlignVertical: 'top',
-    minHeight: 100,
+    minHeight: 90,
   },
   inputFooter: {
     alignItems: 'flex-end',
@@ -446,13 +493,13 @@ const styles = StyleSheet.create({
   aiSuggestionBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    backgroundColor: 'rgba(108, 92, 231, 0.15)',
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.md,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(108, 92, 231, 0.35)',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 20,
     gap: 10,
   },
   aiSuggestionContent: {
@@ -463,16 +510,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   section: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 24,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 10,
   },
   sectionLabel: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: 10,
   },
   emotionScroll: {
     flexDirection: 'row',
@@ -480,18 +527,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emotionTag: {
-    marginRight: 2,
+    marginRight: 4,
   },
   intensitySelectorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
     padding: 8,
-    borderRadius: theme.radius.pill,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   intensityPill: {
     width: 28,
@@ -507,19 +551,17 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   privacyCard: {
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
     padding: 14,
-    borderRadius: theme.radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   privacyCardActive: {
     borderColor: theme.colors.primaryLight,
     backgroundColor: 'rgba(108, 92, 231, 0.15)',
   },
   privacyCardActiveGhost: {
-    borderColor: '#A29BFE',
-    backgroundColor: 'rgba(162, 155, 254, 0.12)',
+    borderColor: theme.colors.accent,
+    backgroundColor: 'rgba(0, 206, 201, 0.12)',
   },
   privacyHeader: {
     flexDirection: 'row',

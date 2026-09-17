@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useNetworkStore } from '@/stores/networkStore';
 import { offlineSyncService } from '@/services/offlineSyncService';
 
 export const OfflineBanner: React.FC = () => {
+  const { colors } = useTheme();
   const isOnline = useNetworkStore((s) => s.isOnline);
   const isSyncing = useNetworkStore((s) => s.isSyncing);
   const pendingCount = useNetworkStore((s) => s.pendingCount);
@@ -37,10 +39,10 @@ export const OfflineBanner: React.FC = () => {
               : 'cloud-upload-outline'
           }
           size={16}
-          color={!isOnline ? '#FFD166' : theme.colors.primaryLight}
+          color={!isOnline ? '#FFD166' : colors.primaryLight}
         />
 
-        <Typography variant="caption" weight="semibold" color={theme.colors.textPrimary} style={styles.text}>
+        <Typography variant="caption" weight="semibold" color={colors.textPrimary} style={styles.text}>
           {!isOnline
             ? pendingCount > 0
               ? `Working Offline • ${pendingCount} post${pendingCount !== 1 ? 's' : ''} saved on device`

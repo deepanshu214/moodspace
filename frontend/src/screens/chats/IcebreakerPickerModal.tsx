@@ -9,6 +9,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { IcebreakerCard } from '@/components/chat/IcebreakerCard';
@@ -73,6 +74,7 @@ const FALLBACK_DECK: Icebreaker[] = [
 ];
 
 export const IcebreakerPickerModal: React.FC<Props> = ({ route, navigation }) => {
+  const { colors } = useTheme();
   const { conversationId, emotion } = route.params;
   const [selectedCategory, setSelectedCategory] = useState<IcebreakerCategory | 'all'>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -126,42 +128,46 @@ export const IcebreakerPickerModal: React.FC<Props> = ({ route, navigation }) =>
   return (
     <ScreenWrapper style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.titleCol}>
           <Typography variant="h2" weight="bold">
             Empathetic Sparks
           </Typography>
-          <Typography variant="caption" color={theme.colors.textSecondary}>
+          <Typography variant="caption" color={colors.textSecondary}>
             Thoughtful prompts to initiate heartfelt dialogues
           </Typography>
         </View>
         <IconButton
-          icon={<Ionicons name="close" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="close" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
       </View>
 
       {/* Category Pills */}
-      <View style={styles.categoryBar}>
+      <View style={[styles.categoryBar, { borderBottomColor: colors.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
           {CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat.value;
             return (
               <TouchableOpacity
                 key={cat.value}
-                style={[styles.catChip, isActive && styles.catChipActive]}
+                style={[
+                  styles.catChip,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  isActive && styles.catChipActive,
+                ]}
                 onPress={() => setSelectedCategory(cat.value)}
               >
                 <Ionicons
                   name={cat.icon as any}
                   size={12}
-                  color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                  color={isActive ? '#FFFFFF' : colors.textSecondary}
                 />
                 <Typography
                   variant="caption"
                   weight={isActive ? 'bold' : 'medium'}
-                  color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                  color={isActive ? '#FFFFFF' : colors.textSecondary}
                 >
                   {cat.label}
                 </Typography>
@@ -196,7 +202,6 @@ export const IcebreakerPickerModal: React.FC<Props> = ({ route, navigation }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -205,7 +210,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   titleCol: {
     flex: 1,
@@ -213,7 +217,6 @@ const styles = StyleSheet.create({
   categoryBar: {
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   categoryScroll: {
     paddingHorizontal: theme.spacing.lg,
@@ -225,9 +228,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: theme.radius.round,
-    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     gap: 4,
   },
   catChipActive: {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 
 export interface MoodDistributionItem {
@@ -28,6 +29,7 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
   distribution = DEFAULT_DISTRIBUTION,
   style,
 }) => {
+  const { colors } = useTheme();
   const config = theme.getEmotionConfig(dominantEmotion);
 
   return (
@@ -79,7 +81,7 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
           return (
             <View key={`${item.emotion}-legend-${idx}`} style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: itemConfig.primary }]} />
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {itemConfig.label} {item.percentage}%
               </Typography>
             </View>

@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -16,6 +17,7 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingProfile
 const avatarPresets = ['calm', 'joy', 'anxiety', 'love', 'excitement', 'neutral'];
 
 export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { user, setUser } = useAuthStore();
   const [selectedEmotion, setSelectedEmotion] = useState('calm');
   const [bio, setBio] = useState(user?.bio || '');
@@ -33,13 +35,13 @@ export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topProgress}>
-        <Typography variant="caption" color={theme.colors.primaryLight} weight="bold">
+        <Typography variant="caption" color={colors.accentInk} weight="bold">
           STEP 1 OF 3
         </Typography>
         <Typography variant="h2" weight="bold" style={styles.title}>
           Set Up Your Aura
         </Typography>
-        <Typography variant="body" color={theme.colors.textSecondary}>
+        <Typography variant="body" color={colors.textSecondary}>
           Choose your starting aura tone and share a few words about your emotional philosophy.
         </Typography>
       </View>
@@ -51,12 +53,12 @@ export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
           size="xl"
           emotion={selectedEmotion}
         />
-        <Typography variant="bodySmall" weight="bold" color={theme.colors.primaryLight} style={styles.auraLabel}>
-          {theme.colors.emotions[selectedEmotion]?.label || 'Calm'} Aura
+        <Typography variant="bodySmall" weight="bold" color={colors.accentInk} style={styles.auraLabel}>
+          {colors.emotions[selectedEmotion]?.label || 'Calm'} Aura
         </Typography>
 
         {/* Emotion Preset Chips */}
-        <Typography variant="caption" color={theme.colors.textMuted} style={styles.presetHeading}>
+        <Typography variant="caption" color={colors.textMuted} style={styles.presetHeading}>
           Choose Tone
         </Typography>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetRow}>
@@ -67,11 +69,12 @@ export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => setSelectedEmotion(emo)}
               style={[
                 styles.presetPill,
-                selectedEmotion === emo && styles.presetPillActive,
-                { borderColor: theme.colors.emotions[emo]?.border || theme.colors.border },
+                { backgroundColor: colors.surfaceElevated },
+                selectedEmotion === emo && { backgroundColor: colors.surfaceHighlight, transform: [{ scale: 1.1 }] },
+                { borderColor: colors.emotions[emo]?.border || colors.border },
               ]}
             >
-              <Typography variant="body">{theme.colors.emotions[emo]?.emoji}</Typography>
+              <Typography variant="body">{colors.emotions[emo]?.emoji}</Typography>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -144,14 +147,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 1.5,
     marginHorizontal: 6,
-  },
-  presetPillActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.surfaceHighlight,
-    transform: [{ scale: 1.1 }],
   },
   formSection: {
     width: '100%',

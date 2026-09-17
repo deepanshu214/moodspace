@@ -5,3 +5,4 @@ export * from './FloatingActionButton';
 export * from './AtmosphericPulseRibbon';
 export * from './LuminousMoodBubble';
 export * from './BubbleDetailSheet';
+export * from './ReactionFloater';

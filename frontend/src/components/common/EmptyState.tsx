@@ -9,6 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Button } from './Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,6 +33,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
   style,
 }) => {
+  const { colors } = useTheme();
   const floatY = useSharedValue(0);
 
   useEffect(() => {
@@ -51,11 +53,11 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <Animated.View style={[styles.iconCircle, animatedFloatStyle]}>
+      <Animated.View style={[styles.iconCircle, { backgroundColor: colors.surfaceElevated, shadowColor: colors.primary }, animatedFloatStyle]}>
         {emoji ? (
           <Typography variant="display">{emoji}</Typography>
         ) : (
-          <Ionicons name={iconName} size={42} color={theme.colors.primaryLight} />
+          <Ionicons name={iconName} size={42} color={colors.accentInk} />
         )}
       </Animated.View>
 
@@ -66,7 +68,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {description && (
         <Typography
           variant="body"
-          color={theme.colors.textSecondary}
+          color={colors.textSecondary}
           align="center"
           style={styles.description}
         >
@@ -97,13 +99,11 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.lg,
-    shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,

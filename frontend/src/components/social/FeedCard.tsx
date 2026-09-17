@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Share, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Card } from '../common/Card';
 import { MoodTag } from '../mood/MoodTag';
 import { AuraDisplay } from './AuraDisplay';
+import { ReactionFloater } from '../mood/ReactionFloater';
+import { haptics } from '@/theme/haptics';
 import { useReact } from '@/hooks/useSocial';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -33,10 +36,10 @@ export interface FeedCardProps {
 }
 
 const REACTIONS = [
-  { type: 'heart' as const, label: 'Support', icon: 'heart', color: '#FD79A8' },
-  { type: 'hug' as const, label: 'Hug', icon: 'hand-left', color: '#6C5CE7' },
-  { type: 'empathy' as const, label: 'With You', icon: 'water', color: '#4ECCE8' },
-  { type: 'celebrate' as const, label: 'Joy', icon: 'sparkles', color: '#FFD93D' },
+  { type: 'heart' as const, label: 'Support', icon: 'heart', emoji: '❤️', color: '#FD79A8' },
+  { type: 'hug' as const, label: 'Hug', icon: 'hand-left', emoji: '🤗', color: '#6C5CE7' },
+  { type: 'empathy' as const, label: 'With You', icon: 'water', emoji: '🌊', color: '#4ECCE8' },
+  { type: 'celebrate' as const, label: 'Joy', icon: 'sparkles', emoji: '✨', color: '#FFD93D' },
 ];
 
 export const FeedCard: React.FC<FeedCardProps> = ({
@@ -61,21 +64,27 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   onCommentPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [totalReactions, setTotalReactions] = useState(reactionsCount);
+  const [floaterKey, setFloaterKey] = useState(0);
+  const [floaterEmoji, setFloaterEmoji] = useState('❤️');
   const { mutate: sendReaction } = useReact();
 
-  const handleReactionPress = (reactionType: 'heart' | 'hug' | 'empathy' | 'celebrate') => {
-    if (activeReaction === reactionType) {
+  const handleReactionPress = (rx: typeof REACTIONS[0]) => {
+    haptics.light();
+    if (activeReaction === rx.type) {
       setActiveReaction(null);
       setTotalReactions((prev) => Math.max(0, prev - 1));
     } else {
-      setActiveReaction(reactionType);
+      setActiveReaction(rx.type);
+      setFloaterEmoji(rx.emoji);
+      setFloaterKey(Date.now());
       setTotalReactions((prev) => (activeReaction ? prev : prev + 1));
       sendReaction({
         target_type: 'checkin',
         target_id: id,
-        reaction_type: reactionType,
+        reaction_type: rx.type,
       });
     }
   };
@@ -116,24 +125,24 @@ export const FeedCard: React.FC<FeedCardProps> = ({
 
           <View style={styles.authorTexts}>
             <View style={styles.nameRow}>
-              <Typography variant="body" weight="bold" color={theme.colors.textPrimary}>
-                {isAnonymous ? 'Anonymous Spirit' : authorName}
+              <Typography variant="body" weight="bold" color={colors.textPrimary}>
+                {isAnonymous ? 'Anonymous Friend' : authorName}
               </Typography>
               {isAnonymous && (
                 <View style={styles.incognitoBadge}>
                   <Typography variant="caption" color="#A29BFE">
-                    Cloaked
+                    Private
                   </Typography>
                 </View>
               )}
             </View>
 
             <View style={styles.subMeta}>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {timestamp}
               </Typography>
               {locationCity && (
-                <Typography variant="caption" color={theme.colors.textSecondary}>
+                <Typography variant="caption" color={colors.textSecondary}>
                   • 📍 {locationCity}
                 </Typography>
               )}
@@ -150,7 +159,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       {(weatherCondition || weatherTemp !== undefined) && (
         <View style={styles.weatherCapsule}>
           <Ionicons name="cloud-outline" size={13} color={emotionConfig.primary} />
-          <Typography variant="caption" color={theme.colors.textSecondary}>
+          <Typography variant="caption" color={colors.textSecondary}>
             {weatherCondition || 'Calm skies'}
             {weatherTemp !== undefined ? ` • ${weatherTemp}°C` : ''}
           </Typography>
@@ -175,7 +184,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       >
         <Typography
           variant="body"
-          color={theme.colors.textPrimary}
+          color={colors.textPrimary}
           style={styles.reflectionText}
         >
           {content}
@@ -190,24 +199,23 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             <TouchableOpacity
               key={rx.type}
               activeOpacity={0.7}
-              onPress={() => handleReactionPress(rx.type)}
+              onPress={() => handleReactionPress(rx)}
               style={[
                 styles.reactionPill,
                 isSelected && {
-                  backgroundColor: `${rx.color}22`,
+                  backgroundColor: `${rx.color}28`,
                   borderColor: rx.color,
                 },
               ]}
             >
-              <Ionicons
-                name={rx.icon as any}
-                size={14}
-                color={isSelected ? rx.color : theme.colors.textMuted}
-              />
+              {isSelected && (
+                <ReactionFloater emoji={floaterEmoji} triggerKey={floaterKey} />
+              )}
+              <Typography style={{ fontSize: 13, marginRight: 4 }}>{rx.emoji}</Typography>
               <Typography
                 variant="caption"
                 weight={isSelected ? 'bold' : 'medium'}
-                color={isSelected ? rx.color : theme.colors.textSecondary}
+                color={isSelected ? rx.color : colors.textSecondary}
               >
                 {rx.label}
               </Typography>
@@ -219,7 +227,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       {/* Footer Stats & Actions */}
       <View style={styles.footer}>
         <View style={styles.statsSummary}>
-          <Typography variant="caption" color={theme.colors.textMuted}>
+          <Typography variant="caption" color={colors.textMuted}>
             {totalReactions} Resonances • {commentsCount} Echoes
           </Typography>
         </View>
@@ -230,8 +238,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             onPress={onCommentPress || onPress}
             style={styles.iconBtn}
           >
-            <Ionicons name="chatbubble-outline" size={17} color={theme.colors.textSecondary} />
-            <Typography variant="caption" color={theme.colors.textSecondary}>
+            <Ionicons name="chatbubble-outline" size={17} color={colors.textSecondary} />
+            <Typography variant="caption" color={colors.textSecondary}>
               Echo
             </Typography>
           </TouchableOpacity>
@@ -241,8 +249,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             onPress={handleShare}
             style={styles.iconBtn}
           >
-            <Ionicons name="share-outline" size={17} color={theme.colors.textSecondary} />
-            <Typography variant="caption" color={theme.colors.textSecondary}>
+            <Ionicons name="share-outline" size={17} color={colors.textSecondary} />
+            <Typography variant="caption" color={colors.textSecondary}>
               Share
             </Typography>
           </TouchableOpacity>
@@ -345,6 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+    position: 'relative',
   },
   footer: {
     flexDirection: 'row',

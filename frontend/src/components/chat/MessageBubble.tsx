@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { DirectMessage, MessageReactionResponse } from '@/api/types';
@@ -33,6 +34,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onLongPress,
   onReactionPress,
 }) => {
+  const { colors } = useTheme();
   const isIcebreaker = message.message_type === 'icebreaker';
   const isMoodShare = message.message_type === 'mood_share';
   const isDeleted = message.is_deleted;
@@ -49,8 +51,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* Icebreaker header */}
       {isIcebreaker && !isDeleted && (
         <View style={styles.icebreakerHeader}>
-          <Ionicons name="chatbubble-ellipses-outline" size={12} color={theme.colors.primaryLight} />
-          <Typography variant="caption" color={theme.colors.primaryLight} style={styles.icebreakerLabel}>
+          <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.accentInk} />
+          <Typography variant="caption" color={colors.accentInk} style={styles.icebreakerLabel}>
             Icebreaker
           </Typography>
         </View>
@@ -71,7 +73,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         delayLongPress={350}
         style={[
           styles.bubble,
-          isMe ? styles.bubbleMe : styles.bubbleOther,
+          isMe
+            ? { backgroundColor: colors.primary }
+            : { backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.border },
           isIcebreaker && styles.bubbleIcebreaker,
           isMoodShare && emotionCfg && {
             borderLeftWidth: 3,
@@ -83,10 +87,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <Typography
           variant="body"
           color={isDeleted
-            ? theme.colors.textMuted
+            ? colors.textMuted
             : isMe
               ? '#FFFFFF'
-              : theme.colors.textPrimary}
+              : colors.textPrimary}
           style={isDeleted ? styles.deletedText : undefined}
         >
           {isDeleted ? '🚫 Message deleted' : message.content}
@@ -96,7 +100,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <View style={styles.metaRow}>
           <Typography
             variant="caption"
-            color={isMe ? 'rgba(255, 255, 255, 0.65)' : theme.colors.textMuted}
+            color={isMe ? 'rgba(255, 255, 255, 0.65)' : colors.textMuted}
             style={styles.time}
           >
             {formatMessageTime(message.created_at)}
@@ -112,7 +116,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
               {(message.status === 'delivered' || message.status === 'read') && (
                 <Ionicons name="checkmark-done-outline" size={12}
-                  color={message.status === 'read' ? theme.colors.primaryLight : 'rgba(255,255,255,0.6)'} />
+                  color={message.status === 'read' ? colors.primaryLight : 'rgba(255,255,255,0.6)'} />
               )}
             </View>
           )}
@@ -126,10 +130,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           style={[styles.reactionsRow, isMe && styles.reactionsRowMe]}
         >
           {Object.entries(reactionGroups).map(([emoji, count]) => (
-            <View key={emoji} style={styles.reactionPill}>
+            <View key={emoji} style={[styles.reactionPill, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
               <Typography variant="caption">{emoji}</Typography>
               {count > 1 && (
-                <Typography variant="caption" color={theme.colors.textSecondary} style={styles.reactionCount}>
+                <Typography variant="caption" color={colors.textSecondary} style={styles.reactionCount}>
                   {count}
                 </Typography>
               )}
@@ -176,13 +180,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
   },
   bubbleMe: {
-    backgroundColor: theme.colors.primary,
     borderBottomRightRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: theme.colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     borderBottomLeftRadius: 4,
   },
   bubbleIcebreaker: {
@@ -220,12 +220,10 @@ const styles = StyleSheet.create({
   reactionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surfaceHighlight,
     borderRadius: theme.radius.round,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     gap: 3,
   },
   reactionCount: {

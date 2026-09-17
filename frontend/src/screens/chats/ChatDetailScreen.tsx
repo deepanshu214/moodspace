@@ -14,6 +14,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { Avatar } from '@/components/common/Avatar';
@@ -73,6 +74,7 @@ const MOCK_MESSAGES: LocalMessage[] = [
 type Props2 = NativeStackScreenProps<ChatStackParamList, 'ChatDetail'>;
 
 export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
+  const { colors } = useTheme();
   const {
     chatId,
     recipientName = 'Soul Explorer',
@@ -252,16 +254,16 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
   const keyExtractor = useCallback((item: LocalMessage) => item.id, []);
 
   return (
-    <ScreenWrapper style={styles.container}>
+    <ScreenWrapper style={styles.container} backgroundColor={colors.background}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {/* ── Header ── */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
           <IconButton
-            icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+            icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
             variant="ghost"
             onPress={() => navigation.goBack()}
           />
@@ -281,10 +283,10 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
                   {recipientName}
                 </Typography>
                 {isEchoMatch && (
-                  <Ionicons name="sparkles" size={13} color={theme.colors.secondary} />
+                  <Ionicons name="sparkles" size={13} color={colors.secondaryInk} />
                 )}
               </View>
-              <Typography variant="caption" color={theme.colors.success}>
+              <Typography variant="caption" color={colors.success}>
                 {emotionCfg
                   ? `${emotionCfg.emoji} Feeling ${emotionCfg.label}`
                   : 'Active now'}
@@ -293,15 +295,15 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
           </TouchableOpacity>
 
           <IconButton
-            icon={<Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primaryLight} />}
+            icon={<Ionicons name="shield-checkmark-outline" size={20} color={colors.accentInk} />}
             variant="ghost"
           />
         </View>
 
         {/* ── Encryption notice ── */}
-        <View style={styles.encryptionNotice}>
-          <Ionicons name="lock-closed" size={12} color={theme.colors.textMuted} />
-          <Typography variant="caption" color={theme.colors.textMuted} style={styles.noticeText}>
+        <View style={[styles.encryptionNotice, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Ionicons name="lock-closed" size={12} color={colors.textMuted} />
+          <Typography variant="caption" color={colors.textMuted} style={styles.noticeText}>
             End-to-end encrypted · Only you two can read these
           </Typography>
         </View>
@@ -342,7 +344,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
 
         {/* ── Icebreaker panel ── */}
         {showIcebreakerPanel && (
-          <View style={styles.icebreakerPanel}>
+          <View style={[styles.icebreakerPanel, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
             <View style={styles.icebreakerHeader}>
               <Typography variant="title" weight="semibold">
                 💬 Choose an Icebreaker
@@ -357,12 +359,12 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
                     });
                   }}
                 >
-                  <Typography variant="caption" color={theme.colors.primaryLight} weight="semibold">
+                  <Typography variant="caption" color={colors.accentInk} weight="semibold">
                     Browse All Sparks ✦
                   </Typography>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setShowIcebreakerPanel(false)}>
-                  <Ionicons name="close" size={20} color={theme.colors.textMuted} />
+                  <Ionicons name="close" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -370,15 +372,15 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
               {(icebreakers ?? FALLBACK_ICEBREAKERS).map((ice) => (
                 <TouchableOpacity
                   key={ice.id}
-                  style={styles.icebreakerChip}
+                  style={[styles.icebreakerChip, { backgroundColor: colors.surfaceElevated }]}
                   onPress={() => handleSendIcebreaker(ice)}
                   activeOpacity={0.75}
                 >
-                  <Typography variant="bodySmall" color={theme.colors.textPrimary} style={styles.icebreakerChipText}>
+                  <Typography variant="bodySmall" color={colors.textPrimary} style={styles.icebreakerChipText}>
                     "{ice.prompt}"
                   </Typography>
-                  <View style={[styles.icebreakerCatPill, { backgroundColor: theme.colors.surfaceHighlight }]}>
-                    <Typography variant="caption" color={theme.colors.textSecondary}>
+                  <View style={[styles.icebreakerCatPill, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Typography variant="caption" color={colors.textSecondary}>
                       {ice.category}
                     </Typography>
                   </View>
@@ -389,16 +391,16 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
         )}
 
         {/* ── Composer ── */}
-        <View style={styles.composer}>
+        <View style={[styles.composer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
           {/* Icebreaker type indicator */}
           {messageType === 'icebreaker' && (
             <View style={styles.icebreakerBadge}>
-              <Ionicons name="chatbubble-ellipses-outline" size={12} color={theme.colors.primaryLight} />
-              <Typography variant="caption" color={theme.colors.primaryLight}>
+              <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.accentInk} />
+              <Typography variant="caption" color={colors.accentInk}>
                 Icebreaker
               </Typography>
               <TouchableOpacity onPress={() => setMessageType('text')}>
-                <Ionicons name="close-circle" size={14} color={theme.colors.textMuted} />
+                <Ionicons name="close-circle" size={14} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
           )}
@@ -413,19 +415,19 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={20}
-                color={showIcebreakerPanel ? theme.colors.primary : theme.colors.textMuted}
+                color={showIcebreakerPanel ? colors.primary : colors.textMuted}
               />
             </TouchableOpacity>
 
             <TextInput
               placeholder="Send a supportive message…"
-              placeholderTextColor={theme.colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={inputText}
               onChangeText={setInputText}
               onSubmitEditing={handleSend}
               returnKeyType="send"
               multiline
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
             />
 
             <TouchableOpacity
@@ -451,12 +453,12 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
         onRequestClose={() => setShowReactionModal(false)}
       >
         <TouchableOpacity
-          style={styles.modalBackdrop}
+          style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}
           activeOpacity={1}
           onPress={() => setShowReactionModal(false)}
         >
-          <View style={styles.reactionPanel}>
-            <Typography variant="bodySmall" color={theme.colors.textSecondary} style={styles.reactionTitle}>
+          <View style={[styles.reactionPanel, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+            <Typography variant="bodySmall" color={colors.textSecondary} style={styles.reactionTitle}>
               React
             </Typography>
             <View style={styles.emojiGrid}>
@@ -473,9 +475,9 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
 
             {/* Delete option for own messages */}
             {selectedMessage?.sender_id === currentUserId && (
-              <TouchableOpacity onPress={handleDeleteMessage} style={styles.deleteOption}>
-                <Ionicons name="trash-outline" size={16} color={theme.colors.error} />
-                <Typography variant="bodySmall" color={theme.colors.error}>
+              <TouchableOpacity onPress={handleDeleteMessage} style={[styles.deleteOption, { borderTopColor: colors.border }]}>
+                <Ionicons name="trash-outline" size={16} color={colors.error} />
+                <Typography variant="bodySmall" color={colors.error}>
                   Delete Message
                 </Typography>
               </TouchableOpacity>
@@ -524,7 +526,6 @@ const FALLBACK_ICEBREAKERS: Icebreaker[] = [
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   flex: {
     flex: 1,
@@ -535,8 +536,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
   },
   recipientInfo: {
     flex: 1,
@@ -562,9 +561,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 6,
     gap: 4,
-    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   noticeText: {
     marginLeft: 2,
@@ -590,9 +587,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   icebreakerPanel: {
-    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
     padding: theme.spacing.md,
     gap: theme.spacing.sm,
   },
@@ -607,7 +602,6 @@ const styles = StyleSheet.create({
   },
   icebreakerChip: {
     maxWidth: 220,
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     borderWidth: 1,
@@ -634,8 +628,6 @@ const styles = StyleSheet.create({
   },
   composer: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
     paddingBottom: Platform.OS === 'ios' ? 28 : 8,
   },
   composerRow: {
@@ -655,15 +647,12 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 40,
     maxHeight: 120,
-    color: theme.colors.textPrimary,
     fontSize: 15,
     fontFamily: theme.typography.fontFamily,
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.lg,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   sendBtn: {
     width: 38,
@@ -678,18 +667,15 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: theme.colors.overlay,
     justifyContent: 'flex-end',
   },
   reactionPanel: {
-    backgroundColor: theme.colors.surfaceElevated,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: theme.spacing.lg,
     paddingBottom: 40,
     gap: theme.spacing.md,
     borderTopWidth: 1,
-    borderColor: theme.colors.border,
   },
   reactionTitle: {
     textAlign: 'center',
@@ -713,7 +699,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
     marginTop: 4,
   },
 });

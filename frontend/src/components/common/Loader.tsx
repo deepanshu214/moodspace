@@ -1,30 +1,41 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
+import { MoodOrbLoader } from '@/components/effects/MoodOrbLoader';
 
 export interface LoaderProps {
   size?: 'small' | 'large';
   color?: string;
   message?: string;
   fullScreen?: boolean;
+  /** Use the themed orbiting mood-bubble animation instead of a plain spinner. Defaults to true for large/fullScreen loaders, false for small inline ones. */
+  themed?: boolean;
   style?: ViewStyle;
 }
 
 export const Loader: React.FC<LoaderProps> = ({
   size = 'large',
-  color = theme.colors.primary,
+  color,
   message,
   fullScreen = false,
+  themed,
   style,
 }) => {
-  const content = (
+  const { colors } = useTheme();
+  const spinnerColor = color ?? colors.primary;
+  const useThemedOrb = themed ?? (size === 'large' || fullScreen);
+
+  const content = useThemedOrb ? (
+    <MoodOrbLoader size={size === 'large' ? 108 : 72} message={message} style={style} />
+  ) : (
     <View style={[styles.container, style]}>
-      <ActivityIndicator size={size} color={color} />
+      <ActivityIndicator size={size} color={spinnerColor} />
       {message && (
         <Typography
           variant="bodySmall"
-          color={theme.colors.textSecondary}
+          color={colors.textSecondary}
           style={styles.message}
         >
           {message}
@@ -34,7 +45,7 @@ export const Loader: React.FC<LoaderProps> = ({
   );
 
   if (fullScreen) {
-    return <View style={styles.fullScreenOverlay}>{content}</View>;
+    return <View style={[styles.fullScreenOverlay, { backgroundColor: colors.overlay }]}>{content}</View>;
   }
 
   return content;
@@ -51,7 +62,6 @@ const styles = StyleSheet.create({
   },
   fullScreenOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: theme.colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 999,

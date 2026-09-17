@@ -3,43 +3,29 @@ import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withRepeat,
-  withSequence,
   withTiming,
   Easing,
 } from 'react-native-reanimated';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { MoodOrbLoader } from '@/components/effects/MoodOrbLoader';
 import { useAuthStore } from '@/stores/authStore';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { isAuthenticated, isInitializing } = useAuthStore();
-  const scale = useSharedValue(0.85);
-  const opacity = useSharedValue(0.4);
+  const titleOpacity = useSharedValue(0);
+  const titleY = useSharedValue(10);
 
   useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.08, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.95, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
-
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.4, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
+    titleOpacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.ease) });
+    titleY.value = withTiming(0, { duration: 600, easing: Easing.out(Easing.ease) });
   }, []);
 
   useEffect(() => {
@@ -48,32 +34,30 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
         if (!isAuthenticated) {
           navigation.replace('Welcome');
         }
-      }, 1000);
+      }, 1400);
       return () => clearTimeout(timer);
     }
   }, [isInitializing, isAuthenticated, navigation]);
 
-  const animatedOrbStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
+  const titleStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+    transform: [{ translateY: titleY.value }],
   }));
 
   return (
     <ScreenWrapper style={styles.container}>
       <View style={styles.centerContent}>
-        <Animated.View style={[styles.glowHalo, animatedOrbStyle]} />
+        <MoodOrbLoader size={132} />
 
-        <View style={styles.logoOrb}>
-          <Typography variant="display">🔮</Typography>
-        </View>
+        <Animated.View style={titleStyle}>
+          <Typography variant="display" weight="heavy" color={colors.primary} style={styles.brandTitle}>
+            MoodSpace
+          </Typography>
 
-        <Typography variant="display" weight="heavy" color={theme.colors.primaryLight} style={styles.brandTitle}>
-          MoodSpace
-        </Typography>
-
-        <Typography variant="body" color={theme.colors.textMuted} style={styles.tagline}>
-          Express, Connect & Resonate
-        </Typography>
+          <Typography variant="body" color={colors.textMuted} align="center" style={styles.tagline}>
+            Express, Connect & Resonate
+          </Typography>
+        </Animated.View>
       </View>
     </ScreenWrapper>
   );
@@ -89,30 +73,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  glowHalo: {
-    position: 'absolute',
-    top: -20,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: theme.colors.primaryDark,
-    ...theme.shadows.glow(theme.colors.primary, 0.7),
-  },
-  logoOrb: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: theme.colors.surfaceElevated,
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.lg,
-    zIndex: 2,
-    ...theme.shadows.glow(theme.colors.primary, 0.5),
-  },
   brandTitle: {
     letterSpacing: -0.5,
+    textAlign: 'center',
+    marginTop: theme.spacing.md,
   },
   tagline: {
     marginTop: theme.spacing.sm,

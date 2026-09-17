@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
@@ -32,6 +33,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
   onPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const [joined, setJoined] = useState(isJoined);
   const { mutate: joinCommunity, isPending: isJoining } = useJoinCommunity();
   const { mutate: leaveCommunity, isPending: isLeaving } = useLeaveCommunity();
@@ -62,8 +64,8 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
 
           <View style={styles.metaRow}>
             <View style={styles.memberPill}>
-              <Ionicons name="people-outline" size={13} color={theme.colors.textMuted} />
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Ionicons name="people-outline" size={13} color={colors.textMuted} />
+              <Typography variant="caption" color={colors.textMuted}>
                 {memberCount}
               </Typography>
             </View>
@@ -78,7 +80,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
 
         {/* Community Name & Dominant Emotion */}
         <View style={styles.titleRow}>
-          <Typography variant="title" weight="bold" color={theme.colors.textPrimary}>
+          <Typography variant="title" weight="bold" color={colors.textPrimary}>
             {name}
           </Typography>
           <View
@@ -102,7 +104,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
         {/* Description */}
         <Typography
           variant="bodySmall"
-          color={theme.colors.textSecondary}
+          color={colors.textSecondary}
           numberOfLines={2}
           style={styles.desc}
         >
@@ -111,7 +113,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
 
         {/* Footer Action Row */}
         <View style={styles.footerRow}>
-          <Typography variant="caption" color={theme.colors.primaryLight} weight="semibold">
+          <Typography variant="caption" color={colors.accentInk} weight="semibold">
             Explore Sanctuary →
           </Typography>
 

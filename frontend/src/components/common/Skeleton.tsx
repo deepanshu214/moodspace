@@ -9,6 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 
 export interface SkeletonProps {
   width?: DimensionValue;
@@ -25,6 +26,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   circle = false,
   style,
 }) => {
+  const { colors } = useTheme();
   const opacity = useSharedValue(0.3);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
           width: actualWidth,
           height,
           borderRadius: actualRadius,
+          backgroundColor: colors.surfaceHighlight,
         },
         animatedStyle,
         style,
@@ -61,8 +64,10 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   );
 };
 
-export const SkeletonCard: React.FC<{ style?: ViewStyle }> = ({ style }) => (
-  <View style={[styles.cardContainer, style]}>
+export const SkeletonCard: React.FC<{ style?: ViewStyle }> = ({ style }) => {
+  const { colors } = useTheme();
+  return (
+  <View style={[styles.cardContainer, { backgroundColor: colors.surface, borderColor: colors.border }, style]}>
     <View style={styles.headerRow}>
       <Skeleton circle height={40} />
       <View style={styles.headerTexts}>
@@ -74,18 +79,15 @@ export const SkeletonCard: React.FC<{ style?: ViewStyle }> = ({ style }) => (
     <Skeleton width="85%" height={16} style={{ marginBottom: 6 }} />
     <Skeleton width="60%" height={16} />
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
-  skeleton: {
-    backgroundColor: theme.colors.surfaceHighlight,
-  },
+  skeleton: {},
   cardContainer: {
-    backgroundColor: theme.colors.surface,
     padding: theme.spacing.lg,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     marginBottom: theme.spacing.md,
   },
   headerRow: {

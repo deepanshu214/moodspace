@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Card } from '../common/Card';
@@ -42,6 +43,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
   onLikePress,
   style,
 }) => {
+  const { colors } = useTheme();
   const [revealed, setRevealed] = useState(!hasContentWarning);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(likesCount);
@@ -57,7 +59,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
     }
   };
 
-  const displayName = isAnonymous ? 'Wandering Spirit' : authorName;
+  const displayName = isAnonymous ? 'Anonymous Member' : authorName;
   const emotionConfig = theme.getEmotionConfig(emotion);
 
   return (
@@ -65,9 +67,9 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
       {/* Pinned Indicator Header (if pinned) */}
       {isPinned && (
         <View style={styles.pinnedBanner}>
-          <Ionicons name="pin" size={12} color={theme.colors.accent} />
-          <Typography variant="caption" weight="bold" color={theme.colors.accent}>
-            Pinned Sanctuary Guideline
+          <Ionicons name="pin" size={12} color={colors.accent} />
+          <Typography variant="caption" weight="bold" color={colors.accent}>
+            Pinned Guideline
           </Typography>
         </View>
       )}
@@ -85,19 +87,19 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
 
           <View style={styles.authorMeta}>
             <View style={styles.nameRow}>
-              <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
+              <Typography variant="bodySmall" weight="bold" color={colors.textPrimary}>
                 {displayName}
               </Typography>
               {isAnonymous && (
                 <View style={styles.incognitoBadge}>
                   <Typography variant="caption" color="#A29BFE">
-                    Cloaked
+                    Private
                   </Typography>
                 </View>
               )}
             </View>
 
-            <Typography variant="caption" color={theme.colors.textMuted}>
+            <Typography variant="caption" color={colors.textMuted}>
               {timestamp}
             </Typography>
           </View>
@@ -110,7 +112,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
 
       {/* Title (if present) */}
       {title ? (
-        <Typography variant="title" weight="bold" color={theme.colors.textPrimary} style={styles.title}>
+        <Typography variant="title" weight="bold" color={colors.textPrimary} style={styles.title}>
           {title}
         </Typography>
       ) : null}
@@ -122,18 +124,18 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
           onPress={() => setRevealed(true)}
           style={styles.warningShield}
         >
-          <Ionicons name="shield-outline" size={18} color={theme.colors.warning} />
+          <Ionicons name="shield-outline" size={18} color={colors.warning} />
           <View style={styles.warningTexts}>
-            <Typography variant="caption" weight="bold" color={theme.colors.warning}>
+            <Typography variant="caption" weight="bold" color={colors.warning}>
               Content Note: Sensitive Themes
             </Typography>
-            <Typography variant="caption" color={theme.colors.textMuted}>
+            <Typography variant="caption" color={colors.textMuted}>
               Tap to unveil this reflection gently.
             </Typography>
           </View>
         </TouchableOpacity>
       ) : (
-        <Typography variant="body" color={theme.colors.textPrimary} style={styles.content}>
+        <Typography variant="body" color={colors.textPrimary} style={styles.content}>
           {content}
         </Typography>
       )}
@@ -151,12 +153,12 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
           <Ionicons
             name={liked ? 'heart' : 'heart-outline'}
             size={16}
-            color={liked ? '#FD79A8' : theme.colors.textMuted}
+            color={liked ? '#FD79A8' : colors.textMuted}
           />
           <Typography
             variant="caption"
             weight={liked ? 'bold' : 'medium'}
-            color={liked ? '#FD79A8' : theme.colors.textSecondary}
+            color={liked ? '#FD79A8' : colors.textSecondary}
           >
             {likes} Support
           </Typography>
@@ -167,8 +169,8 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
           onPress={onPress}
           style={styles.commentBtn}
         >
-          <Ionicons name="chatbubble-outline" size={15} color={theme.colors.textMuted} />
-          <Typography variant="caption" color={theme.colors.textSecondary}>
+          <Ionicons name="chatbubble-outline" size={15} color={colors.textMuted} />
+          <Typography variant="caption" color={colors.textSecondary}>
             {commentsCount} Echoes
           </Typography>
         </TouchableOpacity>

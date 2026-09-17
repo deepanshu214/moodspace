@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -45,6 +46,7 @@ const MOCK_USERS = [
 ];
 
 export const FollowersListScreen: React.FC<Props> = ({ route, navigation }) => {
+  const { colors } = useTheme();
   const initialType = route.params?.type || 'followers';
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>(initialType);
 
@@ -58,7 +60,7 @@ export const FollowersListScreen: React.FC<Props> = ({ route, navigation }) => {
       {/* Header Bar */}
       <View style={styles.topBar}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
@@ -78,7 +80,7 @@ export const FollowersListScreen: React.FC<Props> = ({ route, navigation }) => {
           <Typography
             variant="bodySmall"
             weight="bold"
-            color={activeTab === 'followers' ? '#FFFFFF' : theme.colors.textMuted}
+            color={activeTab === 'followers' ? '#FFFFFF' : colors.textMuted}
           >
             Followers ({followersApi?.length || 148})
           </Typography>
@@ -92,7 +94,7 @@ export const FollowersListScreen: React.FC<Props> = ({ route, navigation }) => {
           <Typography
             variant="bodySmall"
             weight="bold"
-            color={activeTab === 'following' ? '#FFFFFF' : theme.colors.textMuted}
+            color={activeTab === 'following' ? '#FFFFFF' : colors.textMuted}
           >
             Following ({followingApi?.length || 92})
           </Typography>

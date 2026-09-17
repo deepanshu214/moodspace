@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { MoodStreakInfo, StreakBadge } from '@/api/types';
@@ -18,6 +19,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
   onCheckInPress,
   onBadgePress,
 }) => {
+  const { colors } = useTheme();
   const {
     current_streak,
     longest_streak,
@@ -28,7 +30,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
   } = streakInfo;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       {/* ── Top Row: Streak Counter & Status ── */}
       <View style={styles.topRow}>
         <View style={styles.counterBlock}>
@@ -37,14 +39,14 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
           </View>
           <View style={styles.counterMeta}>
             <View style={styles.streakNumberRow}>
-              <Typography variant="h2" weight="bold" color="#FFFFFF">
+              <Typography variant="h2" weight="bold" color={colors.textPrimary}>
                 {current_streak}
               </Typography>
               <Typography variant="title" weight="semibold" color="#FD79A8" style={styles.daysLabel}>
                 Day Streak
               </Typography>
             </View>
-            <Typography variant="caption" color={theme.colors.textSecondary}>
+            <Typography variant="caption" color={colors.textSecondary}>
               {has_checked_in_today
                 ? '✨ Today’s reflection released'
                 : '🔥 Keep your inner flame alive today'}
@@ -66,7 +68,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
       </View>
 
       {/* ── Weekly Activity Dots (Mon - Sun) ── */}
-      <View style={styles.weeklyRow}>
+      <View style={[styles.weeklyRow, { borderTopColor: colors.border }]}>
         {DAYS_OF_WEEK.map((day, index) => {
           const isActive = weekly_activity[index] ?? false;
           return (
@@ -74,12 +76,14 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
               <View
                 style={[
                   styles.dayDot,
-                  isActive ? styles.dayDotActive : styles.dayDotInactive,
+                  isActive
+                    ? styles.dayDotActive
+                    : { backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.border },
                 ]}
               >
                 {isActive && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
               </View>
-              <Typography variant="caption" color={theme.colors.textMuted} style={styles.dayLabel}>
+              <Typography variant="caption" color={colors.textMuted} style={styles.dayLabel}>
                 {day}
               </Typography>
             </View>
@@ -88,23 +92,23 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
       </View>
 
       {/* ── Stats Bar: Longest Streak & Total Reflections ── */}
-      <View style={styles.statsBar}>
+      <View style={[styles.statsBar, { backgroundColor: colors.surfaceElevated }]}>
         <View style={styles.statItem}>
-          <Typography variant="caption" color={theme.colors.textMuted}>
+          <Typography variant="caption" color={colors.textMuted}>
             Personal Best
           </Typography>
-          <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
+          <Typography variant="bodySmall" weight="bold" color={colors.textPrimary}>
             {longest_streak} Days
           </Typography>
         </View>
 
-        <View style={styles.statDivider} />
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
 
         <View style={styles.statItem}>
-          <Typography variant="caption" color={theme.colors.textMuted}>
+          <Typography variant="caption" color={colors.textMuted}>
             Total Reflections
           </Typography>
-          <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
+          <Typography variant="bodySmall" weight="bold" color={colors.textPrimary}>
             {total_checkins} Released
           </Typography>
         </View>
@@ -112,7 +116,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
 
       {/* ── Milestones Carousel ── */}
       <View style={styles.milestonesSection}>
-        <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.milestoneHeader}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.milestoneHeader}>
           STREAK MILESTONES
         </Typography>
 
@@ -124,25 +128,27 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
               onPress={() => onBadgePress?.(badge)}
               style={[
                 styles.badgeChip,
-                badge.unlocked ? styles.badgeUnlocked : styles.badgeLocked,
+                badge.unlocked
+                  ? styles.badgeUnlocked
+                  : { backgroundColor: colors.surfaceElevated, borderColor: colors.border, opacity: 0.6 },
               ]}
             >
-              <View style={[styles.badgeIconWrapper, badge.unlocked ? styles.iconUnlocked : styles.iconLocked]}>
+              <View style={[styles.badgeIconWrapper, badge.unlocked ? styles.iconUnlocked : { backgroundColor: colors.border }]}>
                 <Ionicons
                   name={badge.icon as any}
                   size={14}
-                  color={badge.unlocked ? '#FD79A8' : theme.colors.textMuted}
+                  color={badge.unlocked ? '#FD79A8' : colors.textMuted}
                 />
               </View>
               <View>
                 <Typography
                   variant="caption"
                   weight="bold"
-                  color={badge.unlocked ? theme.colors.textPrimary : theme.colors.textMuted}
+                  color={badge.unlocked ? colors.textPrimary : colors.textMuted}
                 >
                   {badge.title}
                 </Typography>
-                <Typography variant="caption" color={theme.colors.textMuted} style={styles.badgeDays}>
+                <Typography variant="caption" color={colors.textMuted} style={styles.badgeDays}>
                   {badge.days_required} days
                 </Typography>
               </View>
@@ -156,11 +162,9 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     marginBottom: theme.spacing.lg,
   },
   topRow: {
@@ -207,7 +211,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
     marginBottom: theme.spacing.sm,
   },
   dayCol: {
@@ -224,11 +227,6 @@ const styles = StyleSheet.create({
   dayDotActive: {
     backgroundColor: '#FD79A8',
   },
-  dayDotInactive: {
-    backgroundColor: theme.colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
   dayLabel: {
     fontSize: 10,
   },
@@ -236,7 +234,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -249,7 +246,6 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 24,
-    backgroundColor: theme.colors.border,
   },
   milestonesSection: {
     marginTop: 4,
@@ -274,11 +270,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(253, 121, 168, 0.08)',
     borderColor: 'rgba(253, 121, 168, 0.3)',
   },
-  badgeLocked: {
-    backgroundColor: theme.colors.surfaceElevated,
-    borderColor: theme.colors.border,
-    opacity: 0.6,
-  },
   badgeIconWrapper: {
     width: 24,
     height: 24,
@@ -288,9 +279,6 @@ const styles = StyleSheet.create({
   },
   iconUnlocked: {
     backgroundColor: 'rgba(253, 121, 168, 0.2)',
-  },
-  iconLocked: {
-    backgroundColor: theme.colors.border,
   },
   badgeDays: {
     fontSize: 10,

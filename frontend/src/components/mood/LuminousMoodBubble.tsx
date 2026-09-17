@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 
 export interface LuminousMoodBubbleProps {
@@ -36,6 +37,7 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
   showAuthor = true,
   onPress,
 }) => {
+  const { colors } = useTheme();
   const config = theme.getEmotionConfig(emotion);
 
   // Reanimated shared values
@@ -245,7 +247,7 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
             <Typography
               variant="caption"
               weight="semibold"
-              color={theme.colors.textPrimary}
+              color={colors.textPrimary}
               numberOfLines={1}
               style={styles.authorText}
             >
