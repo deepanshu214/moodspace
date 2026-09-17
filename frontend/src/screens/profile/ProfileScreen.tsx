@@ -212,8 +212,8 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           }}
           style={styles.editProfileBtn}
         >
-          <Ionicons name="pencil" size={13} color={colors.primaryLight} />
-          <Typography variant="caption" weight="bold" color={colors.primaryLight} style={{ marginLeft: 6 }}>
+          <Ionicons name="pencil" size={13} color={colors.accentInk} />
+          <Typography variant="caption" weight="bold" color={colors.accentInk} style={{ marginLeft: 6 }}>
             Edit Profile
           </Typography>
         </TouchableOpacity>
@@ -222,7 +222,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <GlassCard variant="default" style={styles.statsCard}>
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Typography variant="stat" style={{ color: colors.primaryLight }}>
+              <Typography variant="stat" style={{ color: colors.accentInk }}>
                 {streak.total_checkins || moodHistory?.length || 24}
               </Typography>
               <Typography variant="caption" color={colors.textMuted}>
@@ -284,7 +284,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             MY SHARED ECHOES & POSTS
           </Typography>
           <View style={[styles.badgeCount, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}>
-            <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+            <Typography variant="caption" weight="bold" color={colors.accentInk}>
               {myPosts.length}
             </Typography>
           </View>

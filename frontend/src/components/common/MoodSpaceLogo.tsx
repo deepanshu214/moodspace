@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Svg, {
   Defs,
   LinearGradient as SvgLinearGradient,
@@ -6,6 +7,9 @@ import Svg, {
   Stop,
   Rect,
   Circle,
+  Ellipse,
+  Path,
+  G,
 } from 'react-native-svg';
 import Animated, {
   useSharedValue,
@@ -15,7 +19,6 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Platform } from 'react-native';
 
 export interface MoodSpaceLogoProps {
   size?: number;
@@ -23,102 +26,185 @@ export interface MoodSpaceLogoProps {
   animated?: boolean;
 }
 
+/** Gradient ids must be unique per instance — several logos can share one document on web. */
+let logoInstanceCounter = 0;
+
+/**
+ * MoodSpace — "Pastel Aura Heart-Beacon"
+ * An organic smiling heart-bubble broadcasting soft aura rings, built from
+ * buttercream / rose blush / mint pastel radial gradients.
+ */
 export const MoodSpaceLogo: React.FC<MoodSpaceLogoProps> = ({
   size = 80,
   showBackground = true,
   animated = false,
 }) => {
-  const floatY = useSharedValue(0);
+  const uid = useMemo(() => `ms${++logoInstanceCounter}`, []);
+  const breathe = useSharedValue(1);
+  const beacon = useSharedValue(0.5);
 
   useEffect(() => {
-    if (!animated || Platform.OS === 'web') return;
-    floatY.value = withRepeat(
+    if (!animated) return;
+    breathe.value = withRepeat(
       withSequence(
-        withTiming(-7, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 2400, easing: Easing.inOut(Easing.sin) })
+        withTiming(1.045, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+    beacon.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.45, { duration: 2600, easing: Easing.inOut(Easing.sin) })
       ),
       -1,
       true
     );
   }, [animated]);
 
-  const floatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: floatY.value }],
+  const breatheStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: breathe.value }],
   }));
 
+  const beaconStyle = useAnimatedStyle(() => ({
+    opacity: beacon.value * 0.7,
+    transform: [{ scale: 0.92 + beacon.value * 0.14 }],
+  }));
+
+  // Organic, bubbly heart — visual centre sits at ~(50, 47)
+  const HEART =
+    'M50 81 C27 64 14 49 14 35 C14 23 23 14.5 33.5 14.5 ' +
+    'C41 14.5 46.5 18.5 50 25 C53.5 18.5 59 14.5 66.5 14.5 ' +
+    'C77 14.5 86 23 86 35 C86 49 73 64 50 81 Z';
+
   return (
-    <Animated.View style={floatStyle}>
-      <Svg width={size} height={size} viewBox="0 0 100 100">
-        <Defs>
-          {/* Rounded square background: coral → rose → violet */}
-          <SvgLinearGradient id="msLogoBg" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#FF6B35" />
-            <Stop offset="0.45" stopColor="#FF4D84" />
-            <Stop offset="1" stopColor="#C471ED" />
-          </SvgLinearGradient>
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      {/* ── Outward beacon pulse (behind everything) ── */}
+      {animated && (
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, beaconStyle]}>
+          <Svg width={size} height={size} viewBox="0 0 100 100">
+            <Defs>
+              <RadialGradient id={`${uid}-beacon`} cx="50%" cy="50%" r="50%">
+                <Stop offset="0.45" stopColor="#F8BBD0" stopOpacity="0" />
+                <Stop offset="0.78" stopColor="#F8BBD0" stopOpacity="0.45" />
+                <Stop offset="1" stopColor="#A7D7C5" stopOpacity="0" />
+              </RadialGradient>
+            </Defs>
+            <Circle cx="50" cy="50" r="49" fill={`url(#${uid}-beacon)`} />
+          </Svg>
+        </Animated.View>
+      )}
 
-          {/* Joy bubble: golden sunlight */}
-          <RadialGradient id="msJoy" cx="40%" cy="35%" r="65%">
-            <Stop offset="0" stopColor="#FFE566" stopOpacity="1" />
-            <Stop offset="1" stopColor="#FF9F1C" stopOpacity="0.9" />
-          </RadialGradient>
+      <Animated.View style={breatheStyle}>
+        <Svg width={size} height={size} viewBox="0 0 100 100">
+          <Defs>
+            {/* Soft pastel backdrop: buttercream → rose blush → mint */}
+            <SvgLinearGradient id={`${uid}-bg`} x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor="#FFF6DC" />
+              <Stop offset="0.52" stopColor="#FDE7EF" />
+              <Stop offset="1" stopColor="#E2F3EB" />
+            </SvgLinearGradient>
 
-          {/* Calm bubble: ocean teal */}
-          <RadialGradient id="msCalm" cx="40%" cy="35%" r="65%">
-            <Stop offset="0" stopColor="#7EFFD4" stopOpacity="1" />
-            <Stop offset="1" stopColor="#00B4A6" stopOpacity="0.9" />
-          </RadialGradient>
+            {/* Glass rim sheen across the top of the backdrop */}
+            <RadialGradient id={`${uid}-rim`} cx="50%" cy="6%" r="78%">
+              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.85" />
+              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+            </RadialGradient>
 
-          {/* Love bubble: rose blush */}
-          <RadialGradient id="msLove" cx="40%" cy="35%" r="65%">
-            <Stop offset="0" stopColor="#FFB3CA" stopOpacity="1" />
-            <Stop offset="1" stopColor="#FF4D84" stopOpacity="0.9" />
-          </RadialGradient>
+            {/* Heart body — buttercream core melting into rose blush */}
+            <RadialGradient id={`${uid}-heart`} cx="38%" cy="26%" r="76%">
+              <Stop offset="0" stopColor="#FFF8E1" />
+              <Stop offset="0.42" stopColor="#FFE082" />
+              <Stop offset="1" stopColor="#F8BBD0" />
+            </RadialGradient>
 
-          {/* Center glow — where all three meet */}
-          <RadialGradient id="msGlow" cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor="#FFFFFF" stopOpacity="1" />
-            <Stop offset="0.45" stopColor="#FFFFFF" stopOpacity="0.55" />
-            <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-          </RadialGradient>
+            {/* Mint kiss on the lower-left lobe */}
+            <RadialGradient id={`${uid}-mint`} cx="20%" cy="64%" r="52%">
+              <Stop offset="0" stopColor="#A7D7C5" stopOpacity="0.92" />
+              <Stop offset="1" stopColor="#A7D7C5" stopOpacity="0" />
+            </RadialGradient>
 
-          {/* Outer ring shimmer */}
-          <RadialGradient id="msRim" cx="50%" cy="10%" r="80%">
-            <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.28" />
-            <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-          </RadialGradient>
-        </Defs>
+            {/* Halo bloom hugging the heart */}
+            <RadialGradient id={`${uid}-bloom`} cx="50%" cy="48%" r="50%">
+              <Stop offset="0.5" stopColor="#F8BBD0" stopOpacity="0.30" />
+              <Stop offset="1" stopColor="#F8BBD0" stopOpacity="0" />
+            </RadialGradient>
 
-        {/* ── Background rounded square ── */}
-        {showBackground && (
-          <>
-            <Rect x="0" y="0" width="100" height="100" rx="24" ry="24" fill="url(#msLogoBg)" />
-            {/* Glass rim shimmer at top */}
-            <Rect x="6" y="6" width="88" height="44" rx="20" ry="20" fill="url(#msRim)" />
-          </>
-        )}
+            {/* Glossy top-left highlight */}
+            <RadialGradient id={`${uid}-gloss`} cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.9" />
+              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
 
-        {/* ── 3 overlapping mood bubbles in a triangle ── */}
+          {/* ── Pastel backdrop ── */}
+          {showBackground && (
+            <>
+              <Rect x="0" y="0" width="100" height="100" rx="26" ry="26" fill={`url(#${uid}-bg)`} />
+              <Rect x="0" y="0" width="100" height="56" rx="26" ry="26" fill={`url(#${uid}-rim)`} />
+              <Rect
+                x="1"
+                y="1"
+                width="98"
+                height="98"
+                rx="25.5"
+                ry="25.5"
+                fill="none"
+                stroke="#FFFFFF"
+                strokeOpacity="0.75"
+                strokeWidth="1.4"
+              />
+            </>
+          )}
 
-        {/* Joy — top center */}
-        <Circle cx="50" cy="39" r="23" fill="url(#msJoy)" opacity="0.90" />
+          {/* ── Aura beacon rings ── */}
+          <G opacity="0.55">
+            <Circle cx="50" cy="47" r="45" fill="none" stroke="#A7D7C5" strokeOpacity="0.30" strokeWidth="1" />
+            <Circle cx="50" cy="47" r="39" fill="none" stroke="#F8BBD0" strokeOpacity="0.38" strokeWidth="1.2" />
+          </G>
 
-        {/* Calm — bottom left */}
-        <Circle cx="34" cy="65" r="23" fill="url(#msCalm)" opacity="0.90" />
+          {/* ── Soft bloom behind the heart ── */}
+          <Circle cx="50" cy="48" r="42" fill={`url(#${uid}-bloom)`} />
 
-        {/* Love — bottom right */}
-        <Circle cx="66" cy="65" r="23" fill="url(#msLove)" opacity="0.90" />
+          {/* ── Heart body ── */}
+          <Path d={HEART} fill={`url(#${uid}-heart)`} />
+          <Path d={HEART} fill={`url(#${uid}-mint)`} />
+          <Path
+            d={HEART}
+            fill="none"
+            stroke="#FFFFFF"
+            strokeOpacity="0.62"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
 
-        {/* ── Center glow at triple-overlap ── */}
-        <Circle cx="50" cy="56" r="14" fill="url(#msGlow)" />
+          {/* ── Glossy highlight on the upper-left lobe ── */}
+          <Ellipse cx="34" cy="30" rx="11" ry="7.5" fill={`url(#${uid}-gloss)`} opacity="0.75" />
 
-        {/* ── Sparkle accent dots ── */}
-        <Circle cx="18" cy="19" r="2.8" fill="white" opacity="0.80" />
-        <Circle cx="84" cy="16" r="2.2" fill="white" opacity="0.70" />
-        <Circle cx="13" cy="80" r="1.9" fill="white" opacity="0.60" />
-        <Circle cx="88" cy="82" r="2.4" fill="white" opacity="0.72" />
-        <Circle cx="50" cy="9" r="1.6" fill="white" opacity="0.55" />
-      </Svg>
-    </Animated.View>
+          {/* ── Friendly face ── */}
+          <G fill="#7E5D52">
+            <Ellipse cx="40" cy="38" rx="2.7" ry="3.3" />
+            <Ellipse cx="60" cy="38" rx="2.7" ry="3.3" />
+          </G>
+          <Path
+            d="M41 48.5 Q50 57.5 59 48.5"
+            fill="none"
+            stroke="#7E5D52"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          {/* Blush cheeks */}
+          <Ellipse cx="32.5" cy="45" rx="4" ry="2.6" fill="#F8BBD0" opacity="0.75" />
+          <Ellipse cx="67.5" cy="45" rx="4" ry="2.6" fill="#F8BBD0" opacity="0.75" />
+
+          {/* ── Sparkles ── */}
+          <Circle cx="17" cy="20" r="2.4" fill="#FFFFFF" opacity="0.9" />
+          <Circle cx="85" cy="18" r="1.9" fill="#FFFFFF" opacity="0.8" />
+          <Circle cx="88" cy="74" r="2.2" fill="#FFFFFF" opacity="0.72" />
+          <Circle cx="13" cy="72" r="1.6" fill="#FFFFFF" opacity="0.65" />
+        </Svg>
+      </Animated.View>
+    </View>
   );
 };

@@ -90,7 +90,7 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
             <View style={styles.subMetaRow}>
               {auraScore !== undefined && !isAnonymous && (
                 <View style={styles.auraPill}>
-                  <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+                  <Typography variant="caption" weight="bold" color={colors.accentInk}>
                     ⚡ {auraScore} Aura
                   </Typography>
                 </View>

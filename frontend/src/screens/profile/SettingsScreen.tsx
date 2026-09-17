@@ -91,7 +91,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 0. APPEARANCE & THEME ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           APPEARANCE & THEME
         </Typography>
 
@@ -137,7 +137,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 1. PRIVACY & ANONYMITY ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           PRIVACY & ANONYMITY
         </Typography>
 
@@ -230,7 +230,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 2. NOTIFICATIONS & REMINDERS ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           NOTIFICATIONS & REMINDERS
         </Typography>
 
@@ -267,7 +267,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 3. SENSORY EXPERIENCE ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           SOUND & VIBRATION
         </Typography>
 
@@ -310,7 +310,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 4. APP TOUR & FEATURE GUIDE ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           APP TOUR & GUIDES
         </Typography>
 
@@ -326,7 +326,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 Step-by-step interactive walkthrough with hands-on mini demos
               </Typography>
             </View>
-            <Ionicons name="sparkles" size={20} color={colors.primaryLight} />
+            <Ionicons name="sparkles" size={20} color={colors.accentInk} />
           </TouchableOpacity>
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -349,7 +349,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── 5. DATA EXPORT ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           DOWNLOAD YOUR DATA
         </Typography>
 
@@ -365,14 +365,14 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 Download a copy of your mood check-ins and reflections
               </Typography>
             </View>
-            <Ionicons name="download-outline" size={20} color={colors.primaryLight} />
+            <Ionicons name="download-outline" size={20} color={colors.accentInk} />
           </TouchableOpacity>
         </Card>
       </View>
 
       {/* ── 6. ACCOUNT ACTIONS ── */}
       <View style={styles.section}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.sectionTitle}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.sectionTitle}>
           ACCOUNT ACTIONS
         </Typography>
 

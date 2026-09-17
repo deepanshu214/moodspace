@@ -15,10 +15,10 @@ import { haptics } from '@/theme/haptics';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
 const EMOTION_PREVIEW = [
-  { emoji: '☀️', label: 'Joy', color: '#FF9F1C' },
-  { emoji: '🌿', label: 'Calm', color: '#00B4A6' },
-  { emoji: '💖', label: 'Love', color: '#FF4D84' },
-  { emoji: '⚡', label: 'Excited', color: '#C471ED' },
+  { emoji: '☀️', label: 'Joy', color: '#FFE082', ink: '#B07D18' },
+  { emoji: '🌿', label: 'Calm', color: '#A7D7C5', ink: '#3F8B72' },
+  { emoji: '💖', label: 'Love', color: '#F8BBD0', ink: '#C2557E' },
+  { emoji: '⚡', label: 'Excited', color: '#E1BEE7', ink: '#8E5C99' },
 ];
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
@@ -33,7 +33,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
       <ScreenWrapper style={styles.container} backgroundColor="transparent">
         {/* ── Hero ── */}
         <View style={styles.heroSection}>
-          <MoodSpaceLogo size={120} showBackground animated={Platform.OS !== 'web'} />
+          <MoodSpaceLogo size={128} showBackground animated />
 
           <Typography
             variant="display"
@@ -59,14 +59,14 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
                 key={em.label}
                 style={[
                   styles.moodChip,
-                  { backgroundColor: em.color + '22', borderColor: em.color + '55' },
+                  { backgroundColor: em.color, borderColor: em.ink + '44' },
                 ]}
               >
                 <Typography style={{ fontSize: 14 }}>{em.emoji}</Typography>
                 <Typography
                   variant="caption"
-                  weight="semibold"
-                  style={{ color: em.color, marginLeft: 4 }}
+                  weight="bold"
+                  style={{ color: em.ink, marginLeft: 4 }}
                 >
                   {em.label}
                 </Typography>

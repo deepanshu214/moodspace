@@ -168,7 +168,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           Already have an account?{' '}
         </Typography>
         <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.7}>
-          <Typography variant="bodySmall" weight="bold" color={colors.primaryLight}>
+          <Typography variant="bodySmall" weight="bold" color={colors.accentInk}>
             Sign In
           </Typography>
         </TouchableOpacity>

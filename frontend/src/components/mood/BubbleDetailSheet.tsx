@@ -165,7 +165,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             {/* Context Weather Capsule (if available) */}
             {(bubble.locationCity || bubble.weatherCondition) && (
               <View style={styles.weatherPill}>
-                <Ionicons name="location-sharp" size={12} color={colors.primaryLight} />
+                <Ionicons name="location-sharp" size={12} color={colors.accentInk} />
                 <Typography variant="caption" color={colors.textSecondary} style={styles.weatherText}>
                   {bubble.locationCity || 'Nearby'}
                   {bubble.weatherCondition ? ` • ${bubble.weatherCondition}` : ''}
@@ -281,10 +281,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                   }}
                   style={styles.detailLinkBtn}
                 >
-                  <Typography variant="caption" weight="semibold" color={colors.primaryLight}>
+                  <Typography variant="caption" weight="semibold" color={colors.accentInk}>
                     Open Full Thread
                   </Typography>
-                  <Ionicons name="arrow-forward" size={14} color={colors.primaryLight} />
+                  <Ionicons name="arrow-forward" size={14} color={colors.accentInk} />
                 </TouchableOpacity>
               )}
             </View>

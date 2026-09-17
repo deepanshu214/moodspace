@@ -1,5 +1,7 @@
 export interface EmotionColorConfig {
   primary: string;
+  /** Saturated, legible counterpart for text/icons on light surfaces. */
+  deep: string;
   glow: string;
   background: string;
   border: string;
@@ -8,123 +10,130 @@ export interface EmotionColorConfig {
   gradientPair: [string, string];
 }
 
-// ─── Shared emotion configs ────────────────────────────────────────────────────
+// ─── Shared emotion configs — soft pastel tones ───────────────────────────────
+// `primary` is the pastel fill (orbs, borders, washes).
+// `deep` is the legible ink for text/icons sitting on white or cream.
 const emotionPalette: Record<string, EmotionColorConfig> = {
   joy: {
-    primary: '#FF9F1C', glow: 'rgba(255,159,28,0.35)',
-    background: 'rgba(255,159,28,0.14)', border: 'rgba(255,159,28,0.35)',
-    emoji: '☀️', label: 'Joy', gradientPair: ['#FF9F1C', '#FF6B35'],
+    primary: '#FFE082', deep: '#B07D18', glow: 'rgba(255,224,130,0.55)',
+    background: 'rgba(255,224,130,0.22)', border: 'rgba(255,224,130,0.60)',
+    emoji: '☀️', label: 'Joy', gradientPair: ['#FFE082', '#FFD54F'],
   },
   sadness: {
-    primary: '#4776E6', glow: 'rgba(71,118,230,0.30)',
-    background: 'rgba(71,118,230,0.12)', border: 'rgba(71,118,230,0.28)',
-    emoji: '🌧️', label: 'Sadness', gradientPair: ['#4776E6', '#8E54E9'],
+    primary: '#C5CAE9', deep: '#5567A8', glow: 'rgba(197,202,233,0.52)',
+    background: 'rgba(197,202,233,0.24)', border: 'rgba(197,202,233,0.60)',
+    emoji: '🌧️', label: 'Sadness', gradientPair: ['#C5CAE9', '#B3BCE2'],
   },
   anxiety: {
-    primary: '#C471ED', glow: 'rgba(196,113,237,0.30)',
-    background: 'rgba(196,113,237,0.12)', border: 'rgba(196,113,237,0.28)',
-    emoji: '⚡', label: 'Heavy', gradientPair: ['#C471ED', '#F64F59'],
+    primary: '#E1BEE7', deep: '#8E5C99', glow: 'rgba(225,190,231,0.52)',
+    background: 'rgba(225,190,231,0.24)', border: 'rgba(225,190,231,0.60)',
+    emoji: '⚡', label: 'Heavy', gradientPair: ['#E1BEE7', '#D1A7DC'],
   },
   calm: {
-    primary: '#00B4A6', glow: 'rgba(0,180,166,0.30)',
-    background: 'rgba(0,180,166,0.12)', border: 'rgba(0,180,166,0.28)',
-    emoji: '🌿', label: 'Calm', gradientPair: ['#00B4A6', '#1CB5E0'],
+    primary: '#A7D7C5', deep: '#3F8B72', glow: 'rgba(167,215,197,0.55)',
+    background: 'rgba(167,215,197,0.24)', border: 'rgba(167,215,197,0.62)',
+    emoji: '🌿', label: 'Calm', gradientPair: ['#A7D7C5', '#80CBC4'],
   },
   anger: {
-    primary: '#F64F59', glow: 'rgba(246,79,89,0.30)',
-    background: 'rgba(246,79,89,0.12)', border: 'rgba(246,79,89,0.28)',
-    emoji: '🔥', label: 'Fiery', gradientPair: ['#F64F59', '#FF6B35'],
+    primary: '#FFCCBC', deep: '#C5573C', glow: 'rgba(255,204,188,0.55)',
+    background: 'rgba(255,204,188,0.26)', border: 'rgba(255,204,188,0.62)',
+    emoji: '🔥', label: 'Fiery', gradientPair: ['#FFCCBC', '#FFAB91'],
   },
   loneliness: {
-    primary: '#7C4DFF', glow: 'rgba(124,77,255,0.30)',
-    background: 'rgba(124,77,255,0.12)', border: 'rgba(124,77,255,0.28)',
-    emoji: '🕊️', label: 'Quiet', gradientPair: ['#7C4DFF', '#4776E6'],
+    primary: '#D1C4E9', deep: '#6E5AA0', glow: 'rgba(209,196,233,0.52)',
+    background: 'rgba(209,196,233,0.24)', border: 'rgba(209,196,233,0.60)',
+    emoji: '🕊️', label: 'Quiet', gradientPair: ['#D1C4E9', '#BCAAE0'],
   },
   excitement: {
-    primary: '#FF6B35', glow: 'rgba(255,107,53,0.32)',
-    background: 'rgba(255,107,53,0.14)', border: 'rgba(255,107,53,0.30)',
-    emoji: '🎉', label: 'Hype', gradientPair: ['#FF6B35', '#FF9F1C'],
+    primary: '#FFE0B2', deep: '#C2762A', glow: 'rgba(255,224,178,0.55)',
+    background: 'rgba(255,224,178,0.26)', border: 'rgba(255,224,178,0.62)',
+    emoji: '🎉', label: 'Hype', gradientPair: ['#FFE0B2', '#FFCC80'],
   },
   love: {
-    primary: '#FF4D84', glow: 'rgba(255,77,132,0.32)',
-    background: 'rgba(255,77,132,0.12)', border: 'rgba(255,77,132,0.28)',
-    emoji: '💖', label: 'Love', gradientPair: ['#FF4D84', '#FF6B35'],
+    primary: '#F8BBD0', deep: '#C2557E', glow: 'rgba(248,187,208,0.55)',
+    background: 'rgba(248,187,208,0.24)', border: 'rgba(248,187,208,0.62)',
+    emoji: '💖', label: 'Love', gradientPair: ['#F8BBD0', '#F48FB1'],
   },
   neutral: {
-    primary: '#8898AA', glow: 'rgba(136,152,170,0.25)',
-    background: 'rgba(136,152,170,0.10)', border: 'rgba(136,152,170,0.22)',
-    emoji: '☕', label: 'Cozy', gradientPair: ['#8898AA', '#B0BEC5'],
+    primary: '#D7CCC8', deep: '#6D5C54', glow: 'rgba(215,204,200,0.45)',
+    background: 'rgba(215,204,200,0.22)', border: 'rgba(215,204,200,0.55)',
+    emoji: '☕', label: 'Cozy', gradientPair: ['#D7CCC8', '#C4B5AF'],
   },
 };
 
-// ─── LIGHT MODE (Default) — Warm Sunrise Social Vibe ─────────────────────────
-// Bright, legible, colorful — like a happy social app
+// ─── LIGHT MODE (Default) — Soft Pastel Almond Daylight ──────────────────────
+// Warm, airy, uncluttered. Espresso ink keeps every label fully legible.
 export const lightColors = {
-  background: '#FFF5EB',          // warm cream — NOT dark, clearly readable
-  backgroundSecondary: '#FFEEDD',
-  surface: '#FFFFFF',             // pure white cards — always visible
-  surfaceElevated: '#FFFBF7',
-  surfaceHighlight: '#FFE8D0',
+  background: '#FAF7F2',          // warm almond cream
+  backgroundSecondary: '#F4EFE8',
+  surface: '#FFFFFF',             // pure white cards
+  surfaceElevated: '#FFFDFB',
+  surfaceHighlight: '#FDF2EA',
 
-  // Cards get white bg + orange-tinted border so they POP on warm cream
+  // White cards edged with a soft pastel hairline
   glass: {
     surface: 'rgba(255,255,255,0.96)',
     surfaceHover: '#FFFFFF',
-    surfaceActive: '#FFFBF7',
+    surfaceActive: '#FFFDFB',
     surfaceSolid: '#FFFFFF',
-    border: 'rgba(255,107,53,0.18)',    // coral tint border — clearly visible
-    borderLight: 'rgba(255,107,53,0.10)',
-    borderGlow: 'rgba(255,107,53,0.35)',
-    borderAccent: 'rgba(255,107,53,0.50)',
+    border: '#F0E7DD',                    // soft pastel border
+    borderLight: 'rgba(240,231,221,0.62)',
+    borderGlow: 'rgba(255,138,101,0.30)',
+    borderAccent: 'rgba(255,138,101,0.48)',
   },
 
-  primary: '#FF6B35',       // vibrant coral-orange — the brand color
-  primaryLight: '#FF9A6C',
-  primaryDark: '#E0430E',
-  secondary: '#FF9F1C',     // sunny amber/gold
-  secondaryLight: '#FFCF6B',
-  accent: '#00B4A6',        // teal — for calm contrast
+  primary: '#FF8A65',       // soft pastel coral — the brand tone
+  primaryLight: '#FFBB93',  // pastel peach — fills, borders, gradients only
+  primaryDark: '#C2472A',   // deep terracotta — legible ink on white
+  secondary: '#FFD54F',     // pastel buttercup
+  secondaryLight: '#FFE9A3',
+  accent: '#80CBC4',        // pastel seafoam
+
+  // Legible accent inks for TEXT/ICONS. Pastel fills are too pale to read on
+  // cream, so anything rendering type in an accent colour uses these instead.
+  accentInk: '#C2472A',
+  secondaryInk: '#B07D18',
 
   aurora: {
-    default: ['#FF6B35', '#FF9F1C', '#FF4D84'] as string[],
-    calm: ['#00B4A6', '#1CB5E0', '#84FAB0'] as string[],
-    joy: ['#FF9F1C', '#FF6B35', '#FF4D84'] as string[],
-    anxiety: ['#C471ED', '#F64F59', '#FF4D84'] as string[],
-    anger: ['#F64F59', '#FF6B35', '#FF4E50'] as string[],
-    sadness: ['#4776E6', '#8E54E9', '#00B4A6'] as string[],
-    love: ['#FF4D84', '#FF6B35', '#F64F59'] as string[],
-    excitement: ['#FF6B35', '#FF9F1C', '#FF4D84'] as string[],
-    loneliness: ['#7C4DFF', '#4776E6', '#00B4A6'] as string[],
-    neutral: ['#B0BEC5', '#90A4AE', '#78909C'] as string[],
+    default: ['#FFCDB2', '#FFE082', '#F8BBD0'] as string[],
+    calm: ['#A7D7C5', '#80CBC4', '#C7EAE0'] as string[],
+    joy: ['#FFE082', '#FFD54F', '#FFCDB2'] as string[],
+    anxiety: ['#E1BEE7', '#D1C4E9', '#F8BBD0'] as string[],
+    anger: ['#FFCCBC', '#FFAB91', '#FFCDB2'] as string[],
+    sadness: ['#C5CAE9', '#D1C4E9', '#A7D7C5'] as string[],
+    love: ['#F8BBD0', '#FFCDB2', '#F48FB1'] as string[],
+    excitement: ['#FFE0B2', '#FFCC80', '#FFCDB2'] as string[],
+    loneliness: ['#D1C4E9', '#C5CAE9', '#A7D7C5'] as string[],
+    neutral: ['#D7CCC8', '#E3DAD5', '#C4B5AF'] as string[],
   } as Record<string, string[]>,
 
-  border: '#FFD4B8',              // warm coral border — visible on cream
-  borderLight: '#FFE4CF',
-  borderHighlight: 'rgba(255,107,53,0.45)',
+  border: '#F0E7DD',              // soft pastel border
+  borderLight: '#F7F1EA',
+  borderHighlight: 'rgba(255,138,101,0.42)',
 
-  // Text — very dark brown on warm cream = MAXIMUM legibility
-  textPrimary: '#1C0A00',         // near-black warm brown
-  textSecondary: '#5C2E0A',       // medium warm brown
-  textMuted: '#9C5A2A',           // lighter warm brown — still readable
-  textDisabled: '#CCA882',
+  // Espresso ink on almond cream = maximum legibility
+  textPrimary: '#2D241E',         // dark espresso
+  textSecondary: '#5F5048',       // warm taupe
+  textMuted: '#8D7B70',           // light taupe — still readable
+  textDisabled: '#BCAEA4',
   textInverse: '#FFFFFF',
 
-  success: '#00B4A6',
-  successLight: 'rgba(0,180,166,0.12)',
-  warning: '#FF9F1C',
-  warningLight: 'rgba(255,159,28,0.15)',
-  error: '#F64F59',
-  errorLight: 'rgba(246,79,89,0.12)',
-  info: '#4776E6',
-  infoLight: 'rgba(71,118,230,0.12)',
+  success: '#4DB6A0',
+  successLight: 'rgba(167,215,197,0.28)',
+  warning: '#D9922E',
+  warningLight: 'rgba(255,224,178,0.34)',
+  error: '#D96A54',
+  errorLight: 'rgba(255,204,188,0.32)',
+  info: '#7E9CD8',
+  infoLight: 'rgba(197,202,233,0.32)',
 
-  overlay: 'rgba(28,10,0,0.55)',
-  overlayLight: 'rgba(28,10,0,0.25)',
+  overlay: 'rgba(45,36,30,0.48)',
+  overlayLight: 'rgba(45,36,30,0.22)',
 
   emotions: emotionPalette,
 };
 
-// ─── DARK MODE — Jewel Indigo-Purple, vibrant NOT black ─────────────────────
+// ─── DARK MODE — Jewel Indigo, pastels glowing against it ────────────────────
 export const darkColors = {
   background: '#18082E',          // deep indigo-purple
   backgroundSecondary: '#22103C',
@@ -133,54 +142,58 @@ export const darkColors = {
   surfaceHighlight: '#4A2D7C',
 
   glass: {
-    surface: 'rgba(44,24,82,0.75)',
-    surfaceHover: 'rgba(58,34,102,0.82)',
-    surfaceActive: 'rgba(74,45,124,0.90)',
+    surface: 'rgba(44,24,82,0.78)',
+    surfaceHover: 'rgba(58,34,102,0.85)',
+    surfaceActive: 'rgba(74,45,124,0.92)',
     surfaceSolid: 'rgba(44,24,82,0.97)',
-    border: 'rgba(255,154,108,0.18)',
-    borderLight: 'rgba(255,154,108,0.10)',
-    borderGlow: 'rgba(255,107,53,0.38)',
-    borderAccent: 'rgba(255,107,53,0.55)',
+    border: 'rgba(248,187,208,0.20)',
+    borderLight: 'rgba(248,187,208,0.11)',
+    borderGlow: 'rgba(255,138,101,0.38)',
+    borderAccent: 'rgba(255,138,101,0.55)',
   },
 
-  primary: '#FF6B35',
-  primaryLight: '#FF9A6C',
-  primaryDark: '#E0430E',
-  secondary: '#FF9F1C',
-  secondaryLight: '#FFCF6B',
-  accent: '#00B4A6',
+  primary: '#FF8A65',
+  primaryLight: '#FFBB93',
+  primaryDark: '#E2603C',
+  secondary: '#FFD54F',
+  secondaryLight: '#FFE9A3',
+  accent: '#80CBC4',
+
+  // On jewel indigo the pastels themselves are the legible inks.
+  accentInk: '#FFBB93',
+  secondaryInk: '#FFD54F',
 
   aurora: {
-    default: ['#FF6B35', '#FF9F1C', '#FF4D84'] as string[],
-    calm: ['#00B4A6', '#1CB5E0', '#84FAB0'] as string[],
-    joy: ['#FF9F1C', '#FF6B35', '#FF4D84'] as string[],
-    anxiety: ['#C471ED', '#F64F59', '#FF4D84'] as string[],
-    anger: ['#F64F59', '#FF6B35', '#FF4E50'] as string[],
-    sadness: ['#4776E6', '#8E54E9', '#00B4A6'] as string[],
-    love: ['#FF4D84', '#FF6B35', '#F64F59'] as string[],
-    excitement: ['#FF6B35', '#FF9F1C', '#FF4D84'] as string[],
-    loneliness: ['#7C4DFF', '#4776E6', '#00B4A6'] as string[],
-    neutral: ['#78909C', '#90A4AE', '#B0BEC5'] as string[],
+    default: ['#FFCDB2', '#FFE082', '#F8BBD0'] as string[],
+    calm: ['#A7D7C5', '#80CBC4', '#C7EAE0'] as string[],
+    joy: ['#FFE082', '#FFD54F', '#FFCDB2'] as string[],
+    anxiety: ['#E1BEE7', '#D1C4E9', '#F8BBD0'] as string[],
+    anger: ['#FFCCBC', '#FFAB91', '#FFCDB2'] as string[],
+    sadness: ['#C5CAE9', '#D1C4E9', '#A7D7C5'] as string[],
+    love: ['#F8BBD0', '#FFCDB2', '#F48FB1'] as string[],
+    excitement: ['#FFE0B2', '#FFCC80', '#FFCDB2'] as string[],
+    loneliness: ['#D1C4E9', '#C5CAE9', '#A7D7C5'] as string[],
+    neutral: ['#C4B5AF', '#D7CCC8', '#E3DAD5'] as string[],
   } as Record<string, string[]>,
 
   border: '#3C2060',
   borderLight: '#4A2D72',
-  borderHighlight: 'rgba(255,107,53,0.45)',
+  borderHighlight: 'rgba(255,138,101,0.45)',
 
-  textPrimary: '#FFF3EC',
-  textSecondary: '#D4A88A',
-  textMuted: '#907080',
+  textPrimary: '#FDF6F0',
+  textSecondary: '#D9C2B8',
+  textMuted: '#A28C9C',
   textDisabled: '#5A3C5E',
-  textInverse: '#18082E',
+  textInverse: '#2D241E',
 
-  success: '#00B4A6',
-  successLight: 'rgba(0,180,166,0.15)',
-  warning: '#FF9F1C',
-  warningLight: 'rgba(255,159,28,0.15)',
-  error: '#F64F59',
-  errorLight: 'rgba(246,79,89,0.15)',
-  info: '#4776E6',
-  infoLight: 'rgba(71,118,230,0.15)',
+  success: '#A7D7C5',
+  successLight: 'rgba(167,215,197,0.18)',
+  warning: '#FFD54F',
+  warningLight: 'rgba(255,213,79,0.18)',
+  error: '#FFAB91',
+  errorLight: 'rgba(255,171,145,0.18)',
+  info: '#C5CAE9',
+  infoLight: 'rgba(197,202,233,0.18)',
 
   overlay: 'rgba(12,4,20,0.80)',
   overlayLight: 'rgba(12,4,20,0.48)',

@@ -18,7 +18,7 @@ export const AuraDisplay: React.FC<AuraDisplayProps> = ({
   const { colors } = useTheme();
   const getTier = (pts: number) => {
     if (pts >= 1000) return { title: 'Luminary', color: '#FFD700', emoji: '🌟' };
-    if (pts >= 500) return { title: 'Empath', color: colors.primaryLight, emoji: '💜' };
+    if (pts >= 500) return { title: 'Empath', color: colors.accentInk, emoji: '💜' };
     if (pts >= 200) return { title: 'Guide', color: colors.accent, emoji: '✨' };
     if (pts >= 50) return { title: 'Seeker', color: colors.success, emoji: '🌱' };
     return { title: 'Novice', color: colors.textMuted, emoji: '💫' };

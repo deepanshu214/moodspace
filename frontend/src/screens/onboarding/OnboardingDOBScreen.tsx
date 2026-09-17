@@ -33,7 +33,7 @@ export const OnboardingDOBScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topProgress}>
-        <Typography variant="caption" color={colors.primaryLight} weight="bold">
+        <Typography variant="caption" color={colors.accentInk} weight="bold">
           STEP 2 OF 3
         </Typography>
         <Typography variant="h2" weight="bold" style={styles.title}>

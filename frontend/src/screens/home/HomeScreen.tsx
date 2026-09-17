@@ -37,7 +37,7 @@ import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
 import { InteractiveFeatureTour, AppWalkthroughModal } from '@/components/tutorial';
 import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
-import { MapContainer, Marker, PROVIDER_DEFAULT } from '@/components/map';
+import { MapContainer, Marker, PROVIDER_GOOGLE } from '@/components/map';
 import { storage } from '@/utils/storage';
 import { haptics } from '@/theme/haptics';
 import { useTheme } from '@/context';
@@ -205,18 +205,26 @@ const SAMPLE_PULSE_DATA = [
 ];
 
 const EMOTION_FILTERS = [
-  { id: 'all', label: 'All', emoji: '🌎', color: '#FF7E67' },
-  { id: 'joy', label: 'Joy', emoji: '☀️', color: '#FFB443' },
-  { id: 'calm', label: 'Calm', emoji: '🌿', color: '#56C596' },
-  { id: 'love', label: 'Love', emoji: '💖', color: '#FF6584' },
-  { id: 'sadness', label: 'Reflective', emoji: '💜', color: '#7986CB' },
-  { id: 'anxiety', label: 'Heavy', emoji: '🌧️', color: '#A78BFA' },
+  { id: 'all', label: 'All', emoji: '🌎', color: '#FFCDB2', ink: '#A9583A' },
+  { id: 'joy', label: 'Joy', emoji: '☀️', color: '#FFE082', ink: '#B07D18' },
+  { id: 'calm', label: 'Calm', emoji: '🌿', color: '#A7D7C5', ink: '#3F8B72' },
+  { id: 'love', label: 'Love', emoji: '💖', color: '#F8BBD0', ink: '#C2557E' },
+  { id: 'sadness', label: 'Reflective', emoji: '💜', color: '#C5CAE9', ink: '#5567A8' },
+  { id: 'anxiety', label: 'Heavy', emoji: '🌧️', color: '#E1BEE7', ink: '#8E5C99' },
 ];
+
+/** Frosted pastel header ink + pill treatment (same band in light and dark). */
+const HEADER_INK = '#2D241E';
+const HEADER_INK_SOFT = '#5F5048';
+const HEADER_PILL = {
+  backgroundColor: 'rgba(255,255,255,0.78)',
+  borderColor: 'rgba(255,255,255,0.95)',
+};
 
 
 
 /** Small heartbeat-style pulsing dot used on the live "echoes worldwide" chip */
-const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#00B894' }) => {
+const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#4DB6A0' }) => {
   const pulse = useSharedValue(1);
 
   useEffect(() => {
@@ -299,9 +307,10 @@ const WorldMoodCanvas: React.FC<{
     { cx: 0.870, cy: 0.64, rx: 0.055, ry: 0.075 },
   ];
 
+  // Equirectangular projection, inset so author badges clear the map controls.
   const toXY = (lat: number, lon: number) => ({
-    x: ((lon + 180) / 360) * size.w,
-    y: ((90 - lat) / 180) * size.h,
+    x: Math.min(Math.max(((lon + 180) / 360) * size.w, 28), Math.max(size.w - 76, 28)),
+    y: Math.min(Math.max(((90 - lat) / 180) * size.h, 46), Math.max(size.h - 74, 46)),
   });
 
   return (
@@ -310,7 +319,7 @@ const WorldMoodCanvas: React.FC<{
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >
       <LinearGradient
-        colors={['#08152A', '#0D1E3C', '#0A1628']}
+        colors={['#DCEEF7', '#EAF4F0', '#FBF8F5']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -325,9 +334,9 @@ const WorldMoodCanvas: React.FC<{
               cy={c.cy * size.h}
               rx={c.rx * size.w}
               ry={c.ry * size.h}
-              fill="rgba(80,160,110,0.14)"
-              stroke="rgba(80,200,130,0.09)"
-              strokeWidth="0.5"
+              fill="#E4F5EB"
+              stroke="#CFE9DC"
+              strokeWidth="1"
             />
           ))}
           {LAT_LINES.map((lat) => {
@@ -337,7 +346,7 @@ const WorldMoodCanvas: React.FC<{
               <Line
                 key={`lat-${lat}`}
                 x1={0} y1={y} x2={size.w} y2={y}
-                stroke={major ? 'rgba(100,180,255,0.30)' : 'rgba(80,130,220,0.11)'}
+                stroke={major ? 'rgba(126,156,216,0.45)' : 'rgba(126,156,216,0.18)'}
                 strokeWidth={major ? 1 : 0.5}
               />
             );
@@ -349,7 +358,7 @@ const WorldMoodCanvas: React.FC<{
               <Line
                 key={`lon-${lon}`}
                 x1={x} y1={0} x2={x} y2={size.h}
-                stroke={major ? 'rgba(100,180,255,0.30)' : 'rgba(80,130,220,0.11)'}
+                stroke={major ? 'rgba(126,156,216,0.45)' : 'rgba(126,156,216,0.18)'}
                 strokeWidth={major ? 1 : 0.5}
               />
             );
@@ -378,13 +387,52 @@ const WorldMoodCanvas: React.FC<{
         );
       })}
 
-      <View style={styles.worldMapLiveBadge}>
-        <View style={styles.worldMapLiveDot} />
-        <Typography variant="caption" weight="bold" style={{ color: '#FFFFFF', fontSize: 10, letterSpacing: 0.8 }}>
-          LIVE WORLD MAP
-        </Typography>
-      </View>
     </View>
+  );
+};
+
+/** Emotion filter pill with a springy press response */
+const SpringyFilterPill: React.FC<{
+  filter: { id: string; label: string; emoji: string; color: string; ink: string };
+  isSelected: boolean;
+  colors: any;
+  onPress: () => void;
+}> = ({ filter, isSelected, colors, onPress }) => {
+  const scale = useSharedValue(1);
+  const pillStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  const handlePress = () => {
+    scale.value = withSequence(
+      withSpring(0.91, { damping: 14, stiffness: 420 }),
+      withSpring(1, theme.springs.bouncy)
+    );
+    onPress();
+  };
+
+  return (
+    <Animated.View style={pillStyle}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={handlePress}
+        style={[
+          styles.filterPill,
+          {
+            backgroundColor: isSelected ? filter.color : colors.glass.surface,
+            borderColor: isSelected ? filter.ink : colors.glass.border,
+            borderWidth: isSelected ? 1.5 : 1,
+          },
+        ]}
+      >
+        <Typography style={{ fontSize: 13, marginRight: 4 }}>{filter.emoji}</Typography>
+        <Typography
+          variant="caption"
+          weight={isSelected ? 'bold' : 'medium'}
+          style={{ color: isSelected ? filter.ink : colors.textSecondary }}
+        >
+          {filter.label}
+        </Typography>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
@@ -431,7 +479,7 @@ const FeedEchoCard: React.FC<{
       variant="default"
       glowColor={config.glow}
       onPress={onPress}
-      style={[styles.feedCard, { borderLeftWidth: 3, borderLeftColor: config.primary }]}
+      style={[styles.feedCard, { borderLeftWidth: 4, borderLeftColor: config.primary }]}
     >
       <View style={styles.cardHeader}>
         <View style={[styles.emotionDot, { backgroundColor: config.primary }]} />
@@ -628,21 +676,22 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScreenWrapper backgroundColor={colors.background} style={styles.container}>
-      {/* ── Top Gradient Navigation & Theme Bar ── */}
+      {/* ── Frosted Pastel Navigation & Theme Bar ── */}
       <LinearGradient
-        colors={['#FF6B35', '#FF9F1C']}
+        colors={['#FFE3D3', '#FFF2DC', '#E4F3EC']}
+        locations={[0, 0.55, 1]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0.2 }}
-        style={[styles.topHeader, { borderColor: 'rgba(255,255,255,0.25)' }]}
+        end={{ x: 1, y: 1 }}
+        style={[styles.topHeader, { borderColor: 'rgba(255,255,255,0.85)' }]}
       >
         <View style={styles.headerTitles}>
           <View style={styles.brandRow}>
-            <MoodSpaceLogo size={28} showBackground animated={false} />
-            <Typography variant="h3" weight="heavy" style={{ color: '#FFFFFF', marginLeft: 8 }}>
+            <MoodSpaceLogo size={30} showBackground animated={false} />
+            <Typography variant="h3" weight="heavy" style={{ color: HEADER_INK, marginLeft: 8 }}>
               MoodSpace
             </Typography>
           </View>
-          <Typography variant="caption" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          <Typography variant="caption" style={{ color: HEADER_INK_SOFT }}>
             How is your heart feeling today?
           </Typography>
         </View>
@@ -650,7 +699,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.headerActions}>
           {/* Quick Theme Switcher Button (☀️ / 🌙) */}
           <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
+            style={[styles.headerIconButton, HEADER_PILL]}
             onPress={() => {
               setThemeMode(isDark ? 'light' : 'dark');
               haptics.selection();
@@ -662,31 +711,31 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Interactive Feature Guide Button */}
           <TouchableOpacity
-            style={[styles.headerActionPill, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
+            style={[styles.headerActionPill, HEADER_PILL]}
             onPress={() => {
               setShowTourModal(true);
               haptics.light();
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="sparkles" size={14} color="#FFFFFF" />
-            <Typography variant="caption" weight="bold" style={{ color: '#FFFFFF', marginLeft: 4 }}>
+            <Ionicons name="sparkles" size={14} color={HEADER_INK} />
+            <Typography variant="caption" weight="bold" style={{ color: HEADER_INK, marginLeft: 4 }}>
               Guide
             </Typography>
           </TouchableOpacity>
 
           {/* Recenter Location Button */}
           <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
+            style={[styles.headerIconButton, HEADER_PILL]}
             onPress={handleRecenter}
             activeOpacity={0.7}
           >
-            <Ionicons name="locate" size={16} color="#FFFFFF" />
+            <Ionicons name="locate" size={16} color={HEADER_INK} />
           </TouchableOpacity>
 
           {/* App Settings Button */}
           <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
+            style={[styles.headerIconButton, HEADER_PILL]}
             onPress={() => {
               haptics.light();
               (navigation as any).navigate('ProfileTab', { screen: 'Settings' });
@@ -694,7 +743,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
             accessibilityLabel="App Settings"
           >
-            <Ionicons name="settings-outline" size={16} color="#FFFFFF" />
+            <Ionicons name="settings-outline" size={16} color={HEADER_INK} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -719,7 +768,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <MapContainer
               ref={mapRef}
               style={StyleSheet.absoluteFill}
-              provider={PROVIDER_DEFAULT}
+              provider={PROVIDER_GOOGLE}
               initialRegion={INITIAL_REGION}
               customMapStyle={isDark ? darkMapStyle : lightMapStyle}
               userInterfaceStyle={isDark ? 'dark' : 'light'}
@@ -758,7 +807,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Frosted Fade-out Bottom Gradient */}
           <LinearGradient
-            colors={['transparent', isDark ? 'rgba(24, 8, 46, 0.75)' : 'rgba(255, 245, 235, 0.85)', colors.background]}
+            colors={['transparent', isDark ? 'rgba(24, 8, 46, 0.75)' : 'rgba(250, 247, 242, 0.85)', colors.background]}
             locations={[0, 0.7, 1]}
             style={styles.heroFadeMask}
             pointerEvents="none"
@@ -808,7 +857,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Floating Live Echoes Status Chip */}
           <View style={[styles.mapStatusChip, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
-            <HeartbeatDot color="#00B894" />
+            <HeartbeatDot color="#4DB6A0" />
             <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
               {activeBubblesCount} echoes worldwide
             </Typography>
@@ -824,30 +873,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               {EMOTION_FILTERS.map((f) => {
                 const isSelected = (!selectedFilter && f.id === 'all') || selectedFilter === f.id;
                 return (
-                  <TouchableOpacity
+                  <SpringyFilterPill
                     key={f.id}
-                    activeOpacity={0.7}
+                    filter={f}
+                    isSelected={isSelected}
+                    colors={colors}
                     onPress={() => {
                       haptics.selection();
                       setSelectedFilter(f.id === 'all' ? null : f.id);
                     }}
-                    style={[
-                      styles.filterPill,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.glass.surface,
-                        borderColor: isSelected ? colors.primary : colors.glass.border,
-                      },
-                    ]}
-                  >
-                    <Typography style={{ fontSize: 13, marginRight: 4 }}>{f.emoji}</Typography>
-                    <Typography
-                      variant="caption"
-                      weight={isSelected ? 'bold' : 'medium'}
-                      style={{ color: isSelected ? '#FFFFFF' : colors.textSecondary }}
-                    >
-                      {f.label}
-                    </Typography>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </ScrollView>
@@ -859,26 +894,32 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.bentoSection}>
 
             {/* ① Quick Emotion Share — simple, inviting, one line */}
-            <View style={[styles.quickShareBar, {
-              backgroundColor: colors.primary,
-              shadowColor: colors.primary,
-              overflow: 'hidden',
-            }]}>
+            <LinearGradient
+              colors={['#FFC9AE', '#FFDFC0', '#FFEBC9']}
+              locations={[0, 0.55, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.quickShareBar, {
+                shadowColor: colors.primary,
+                borderColor: 'rgba(255,255,255,0.9)',
+                overflow: 'hidden',
+              }]}
+            >
               <Animated.View style={[styles.shimmerStrip, shimmerStyle]} pointerEvents="none">
                 <LinearGradient
-                  colors={['transparent', 'rgba(255,255,255,0.45)', 'transparent']}
+                  colors={['transparent', 'rgba(255,255,255,0.65)', 'transparent']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{ flex: 1 }}
                 />
               </Animated.View>
               <View style={styles.quickShareLeft}>
-                <Typography style={{ fontSize: 22 }}>✨</Typography>
+                <Typography style={{ fontSize: 22 }}>🫧</Typography>
                 <View style={{ marginLeft: 10 }}>
-                  <Typography variant="body" weight="bold" style={{ color: '#FFFFFF' }}>
+                  <Typography variant="body" weight="bold" style={{ color: HEADER_INK }}>
                     What's your vibe right now?
                   </Typography>
-                  <Typography variant="caption" style={{ color: 'rgba(255,255,255,0.80)' }}>
+                  <Typography variant="caption" style={{ color: HEADER_INK_SOFT }}>
                     Drop a mood bubble on the map
                   </Typography>
                 </View>
@@ -892,11 +933,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 style={styles.quickShareBtn}
                 activeOpacity={0.82}
               >
-                <Typography variant="caption" weight="bold" style={{ color: colors.primary }}>
+                <Typography variant="caption" weight="bold" style={{ color: colors.primaryDark }}>
                   Share
                 </Typography>
               </TouchableOpacity>
-            </View>
+            </LinearGradient>
 
             {/* ② Emotion pills — horizontal quick-filter row */}
             <ScrollView
@@ -995,7 +1036,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   onPress={() => setSelectedFilter(null)}
                   style={[styles.clearFilterPill, { backgroundColor: colors.surfaceHighlight }]}
                 >
-                  <Typography variant="caption" style={{ color: colors.primary }}>
+                  <Typography variant="caption" weight="semibold" style={{ color: colors.primaryDark }}>
                     Clear {selectedFilter} ✕
                   </Typography>
                 </TouchableOpacity>
@@ -1164,7 +1205,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00B894',
+    backgroundColor: '#4DB6A0',
   },
   mapFilterOverlay: {
     position: 'absolute',
@@ -1190,18 +1231,19 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     gap: 16,
   },
-  // Quick Vibe Share Bar — full-width coral pill
+  // Quick Vibe Share Bar — full-width pastel pill
   quickShareBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderRadius: 20,
+    borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 16,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.30,
+    shadowOpacity: 0.18,
     shadowRadius: 12,
-    elevation: 6,
+    elevation: 5,
   },
   quickShareLeft: {
     flexDirection: 'row',
@@ -1337,23 +1379,5 @@ const styles = StyleSheet.create({
   },
   canvasMarkerWrapper: {
     position: 'absolute',
-  },
-  worldMapLiveBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  worldMapLiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#00FF88',
   },
 });

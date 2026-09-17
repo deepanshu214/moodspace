@@ -51,8 +51,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* Icebreaker header */}
       {isIcebreaker && !isDeleted && (
         <View style={styles.icebreakerHeader}>
-          <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.primaryLight} />
-          <Typography variant="caption" color={colors.primaryLight} style={styles.icebreakerLabel}>
+          <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.accentInk} />
+          <Typography variant="caption" color={colors.accentInk} style={styles.icebreakerLabel}>
             Icebreaker
           </Typography>
         </View>

@@ -63,7 +63,7 @@ export const DesignSystemShowcase: React.FC = () => {
       {/* Header Banner */}
       <View style={styles.headerBanner}>
         <View style={styles.brandRow}>
-          <Typography variant="display" color={colors.primaryLight} weight="heavy">
+          <Typography variant="display" color={colors.accentInk} weight="heavy">
             MoodSpace
           </Typography>
           <Badge count={6} variant="secondary" />
@@ -294,7 +294,7 @@ export const DesignSystemShowcase: React.FC = () => {
           value={inputText}
           onChangeText={setInputText}
           helperText="Your notes are end-to-end encrypted"
-          leftIcon={<Ionicons name="sparkles" size={18} color={colors.primaryLight} />}
+          leftIcon={<Ionicons name="sparkles" size={18} color={colors.accentInk} />}
         />
 
         <Input

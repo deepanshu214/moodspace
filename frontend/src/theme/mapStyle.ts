@@ -1,6 +1,8 @@
 /**
- * High-Contrast Twilight & Daylight Map Styles for MoodSpace
- * Beautifully legible coastlines, roads, and cities so emotional bubbles shine with context.
+ * Google Maps styling for MoodSpace.
+ * lightMapStyle — soft pastel daylight: almond-cream land, serene pastel water,
+ * crisp white roads and gentle sage parks, so pastel mood bubbles read clearly.
+ * darkMapStyle — high-contrast twilight for night mode.
  */
 export const darkMapStyle = [
   {
@@ -43,6 +45,11 @@ export const darkMapStyle = [
     stylers: [{ visibility: 'off' }],
   },
   {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#1B3328' }],
+  },
+  {
     featureType: 'road',
     elementType: 'geometry.fill',
     stylers: [{ color: '#1E253D' }],
@@ -77,6 +84,7 @@ export const darkMapStyle = [
     stylers: [{ visibility: 'off' }],
   },
   {
+    // high-contrast twilight water
     featureType: 'water',
     elementType: 'geometry',
     stylers: [{ color: '#182038' }],
@@ -90,8 +98,9 @@ export const darkMapStyle = [
 
 export const lightMapStyle = [
   {
+    // soft cream land
     elementType: 'geometry',
-    stylers: [{ color: '#F2F4F8' }],
+    stylers: [{ color: '#FBF8F5' }],
   },
   {
     elementType: 'labels.icon',
@@ -99,49 +108,90 @@ export const lightMapStyle = [
   },
   {
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#3E4759' }],
+    stylers: [{ color: '#6B5C53' }],
   },
   {
     elementType: 'labels.text.stroke',
-    stylers: [{ color: '#FFFFFF' }, { weight: 2 }],
+    stylers: [{ color: '#FFFFFF' }, { weight: 2.5 }],
   },
   {
     featureType: 'administrative',
     elementType: 'geometry',
-    stylers: [{ color: '#CBD5E1' }],
+    stylers: [{ color: '#EBE1D7' }],
+  },
+  {
+    featureType: 'administrative.country',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#DCCEC1' }],
+  },
+  {
+    featureType: 'administrative.land_parcel',
+    stylers: [{ visibility: 'off' }],
   },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#1E293B' }],
+    stylers: [{ color: '#2D241E' }],
   },
   {
     featureType: 'poi',
     stylers: [{ visibility: 'off' }],
   },
   {
+    // gentle sage parks
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#E4F5EB' }, { visibility: 'on' }],
+  },
+  {
+    featureType: 'landscape.natural',
+    elementType: 'geometry',
+    stylers: [{ color: '#F6F1EA' }],
+  },
+  {
+    // crisp white roads
     featureType: 'road',
     elementType: 'geometry.fill',
     stylers: [{ color: '#FFFFFF' }],
   },
   {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#F0E7DD' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#8D7B70' }],
+  },
+  {
     featureType: 'road.arterial',
     elementType: 'geometry',
-    stylers: [{ color: '#E2E8F0' }],
+    stylers: [{ color: '#FFFFFF' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry',
-    stylers: [{ color: '#CBD5E1' }],
+    stylers: [{ color: '#FFF3E6' }],
   },
   {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#FFE0C7' }],
+  },
+  {
+    featureType: 'transit',
+    stylers: [{ visibility: 'off' }],
+  },
+  {
+    // serene pastel water
     featureType: 'water',
     elementType: 'geometry',
-    stylers: [{ color: '#C8E1FA' }],
+    stylers: [{ color: '#DCEEF7' }],
   },
   {
     featureType: 'water',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#4B6B94' }],
+    stylers: [{ color: '#7E9CD8' }],
   },
 ];

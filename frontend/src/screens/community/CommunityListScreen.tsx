@@ -140,8 +140,8 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.appBar}>
         <View style={styles.titleColumn}>
           <View style={styles.headerBadge}>
-            <Ionicons name="people" size={14} color={colors.primaryLight} />
-            <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.badgeText}>
+            <Ionicons name="people" size={14} color={colors.accentInk} />
+            <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.badgeText}>
               Communities
             </Typography>
           </View>

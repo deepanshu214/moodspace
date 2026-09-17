@@ -113,7 +113,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
 
         {/* Footer Action Row */}
         <View style={styles.footerRow}>
-          <Typography variant="caption" color={colors.primaryLight} weight="semibold">
+          <Typography variant="caption" color={colors.accentInk} weight="semibold">
             Explore Sanctuary →
           </Typography>
 

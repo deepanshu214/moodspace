@@ -121,7 +121,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="App Tour Guide"
             >
-              <Ionicons name="help-circle-outline" size={19} color={colors.primaryLight} />
+              <Ionicons name="help-circle-outline" size={19} color={colors.accentInk} />
             </TouchableOpacity>
           )}
 
@@ -132,7 +132,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="Community Circles"
             >
-              <Ionicons name="planet-outline" size={18} color={colors.primaryLight} />
+              <Ionicons name="planet-outline" size={18} color={colors.accentInk} />
             </TouchableOpacity>
           )}
 
@@ -154,7 +154,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="Recenter Map"
             >
-              <Ionicons name="locate" size={18} color={colors.primaryLight} />
+              <Ionicons name="locate" size={18} color={colors.accentInk} />
             </TouchableOpacity>
           )}
         </View>

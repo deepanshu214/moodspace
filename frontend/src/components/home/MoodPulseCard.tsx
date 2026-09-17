@@ -106,7 +106,7 @@ export const MoodPulseCard: React.FC<MoodPulseCardProps> = ({ data, onEmotionPre
         <View style={[styles.content, { backgroundColor: colors.glass.surface }]}>
           <View style={styles.header}>
             <View>
-              <Typography variant="caption" weight="bold" style={{ color: colors.primaryLight, letterSpacing: 0.5 }}>
+              <Typography variant="caption" weight="bold" style={{ color: colors.accentInk, letterSpacing: 0.5 }}>
                 COMMUNITY RHYTHM
               </Typography>
               <Typography variant="caption" style={{ color: colors.textMuted, marginTop: 2 }}>

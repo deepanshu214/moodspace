@@ -89,7 +89,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       case 'follow_request':
         return {
           icon: 'person-add',
-          color: colors.primaryLight,
+          color: colors.accentInk,
           bg: 'rgba(108, 92, 231, 0.15)',
           label: 'Connection',
         };
@@ -201,8 +201,8 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         {/* Resonance or Community badge */}
         {data?.resonance_score !== undefined && data.resonance_score > 0 && (
           <View style={styles.resonancePill}>
-            <Ionicons name="sparkles" size={10} color={colors.secondary} />
-            <Typography variant="caption" color={colors.secondary} style={styles.badgeText}>
+            <Ionicons name="sparkles" size={10} color={colors.secondaryInk} />
+            <Typography variant="caption" color={colors.secondaryInk} style={styles.badgeText}>
               {data.resonance_score}% Resonance Match
             </Typography>
           </View>
@@ -210,8 +210,8 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
 
         {data?.community_name && (
           <View style={styles.communityPill}>
-            <Ionicons name="planet-outline" size={10} color={colors.primaryLight} />
-            <Typography variant="caption" color={colors.primaryLight} style={styles.badgeText}>
+            <Ionicons name="planet-outline" size={10} color={colors.accentInk} />
+            <Typography variant="caption" color={colors.accentInk} style={styles.badgeText}>
               {data.community_name}
             </Typography>
           </View>

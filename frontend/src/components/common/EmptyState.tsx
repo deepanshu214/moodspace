@@ -57,7 +57,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {emoji ? (
           <Typography variant="display">{emoji}</Typography>
         ) : (
-          <Ionicons name={iconName} size={42} color={colors.primaryLight} />
+          <Ionicons name={iconName} size={42} color={colors.accentInk} />
         )}
       </Animated.View>
 

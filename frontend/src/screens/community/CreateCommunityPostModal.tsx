@@ -121,7 +121,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
         >
           {/* Destination Circle Pill */}
           <View style={styles.circleDestPill}>
-            <Ionicons name="planet" size={14} color={colors.primaryLight} />
+            <Ionicons name="planet" size={14} color={colors.accentInk} />
             <Typography variant="caption" color={colors.textMuted} style={styles.destText}>
               Sharing into <Typography variant="caption" weight="bold" color={colors.textPrimary}>{communityName}</Typography>
             </Typography>

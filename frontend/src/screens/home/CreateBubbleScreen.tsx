@@ -254,11 +254,11 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
               }}
               style={styles.aiSuggestionBox}
             >
-              <Ionicons name="sparkles" size={16} color={colors.primaryLight} />
+              <Ionicons name="sparkles" size={16} color={colors.accentInk} />
               <View style={styles.aiSuggestionContent}>
                 <Typography variant="caption" color={colors.textSecondary}>
                   Detected vibe:{' '}
-                  <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+                  <Typography variant="caption" weight="bold" color={colors.accentInk}>
                     {getEmotionConfig(detectedSentiment.emotion).label}
                   </Typography>
                 </Typography>

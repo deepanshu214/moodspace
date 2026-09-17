@@ -20,7 +20,7 @@ export const OnboardingPermissionsScreen: React.FC<Props> = ({ navigation }) => 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topProgress}>
-        <Typography variant="caption" color={colors.primaryLight} weight="bold">
+        <Typography variant="caption" color={colors.accentInk} weight="bold">
           STEP 3 OF 3
         </Typography>
         <Typography variant="h2" weight="bold" style={styles.title}>
@@ -35,7 +35,7 @@ export const OnboardingPermissionsScreen: React.FC<Props> = ({ navigation }) => 
         {/* Location Permission */}
         <Card variant="elevated" style={styles.permissionCard}>
           <View style={[styles.iconCircle, { backgroundColor: colors.surfaceHighlight }]}>
-            <Ionicons name="location" size={26} color={colors.primaryLight} />
+            <Ionicons name="location" size={26} color={colors.accentInk} />
           </View>
           <View style={styles.permissionMeta}>
             <Typography variant="title">Atmospheric Map Location</Typography>

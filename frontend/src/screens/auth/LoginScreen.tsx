@@ -135,7 +135,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 haptics.light();
               }}
             >
-              <Typography variant="caption" color={colors.primaryLight} weight="semibold">
+              <Typography variant="caption" color={colors.accentInk} weight="semibold">
                 Forgot Password?
               </Typography>
             </TouchableOpacity>
@@ -180,7 +180,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             }}
             activeOpacity={0.7}
           >
-            <Typography variant="bodySmall" weight="bold" color={colors.primaryLight}>
+            <Typography variant="bodySmall" weight="bold" color={colors.accentInk}>
               Sign Up
             </Typography>
           </TouchableOpacity>

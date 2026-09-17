@@ -116,7 +116,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
 
       {/* ── Milestones Carousel ── */}
       <View style={styles.milestonesSection}>
-        <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.milestoneHeader}>
+        <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.milestoneHeader}>
           STREAK MILESTONES
         </Typography>
 

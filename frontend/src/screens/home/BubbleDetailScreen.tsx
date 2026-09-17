@@ -125,7 +125,7 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           <Typography variant="title" weight="bold">
             Supportive Echoes ({comments.length})
           </Typography>
-          <Typography variant="caption" color={colors.primaryLight}>
+          <Typography variant="caption" color={colors.accentInk}>
             Safe & Empathetic
           </Typography>
         </View>

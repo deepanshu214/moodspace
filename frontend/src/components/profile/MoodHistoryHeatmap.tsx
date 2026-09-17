@@ -66,7 +66,7 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
       {/* ── Header: Title & Monthly Highlights ── */}
       <View style={styles.header}>
         <View>
-          <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.headerLabel}>
+          <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.headerLabel}>
             MONTHLY MOOD CONSTELLATION
           </Typography>
           <Typography variant="bodySmall" color={colors.textSecondary}>
@@ -173,7 +173,7 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
 
               {selectedDay.count > 0 ? (
                 <View style={styles.checkinCountBadge}>
-                  <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+                  <Typography variant="caption" weight="bold" color={colors.accentInk}>
                     {selectedDay.count} check-in{selectedDay.count > 1 ? 's' : ''}
                   </Typography>
                 </View>

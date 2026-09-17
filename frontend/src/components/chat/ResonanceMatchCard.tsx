@@ -133,7 +133,7 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
       {/* Icebreaker suggestion */}
       {match.icebreaker && (
         <View style={[styles.icebreaker, { borderLeftColor: colors.primaryLight }]}>
-          <Ionicons name="chatbubble-ellipses-outline" size={14} color={colors.primaryLight} />
+          <Ionicons name="chatbubble-ellipses-outline" size={14} color={colors.accentInk} />
           <Typography variant="bodySmall" color={colors.textSecondary} style={styles.icebreakerText}>
             💬 "{match.icebreaker.prompt}"
           </Typography>

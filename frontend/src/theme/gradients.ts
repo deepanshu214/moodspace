@@ -10,59 +10,59 @@ export interface GradientPreset {
   end: { x: number; y: number };
 }
 
-// ─── Named Aurora Gradient Presets ───
+// ─── Named Aurora Gradient Presets — soft pastel aura washes ───
 export const gradients = {
-  /** Default aurora — vibrant coral / sunny gold / candy pink */
+  /** Default aurora — peach blush / buttercream / rose */
   auroraDefault: {
-    colors: ['#FF6B35', '#F7B731', '#FF85A1', '#FF6B35'],
+    colors: ['#FFCDB2', '#FFE082', '#F8BBD0', '#FFCDB2'],
     locations: [0, 0.35, 0.7, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
   } as GradientPreset,
 
-  /** Calm mood — fresh aqua / sky blue / mint */
+  /** Calm mood — mint / seafoam / pale aqua */
   auroraCalm: {
-    colors: ['#26D0CE', '#1CB5E0', '#84FAB0', '#26D0CE'],
+    colors: ['#A7D7C5', '#80CBC4', '#C7EAE0', '#A7D7C5'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0, y: 0.2 },
     end: { x: 1, y: 0.8 },
   } as GradientPreset,
 
-  /** Joy mood — golden sunshine / coral / candy pink */
+  /** Joy mood — buttercream / buttercup / peach */
   auroraJoy: {
-    colors: ['#F7B731', '#FF6B35', '#FF85A1', '#F7B731'],
+    colors: ['#FFE082', '#FFD54F', '#FFCDB2', '#FFE082'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.2, y: 0 },
     end: { x: 0.8, y: 1 },
   } as GradientPreset,
 
-  /** Anxiety mood — vivid violet / magenta */
+  /** Anxiety mood — lilac / lavender / rose */
   auroraAnxiety: {
-    colors: ['#C471ED', '#F64F59', '#FF85A1', '#C471ED'],
+    colors: ['#E1BEE7', '#D1C4E9', '#F8BBD0', '#E1BEE7'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.1, y: 0.1 },
     end: { x: 0.9, y: 0.9 },
   } as GradientPreset,
 
-  /** Anger mood — vivid red / coral */
+  /** Anger mood — soft terracotta / apricot */
   auroraAnger: {
-    colors: ['#F64F59', '#FF6B35', '#FF4E50', '#F64F59'],
+    colors: ['#FFCCBC', '#FFAB91', '#FFCDB2', '#FFCCBC'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
   } as GradientPreset,
 
-  /** Sadness mood — royal blue / indigo / teal */
+  /** Sadness mood — periwinkle / lavender / mint */
   auroraSadness: {
-    colors: ['#4776E6', '#8E54E9', '#26D0CE', '#4776E6'],
+    colors: ['#C5CAE9', '#D1C4E9', '#A7D7C5', '#C5CAE9'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0, y: 0.3 },
     end: { x: 1, y: 0.7 },
   } as GradientPreset,
 
-  /** Love mood — candy pink / coral */
+  /** Love mood — rose blush / peach */
   auroraLove: {
-    colors: ['#FF85A1', '#FF6B35', '#FF4E50', '#FF85A1'],
+    colors: ['#F8BBD0', '#FFCDB2', '#F48FB1', '#F8BBD0'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.3, y: 0 },
     end: { x: 0.7, y: 1 },
@@ -70,9 +70,9 @@ export const gradients = {
 
   // ─── UI Gradients ───
 
-  /** Primary brand gradient for buttons/FABs */
+  /** Primary brand gradient for buttons/FABs — pastel coral into buttercup */
   primaryButton: {
-    colors: ['#FF6B35', '#F7B731'],
+    colors: ['#FF8A65', '#FFD54F'],
     locations: [0, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
@@ -86,12 +86,20 @@ export const gradients = {
     end: { x: 0.5, y: 1 },
   } as GradientPreset,
 
-  /** Fade-out mask for hero sections — uses warm peach background */
+  /** Fade-out mask for hero sections — uses warm almond background */
   heroFade: {
-    colors: ['transparent', '#FFF8F0'],
+    colors: ['transparent', '#FAF7F2'],
     locations: [0, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
+  } as GradientPreset,
+
+  /** Frosted pastel header wash — peach → buttercream → mint */
+  pastelHeader: {
+    colors: ['#FFE3D3', '#FFF2DC', '#E4F3EC'],
+    locations: [0, 0.55, 1],
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 1 },
   } as GradientPreset,
 };
 

@@ -31,7 +31,7 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
   const { colors } = useTheme();
   const meta = CATEGORY_META[icebreaker.category] ?? {
     icon: 'chatbubble-outline',
-    color: colors.primaryLight,
+    color: colors.accentInk,
   };
 
   return (

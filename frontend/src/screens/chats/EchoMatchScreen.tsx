@@ -182,7 +182,7 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
           </Typography>
         </View>
         <IconButton
-          icon={<Ionicons name="sparkles" size={20} color={colors.secondary} />}
+          icon={<Ionicons name="sparkles" size={20} color={colors.secondaryInk} />}
           variant="ghost"
           onPress={() => refetch()}
         />

@@ -74,8 +74,8 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
             {/* Echo match badge */}
             {is_echo_match && (
               <View style={styles.echoBadge}>
-                <Ionicons name="sparkles" size={10} color={colors.secondary} />
-                <Typography variant="caption" color={colors.secondary} style={styles.echoLabel}>
+                <Ionicons name="sparkles" size={10} color={colors.secondaryInk} />
+                <Typography variant="caption" color={colors.secondaryInk} style={styles.echoLabel}>
                   Echo
                 </Typography>
               </View>

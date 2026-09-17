@@ -283,7 +283,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
                   {recipientName}
                 </Typography>
                 {isEchoMatch && (
-                  <Ionicons name="sparkles" size={13} color={colors.secondary} />
+                  <Ionicons name="sparkles" size={13} color={colors.secondaryInk} />
                 )}
               </View>
               <Typography variant="caption" color={colors.success}>
@@ -295,7 +295,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
           </TouchableOpacity>
 
           <IconButton
-            icon={<Ionicons name="shield-checkmark-outline" size={20} color={colors.primaryLight} />}
+            icon={<Ionicons name="shield-checkmark-outline" size={20} color={colors.accentInk} />}
             variant="ghost"
           />
         </View>
@@ -359,7 +359,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
                     });
                   }}
                 >
-                  <Typography variant="caption" color={colors.primaryLight} weight="semibold">
+                  <Typography variant="caption" color={colors.accentInk} weight="semibold">
                     Browse All Sparks ✦
                   </Typography>
                 </TouchableOpacity>
@@ -395,8 +395,8 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
           {/* Icebreaker type indicator */}
           {messageType === 'icebreaker' && (
             <View style={styles.icebreakerBadge}>
-              <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.primaryLight} />
-              <Typography variant="caption" color={colors.primaryLight}>
+              <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.accentInk} />
+              <Typography variant="caption" color={colors.accentInk}>
                 Icebreaker
               </Typography>
               <TouchableOpacity onPress={() => setMessageType('text')}>

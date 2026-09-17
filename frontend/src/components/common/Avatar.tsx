@@ -128,7 +128,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Ionicons
             name="planet-outline"
             size={dimension * 0.52}
-            color={colors.primaryLight}
+            color={colors.accentInk}
           />
         ) : source ? (
           <Image

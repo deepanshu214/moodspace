@@ -94,7 +94,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
       {/* ── Contributing Factors (Expandable) ── */}
       {expanded && (
         <View style={[styles.breakdownSection, { borderTopColor: colors.border }]}>
-          <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.breakdownTitle}>
+          <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.breakdownTitle}>
             CONTRIBUTING HARMONICS
           </Typography>
 

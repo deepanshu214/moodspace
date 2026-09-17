@@ -155,7 +155,7 @@ export const ConversationsScreen: React.FC<Props> = ({ navigation }) => {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('EchoMatch')}
         >
-          <Ionicons name="sparkles" size={18} color={colors.secondary} />
+          <Ionicons name="sparkles" size={18} color={colors.secondaryInk} />
         </TouchableOpacity>
       </View>
 

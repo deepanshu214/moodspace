@@ -356,8 +356,8 @@ export const NotificationsScreen: React.FC = () => {
             activeOpacity={0.75}
             style={styles.markReadBtn}
           >
-            <Ionicons name="checkmark-done-outline" size={15} color={colors.primaryLight} />
-            <Typography variant="bodySmall" color={colors.primaryLight} weight="semibold">
+            <Ionicons name="checkmark-done-outline" size={15} color={colors.accentInk} />
+            <Typography variant="bodySmall" color={colors.accentInk} weight="semibold">
               Read all
             </Typography>
           </TouchableOpacity>

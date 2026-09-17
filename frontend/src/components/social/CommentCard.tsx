@@ -43,7 +43,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
             {authorName}
           </Typography>
           {auraScore !== undefined && (
-            <Typography variant="caption" color={colors.primaryLight} style={styles.auraBadge}>
+            <Typography variant="caption" color={colors.accentInk} style={styles.auraBadge}>
               ⚡ {auraScore}
             </Typography>
           )}

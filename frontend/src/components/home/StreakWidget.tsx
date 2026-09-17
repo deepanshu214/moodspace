@@ -116,7 +116,7 @@ export const StreakWidget: React.FC<StreakWidgetProps> = ({
           <Typography variant="caption" weight="semibold" style={{ color: colors.textSecondary, textAlign: 'center' }}>
             day streak
           </Typography>
-          <Typography variant="caption" style={{ color: colors.primaryLight, fontSize: 10, textAlign: 'center', marginTop: 2 }}>
+          <Typography variant="caption" style={{ color: colors.accentInk, fontSize: 10, textAlign: 'center', marginTop: 2 }}>
             glowing bright ✨
           </Typography>
         </View>

@@ -62,7 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
   onPress,
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const isDisabled = disabled || loading;
   const scale = useSharedValue(1);
   const shimmerTranslateX = useSharedValue(-SCREEN_WIDTH);
@@ -200,10 +200,13 @@ export const Button: React.FC<ButtonProps> = ({
         return colors.textPrimary;
       case 'outline':
       case 'ghost':
-        return colors.primaryLight;
-      case 'danger':
+        // primaryLight is a pastel peach — unreadable on cream, so ink down in light mode.
+        return isDark ? colors.primaryLight : colors.primaryDark;
       case 'aurora':
       case 'primary':
+        // Pastel coral / pastel aurora fills always want espresso ink, never white.
+        return '#2D241E';
+      case 'danger':
       default:
         return '#FFFFFF';
     }

@@ -35,7 +35,7 @@ export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topProgress}>
-        <Typography variant="caption" color={colors.primaryLight} weight="bold">
+        <Typography variant="caption" color={colors.accentInk} weight="bold">
           STEP 1 OF 3
         </Typography>
         <Typography variant="h2" weight="bold" style={styles.title}>
@@ -53,7 +53,7 @@ export const OnboardingProfileScreen: React.FC<Props> = ({ navigation }) => {
           size="xl"
           emotion={selectedEmotion}
         />
-        <Typography variant="bodySmall" weight="bold" color={colors.primaryLight} style={styles.auraLabel}>
+        <Typography variant="bodySmall" weight="bold" color={colors.accentInk} style={styles.auraLabel}>
           {colors.emotions[selectedEmotion]?.label || 'Calm'} Aura
         </Typography>
 

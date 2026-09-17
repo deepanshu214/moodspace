@@ -153,7 +153,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   onPress={handlePickImage}
                   style={{ marginTop: 8 }}
                 >
-                  <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+                  <Typography variant="caption" weight="bold" color={colors.accentInk}>
                     {avatarUri ? 'Change Photo from Gallery' : 'Add Photo from Gallery'}
                   </Typography>
                 </TouchableOpacity>

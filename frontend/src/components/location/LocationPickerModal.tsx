@@ -149,9 +149,9 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             disabled={isDetecting}
           >
             {isDetecting ? (
-              <ActivityIndicator color={colors.primaryLight} size="small" />
+              <ActivityIndicator color={colors.accentInk} size="small" />
             ) : (
-              <Ionicons name="navigate-circle" size={22} color={colors.primaryLight} />
+              <Ionicons name="navigate-circle" size={22} color={colors.accentInk} />
             )}
             <View style={styles.gpsInfo}>
               <Typography variant="body" weight="semibold" color={colors.textPrimary}>
@@ -183,7 +183,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             />
             {searchQuery.trim().length > 0 && (
               <TouchableOpacity onPress={handleCustomSubmit} style={styles.useCustomBtn}>
-                <Typography variant="caption" weight="bold" color={colors.primaryLight}>
+                <Typography variant="caption" weight="bold" color={colors.accentInk}>
                   Use "{searchQuery}"
                 </Typography>
               </TouchableOpacity>
@@ -219,7 +219,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
                     {preset.cityName}
                   </Typography>
                   {isSelected && (
-                    <Ionicons name="checkmark-circle" size={18} color={colors.primaryLight} />
+                    <Ionicons name="checkmark-circle" size={18} color={colors.accentInk} />
                   )}
                 </TouchableOpacity>
               );
