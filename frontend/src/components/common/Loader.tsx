@@ -3,12 +3,15 @@ import { View, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
 import { Typography } from './Typography';
+import { MoodOrbLoader } from '@/components/effects/MoodOrbLoader';
 
 export interface LoaderProps {
   size?: 'small' | 'large';
   color?: string;
   message?: string;
   fullScreen?: boolean;
+  /** Use the themed orbiting mood-bubble animation instead of a plain spinner. Defaults to true for large/fullScreen loaders, false for small inline ones. */
+  themed?: boolean;
   style?: ViewStyle;
 }
 
@@ -17,11 +20,16 @@ export const Loader: React.FC<LoaderProps> = ({
   color,
   message,
   fullScreen = false,
+  themed,
   style,
 }) => {
   const { colors } = useTheme();
   const spinnerColor = color ?? colors.primary;
-  const content = (
+  const useThemedOrb = themed ?? (size === 'large' || fullScreen);
+
+  const content = useThemedOrb ? (
+    <MoodOrbLoader size={size === 'large' ? 108 : 72} message={message} style={style} />
+  ) : (
     <View style={[styles.container, style]}>
       <ActivityIndicator size={size} color={spinnerColor} />
       {message && (

@@ -23,7 +23,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
       <AuroraBackground emotion="joy" />
       <ParticleCanvas count={15} />
 
-      <ScreenWrapper style={styles.container}>
+      <ScreenWrapper style={styles.container} backgroundColor="transparent">
         <View style={styles.content}>
           <View style={styles.heroSection}>
             <View

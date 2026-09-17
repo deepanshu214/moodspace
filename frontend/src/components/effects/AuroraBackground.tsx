@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
   blob: {
     position: 'absolute',
     borderRadius: 150,
+    overflow: 'hidden',
   },
   blob1: {
     width: 320,

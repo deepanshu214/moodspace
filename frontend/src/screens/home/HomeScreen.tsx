@@ -19,6 +19,7 @@ import Animated, {
   withTiming,
   withSpring,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -30,6 +31,7 @@ import { theme, getEmotionConfig } from '@/theme';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { GlassCard } from '@/components/common/GlassCard';
+import { SkeletonCard } from '@/components/common/Skeleton';
 import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
 import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
 import { InteractiveFeatureTour, AppWalkthroughModal } from '@/components/tutorial';
@@ -244,6 +246,36 @@ const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#00B894' }) => {
   );
 };
 
+/** A single ❤️ that floats up and fades — spawned on each "like" tap */
+const FloatingHeart: React.FC<{ onDone: () => void }> = ({ onDone }) => {
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(0.7);
+  const opacity = useSharedValue(0);
+  const driftX = useMemo(() => (Math.random() - 0.5) * 22, []);
+
+  useEffect(() => {
+    scale.value = withSpring(1.15, theme.springs.bouncy);
+    translateY.value = withTiming(-44, { duration: 850, easing: Easing.out(Easing.ease) });
+    opacity.value = withSequence(
+      withTiming(1, { duration: 120 }),
+      withTiming(0, { duration: 550 }, (finished) => {
+        if (finished) runOnJS(onDone)();
+      })
+    );
+  }, []);
+
+  const floatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }, { translateX: driftX }, { scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.Text pointerEvents="none" style={[styles.floatingHeart, floatStyle]}>
+      ❤️
+    </Animated.Text>
+  );
+};
+
 /** One echo/feed card — owns its own like animation state */
 const FeedEchoCard: React.FC<{
   bubble: DisplayBubble;
@@ -252,13 +284,26 @@ const FeedEchoCard: React.FC<{
 }> = ({ bubble, colors, onPress }) => {
   const config = getEmotionConfig(bubble.emotion);
   const [liked, setLiked] = useState(false);
+  const [bursts, setBursts] = useState<number[]>([]);
+  const burstIdRef = useRef(0);
   const heartScale = useSharedValue(1);
 
   const displayLikes = bubble.likesCount + (liked ? 1 : 0);
 
+  const removeBurst = (id: number) => {
+    setBursts((prev) => prev.filter((b) => b !== id));
+  };
+
   const handleReact = () => {
     haptics.light();
-    setLiked((prev) => !prev);
+    setLiked((prev) => {
+      const next = !prev;
+      if (next) {
+        const id = burstIdRef.current++;
+        setBursts((b) => [...b, id]);
+      }
+      return next;
+    });
     heartScale.value = withSequence(
       withSpring(1.5, { damping: 6, stiffness: 260, mass: 0.6 }),
       withSpring(1, { damping: 10, stiffness: 200 })
@@ -312,6 +357,9 @@ const FeedEchoCard: React.FC<{
           <Typography variant="caption" style={{ color: liked ? colors.secondary : colors.textMuted, marginLeft: 3 }}>
             {displayLikes}
           </Typography>
+          {bursts.map((id) => (
+            <FloatingHeart key={id} onDone={() => removeBurst(id)} />
+          ))}
         </TouchableOpacity>
       </View>
     </GlassCard>
@@ -346,7 +394,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // TanStack queries
   const { data: pulseData } = useAtmosphericPulse();
-  const { data: nearbyApiBubbles } = useNearbyBubbles(
+  const { data: nearbyApiBubbles, isLoading: isFeedLoading } = useNearbyBubbles(
     INITIAL_REGION.latitude,
     INITIAL_REGION.longitude,
     25
@@ -861,16 +909,23 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               )}
             </View>
 
-            <BentoGrid columns={2} gap={12} animated>
-              {filteredBubbles.map((bubble) => (
-                <FeedEchoCard
-                  key={bubble.id}
-                  bubble={bubble}
-                  colors={colors}
-                  onPress={() => handleBubblePress(bubble)}
-                />
-              ))}
-            </BentoGrid>
+            {isFeedLoading && filteredBubbles.length === 0 ? (
+              <View style={styles.feedSkeletonRow}>
+                <SkeletonCard style={styles.feedSkeletonCard} />
+                <SkeletonCard style={styles.feedSkeletonCard} />
+              </View>
+            ) : (
+              <BentoGrid columns={2} gap={12} animated>
+                {filteredBubbles.map((bubble) => (
+                  <FeedEchoCard
+                    key={bubble.id}
+                    bubble={bubble}
+                    colors={colors}
+                    onPress={() => handleBubblePress(bubble)}
+                  />
+                ))}
+              </BentoGrid>
+            )}
           </View>
         )}
       </ScrollView>
@@ -1148,6 +1203,21 @@ const styles = StyleSheet.create({
   heartTapArea: {
     flexDirection: 'row',
     alignItems: 'center',
+    position: 'relative',
+  },
+  feedSkeletonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  feedSkeletonCard: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  floatingHeart: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    fontSize: 15,
   },
   ambientCanvas: {
     flex: 1,

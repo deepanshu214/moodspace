@@ -10,6 +10,7 @@ import Animated, {
 import { theme } from '@/theme';
 import { haptics } from '@/theme/haptics';
 import { useTheme } from '@/context';
+import { useTilt3D } from '@/hooks/useTilt3D';
 
 export type GlassCardVariant = 'default' | 'hero' | 'compact' | 'stat';
 
@@ -49,6 +50,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const isPressed = useSharedValue(0);
+  // 3D "physical card" tilt toward the exact point pressed — pure
+  // onPressIn/onPressOut math, so it never competes with onPress.
+  const { tiltStyle, onLayout, onPressIn: tiltPressIn, onPressOut: tiltPressOut } = useTilt3D(6, 1);
 
   const startBorder = useMemo(
     () => (glowColor ? parseColorToRgba(glowColor, 0.22) : colors.glass.border),
@@ -59,17 +63,18 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     [glowColor, colors]
   );
 
-  const handlePressIn = () => {
+  const handlePressIn = (e: GestureResponderEvent) => {
     isPressed.value = withSpring(1, theme.springs.stiff);
+    if (onPress) tiltPressIn(e);
     haptics.light();
   };
 
   const handlePressOut = () => {
     isPressed.value = withSpring(0, theme.springs.stiff);
+    if (onPress) tiltPressOut();
   };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(1 - 0.025 * isPressed.value, theme.springs.stiff) }],
+  const glowStyle = useAnimatedStyle(() => ({
     borderColor: interpolateColor(isPressed.value, [0, 1], [startBorder, endBorder]),
   }));
 
@@ -98,13 +103,17 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   };
 
   return (
-    <Animated.View style={[
-      styles.container,
-      animatedStyle,
-      style,
-      { borderColor: startBorder },
-      shadowStyle,
-    ]}>
+    <Animated.View
+      onLayout={onPress ? onLayout : undefined}
+      style={[
+        styles.container,
+        onPress ? tiltStyle : undefined,
+        glowStyle,
+        style,
+        { borderColor: startBorder },
+        shadowStyle,
+      ]}
+    >
       <Pressable
         onPress={onPress}
         onPressIn={handlePressIn}

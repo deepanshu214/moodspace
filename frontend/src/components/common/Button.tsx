@@ -288,16 +288,12 @@ export const Button: React.FC<ButtonProps> = ({
 };
 
 const AnimatedGradientView = ({ style, colorPhase }: { style: any, colorPhase: SharedValue<number> }) => {
-  const animatedProps = useAnimatedStyle(() => {
-    return {
-      opacity: 1,
-    };
-  });
-  
-  // Since LinearGradient doesn't support reanimated colors directly without createAnimatedComponent on a custom View
-  // We'll use two overlapping gradients and fade between them
-  const auroraColors1: readonly [string, string] = ['#4A00E0', '#8E2DE2']; // Example aurora pair 1
-  const auroraColors2: readonly [string, string] = ['#00C9FF', '#92FE9D']; // Example aurora pair 2
+  // Brand aurora — coral / gold / candy pink, matching theme.colors.aurora.default.
+  // Two diagonals of the SAME on-brand stops (order rotated) crossfade to create a
+  // living shimmer without ever drifting into off-brand hues.
+  const [c0, c1, c2] = theme.colors.aurora.default;
+  const auroraColorsA: readonly [string, string, string] = [c0, c1, c2];
+  const auroraColorsB: readonly [string, string, string] = [c2, c0, c1];
 
   const style1 = useAnimatedStyle(() => ({
     opacity: 1 - colorPhase.value
@@ -311,7 +307,7 @@ const AnimatedGradientView = ({ style, colorPhase }: { style: any, colorPhase: S
     <View style={style}>
       <Animated.View style={[StyleSheet.absoluteFill, style1]}>
          <LinearGradient
-            colors={auroraColors1}
+            colors={auroraColorsA}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -319,9 +315,9 @@ const AnimatedGradientView = ({ style, colorPhase }: { style: any, colorPhase: S
       </Animated.View>
       <Animated.View style={[StyleSheet.absoluteFill, style2]}>
          <LinearGradient
-            colors={auroraColors2}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            colors={auroraColorsB}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
          />
       </Animated.View>
