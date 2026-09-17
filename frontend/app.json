@@ -11,9 +11,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.deepanshu214.moodspace",
       "buildNumber": "1",
-      "config": {
-        "googleMapsApiKey": "REPLACE_WITH_YOUR_IOS_GOOGLE_MAPS_API_KEY"
-      },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "MoodSpace uses your location to show nearby mood bubbles on the map and tag where you're feeling this way."
       }
@@ -31,12 +28,7 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
-      ],
-      "config": {
-        "googleMaps": {
-          "apiKey": "REPLACE_WITH_YOUR_ANDROID_GOOGLE_MAPS_API_KEY"
-        }
-      }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
