@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,6 +49,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   onSelectLocation,
   onClose,
 }) => {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectError, setDetectError] = useState<string | null>(null);
@@ -129,13 +131,13 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
               <Typography variant="h3" weight="bold">
                 Choose Location 🌍
               </Typography>
-              <Typography variant="caption" color={theme.colors.textSecondary}>
+              <Typography variant="caption" color={colors.textSecondary}>
                 Post your mood from anywhere in the world
               </Typography>
             </View>
 
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="close" size={22} color={theme.colors.textSecondary} />
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -147,33 +149,33 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             disabled={isDetecting}
           >
             {isDetecting ? (
-              <ActivityIndicator color={theme.colors.primaryLight} size="small" />
+              <ActivityIndicator color={colors.primaryLight} size="small" />
             ) : (
-              <Ionicons name="navigate-circle" size={22} color={theme.colors.primaryLight} />
+              <Ionicons name="navigate-circle" size={22} color={colors.primaryLight} />
             )}
             <View style={styles.gpsInfo}>
-              <Typography variant="body" weight="semibold" color={theme.colors.textPrimary}>
+              <Typography variant="body" weight="semibold" color={colors.textPrimary}>
                 {isDetecting ? 'Detecting your GPS location…' : 'Use My Current Device Location'}
               </Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Auto-detects your city and coordinates
               </Typography>
             </View>
           </TouchableOpacity>
 
           {detectError && (
-            <Typography variant="caption" color={theme.colors.error} style={styles.errorText}>
+            <Typography variant="caption" color={colors.error} style={styles.errorText}>
               {detectError}
             </Typography>
           )}
 
           {/* Search or Type City */}
-          <View style={styles.searchBox}>
-            <Ionicons name="search-outline" size={18} color={theme.colors.textMuted} />
+          <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="search-outline" size={18} color={colors.textMuted} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.textPrimary }]}
               placeholder="Search or enter any city..."
-              placeholderTextColor={theme.colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleCustomSubmit}
@@ -181,7 +183,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             />
             {searchQuery.trim().length > 0 && (
               <TouchableOpacity onPress={handleCustomSubmit} style={styles.useCustomBtn}>
-                <Typography variant="caption" weight="bold" color={theme.colors.primaryLight}>
+                <Typography variant="caption" weight="bold" color={colors.primaryLight}>
                   Use "{searchQuery}"
                 </Typography>
               </TouchableOpacity>
@@ -189,7 +191,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
           </View>
 
           {/* City Presets */}
-          <Typography variant="label" color={theme.colors.textMuted} style={styles.sectionLabel}>
+          <Typography variant="label" color={colors.textMuted} style={styles.sectionLabel}>
             Popular Cities Worldwide
           </Typography>
 
@@ -206,18 +208,18 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
                   <Ionicons
                     name="location-outline"
                     size={18}
-                    color={isSelected ? theme.colors.primaryLight : theme.colors.textMuted}
+                    color={isSelected ? colors.primaryLight : colors.textMuted}
                   />
                   <Typography
                     variant="body"
                     weight={isSelected ? 'bold' : 'regular'}
-                    color={isSelected ? theme.colors.primaryLight : theme.colors.textPrimary}
+                    color={isSelected ? colors.primaryLight : colors.textPrimary}
                     style={styles.presetText}
                   >
                     {preset.cityName}
                   </Typography>
                   {isSelected && (
-                    <Ionicons name="checkmark-circle" size={18} color={theme.colors.primaryLight} />
+                    <Ionicons name="checkmark-circle" size={18} color={colors.primaryLight} />
                   )}
                 </TouchableOpacity>
               );
@@ -277,18 +279,15 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
     minHeight: 46,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     marginBottom: theme.spacing.lg,
     gap: 10,
   },
   searchInput: {
     flex: 1,
-    color: theme.colors.textPrimary,
     fontSize: 15,
   },
   useCustomBtn: {

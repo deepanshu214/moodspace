@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 're
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -99,6 +100,7 @@ const MOCK_CONVERSATIONS: Conversation[] = [
 type Props = NativeStackScreenProps<ChatStackParamList, 'Conversations'>;
 
 export const ConversationsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { data: apiConversations, isLoading, isRefetching, refetch, isError } = useConversations();
 
   // Use API data if available, else rich fallback
@@ -142,7 +144,7 @@ export const ConversationsScreen: React.FC<Props> = ({ navigation }) => {
           <Typography variant="h1" weight="bold">
             Echoes
           </Typography>
-          <Typography variant="body" color={theme.colors.textSecondary} style={styles.subtitle}>
+          <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
             Private, encrypted conversations with your resonant connections.
           </Typography>
         </View>
@@ -153,15 +155,15 @@ export const ConversationsScreen: React.FC<Props> = ({ navigation }) => {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('EchoMatch')}
         >
-          <Ionicons name="sparkles" size={18} color={theme.colors.secondary} />
+          <Ionicons name="sparkles" size={18} color={colors.secondary} />
         </TouchableOpacity>
       </View>
 
       {/* Unread pill */}
       {totalUnread > 0 && (
         <View style={styles.unreadBanner}>
-          <Ionicons name="notifications-circle" size={16} color={theme.colors.primary} />
-          <Typography variant="bodySmall" color={theme.colors.textPrimary}>
+          <Ionicons name="notifications-circle" size={16} color={colors.primary} />
+          <Typography variant="bodySmall" color={colors.textPrimary}>
             {totalUnread} unread message{totalUnread !== 1 ? 's' : ''}
           </Typography>
         </View>
@@ -189,7 +191,7 @@ export const ConversationsScreen: React.FC<Props> = ({ navigation }) => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={theme.colors.primary}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
@@ -224,7 +226,6 @@ export const ConversationsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',

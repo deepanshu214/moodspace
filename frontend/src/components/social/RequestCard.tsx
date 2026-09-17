@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Button } from '../common/Button';
@@ -32,6 +33,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
   isDeclining = false,
   style,
 }) => {
+  const { colors } = useTheme();
   return (
     <Card variant="elevated" style={[styles.container, style]}>
       <View style={styles.topRow}>
@@ -43,20 +45,20 @@ export const RequestCard: React.FC<RequestCardProps> = ({
           </Typography>
 
           {bio ? (
-            <Typography variant="bodySmall" color={theme.colors.textSecondary} numberOfLines={1}>
+            <Typography variant="bodySmall" color={colors.textSecondary} numberOfLines={1}>
               {bio}
             </Typography>
           ) : null}
 
           {mutualCount !== undefined && mutualCount > 0 && (
-            <Typography variant="caption" color={theme.colors.textMuted} style={styles.mutual}>
+            <Typography variant="caption" color={colors.textMuted} style={styles.mutual}>
               {mutualCount} mutual connection{mutualCount > 1 ? 's' : ''}
             </Typography>
           )}
         </View>
 
         {timestamp && (
-          <Typography variant="caption" color={theme.colors.textMuted} style={styles.time}>
+          <Typography variant="caption" color={colors.textMuted} style={styles.time}>
             {timestamp}
           </Typography>
         )}

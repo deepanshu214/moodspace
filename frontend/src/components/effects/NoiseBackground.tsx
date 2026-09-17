@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { GlowOrb } from './GlowOrb';
 import { ParticleCanvas } from './ParticleCanvas';
 import { AuroraBackground } from './AuroraBackground';
@@ -26,8 +27,9 @@ export const NoiseBackground: React.FC<NoiseBackgroundProps> = ({
   reducedMotion = false,
   style,
 }) => {
+  const { colors } = useTheme();
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: colors.background }, style]}>
       <AuroraBackground emotion={emotion} reducedMotion={reducedMotion} />
       
       {showOrbs && !reducedMotion && (
@@ -62,7 +64,6 @@ export const NoiseBackground: React.FC<NoiseBackgroundProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
     overflow: 'hidden',
   },
   topOrb: {

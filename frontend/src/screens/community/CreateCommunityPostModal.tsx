@@ -14,6 +14,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -41,6 +42,7 @@ const EMOTIONS = [
 ];
 
 export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation }) => {
+  const { colors } = useTheme();
   const { communityId, communityName } = route.params;
 
   const [postType, setPostType] = useState('reflection');
@@ -91,10 +93,10 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
             onPress={() => navigation.goBack()}
             style={styles.closeBtn}
           >
-            <Ionicons name="close" size={22} color={theme.colors.textPrimary} />
+            <Ionicons name="close" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <Typography variant="body" weight="bold" color={theme.colors.textPrimary}>
+          <Typography variant="body" weight="bold" color={colors.textPrimary}>
             Release Reflection
           </Typography>
 
@@ -119,15 +121,15 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
         >
           {/* Destination Circle Pill */}
           <View style={styles.circleDestPill}>
-            <Ionicons name="planet" size={14} color={theme.colors.primaryLight} />
-            <Typography variant="caption" color={theme.colors.textMuted} style={styles.destText}>
-              Sharing into <Typography variant="caption" weight="bold" color={theme.colors.textPrimary}>{communityName}</Typography>
+            <Ionicons name="planet" size={14} color={colors.primaryLight} />
+            <Typography variant="caption" color={colors.textMuted} style={styles.destText}>
+              Sharing into <Typography variant="caption" weight="bold" color={colors.textPrimary}>{communityName}</Typography>
             </Typography>
           </View>
 
           {/* Post Type Selector */}
           <View style={styles.fieldSection}>
-            <Typography variant="caption" weight="bold" color={theme.colors.textSecondary} style={styles.sectionLabel}>
+            <Typography variant="caption" weight="bold" color={colors.textSecondary} style={styles.sectionLabel}>
               REFLECTION NATURE
             </Typography>
             <View style={styles.typeRow}>
@@ -146,12 +148,12 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
                     <Ionicons
                       name={type.icon as any}
                       size={14}
-                      color={isSelected ? '#FFFFFF' : theme.colors.textMuted}
+                      color={isSelected ? '#FFFFFF' : colors.textMuted}
                     />
                     <Typography
                       variant="caption"
                       weight={isSelected ? 'bold' : 'medium'}
-                      color={isSelected ? '#FFFFFF' : theme.colors.textSecondary}
+                      color={isSelected ? '#FFFFFF' : colors.textSecondary}
                       style={styles.typeLabel}
                     >
                       {type.label}
@@ -165,7 +167,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
           {/* Emotional Resonance Selector */}
           <View style={styles.fieldSection}>
             <View style={styles.labelRow}>
-              <Typography variant="caption" weight="bold" color={theme.colors.textSecondary}>
+              <Typography variant="caption" weight="bold" color={colors.textSecondary}>
                 EMOTIONAL FREQUENCY
               </Typography>
               <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
@@ -193,7 +195,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
                     <Typography
                       variant="caption"
                       weight={isSelected ? 'bold' : 'medium'}
-                      color={isSelected ? emConf.primary : theme.colors.textSecondary}
+                      color={isSelected ? emConf.primary : colors.textSecondary}
                       style={styles.emotionChipText}
                     >
                       {em.label}
@@ -207,10 +209,10 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
           {/* Reflection Content Text Input */}
           <View style={styles.fieldSection}>
             <View style={styles.labelRow}>
-              <Typography variant="caption" weight="bold" color={theme.colors.textSecondary}>
+              <Typography variant="caption" weight="bold" color={colors.textSecondary}>
                 YOUR AUTHENTIC VOICE
               </Typography>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {content.length}/1000
               </Typography>
             </View>
@@ -218,10 +220,10 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
               value={content}
               onChangeText={(text) => setContent(text.slice(0, 1000))}
               placeholder="What does your soul need to speak here? Your vulnerability is held with unconditional reverence..."
-              placeholderTextColor={theme.colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={6}
-              style={styles.contentInput}
+              style={[styles.contentInput, { color: colors.textPrimary }]}
             />
           </View>
 
@@ -230,11 +232,11 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
             <View style={styles.toggleTextWrap}>
               <View style={styles.toggleTitleRow}>
                 <Ionicons name="finger-print-outline" size={16} color="#A29BFE" />
-                <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary} style={styles.toggleTitle}>
+                <Typography variant="bodySmall" weight="bold" color={colors.textPrimary} style={styles.toggleTitle}>
                   Cloak Identity (Post Anonymously)
                 </Typography>
               </View>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Masks your name and profile. You will appear as a "Wandering Spirit".
               </Typography>
             </View>
@@ -251,11 +253,11 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
             <View style={styles.toggleTextWrap}>
               <View style={styles.toggleTitleRow}>
                 <Ionicons name="eye-off-outline" size={16} color="#FD79A8" />
-                <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary} style={styles.toggleTitle}>
+                <Typography variant="bodySmall" weight="bold" color={colors.textPrimary} style={styles.toggleTitle}>
                   Shield Sensitive Content
                 </Typography>
               </View>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 Places a gentle spoiler shield over your reflection so members can opt in before reading sensitive material.
               </Typography>
             </View>
@@ -285,7 +287,6 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   headerBar: {
     flexDirection: 'row',
@@ -384,7 +385,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: theme.colors.textPrimary,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,

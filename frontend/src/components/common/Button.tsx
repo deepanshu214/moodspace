@@ -22,6 +22,7 @@ import Animated, {
   SharedValue,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { haptics } from '@/theme/haptics';
 import { BlurView } from 'expo-blur';
@@ -61,6 +62,7 @@ export const Button: React.FC<ButtonProps> = ({
   onPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const isDisabled = disabled || loading;
   const scale = useSharedValue(1);
   const shimmerTranslateX = useSharedValue(-SCREEN_WIDTH);
@@ -153,31 +155,31 @@ export const Button: React.FC<ButtonProps> = ({
 
     switch (variant) {
       case 'secondary':
-        base.backgroundColor = theme.colors.surfaceElevated;
+        base.backgroundColor = colors.surfaceElevated;
         base.borderWidth = 1;
-        base.borderColor = theme.colors.border;
+        base.borderColor = colors.border;
         break;
       case 'outline':
         base.backgroundColor = 'transparent';
         base.borderWidth = 1.5;
-        base.borderColor = theme.colors.primary;
+        base.borderColor = colors.primary;
         break;
       case 'ghost':
         base.backgroundColor = 'transparent';
         break;
       case 'danger':
-        base.backgroundColor = theme.colors.error;
+        base.backgroundColor = colors.error;
         break;
       case 'glass':
         base.borderWidth = 1;
-        base.borderColor = theme.colors.glass.border;
+        base.borderColor = colors.glass.border;
         break;
       case 'aurora':
         // Gradient background handled by inner element
         break;
       case 'primary':
       default:
-        base.backgroundColor = theme.colors.primary;
+        base.backgroundColor = colors.primary;
         break;
     }
 
@@ -190,15 +192,15 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextColor = (): string => {
     if (customColor && variant === 'outline') return customColor;
-    if (customColor && variant !== 'outline') return theme.colors.textPrimary;
+    if (customColor && variant !== 'outline') return colors.textPrimary;
 
     switch (variant) {
       case 'secondary':
       case 'glass':
-        return theme.colors.textPrimary;
+        return colors.textPrimary;
       case 'outline':
       case 'ghost':
-        return theme.colors.primaryLight;
+        return colors.primaryLight;
       case 'danger':
       case 'aurora':
       case 'primary':
@@ -223,13 +225,13 @@ export const Button: React.FC<ButtonProps> = ({
     if (variant === 'glass') {
       const Container = Platform.OS === 'android' ? View : BlurView;
       const containerProps = Platform.OS === 'android' 
-        ? { style: [StyleSheet.absoluteFill, { backgroundColor: theme.colors.glass.surface }] }
+        ? { style: [StyleSheet.absoluteFill, { backgroundColor: colors.glass.surface }] }
         : { intensity: 25, tint: 'dark' as const, style: StyleSheet.absoluteFill };
       
       return (
         <Container {...containerProps}>
           {Platform.OS !== 'android' && (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.glass.surface }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glass.surface }]} />
           )}
         </Container>
       );

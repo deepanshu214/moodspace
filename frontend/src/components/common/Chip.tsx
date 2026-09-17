@@ -13,6 +13,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { haptics } from '@/theme/haptics';
@@ -38,6 +39,7 @@ export const Chip: React.FC<ChipProps> = ({
   style,
   onPress,
 }) => {
+  const { colors } = useTheme();
   const emotionConfig = emotion ? theme.getEmotionConfig(emotion) : null;
   const scale = useSharedValue(1);
 
@@ -66,8 +68,8 @@ export const Chip: React.FC<ChipProps> = ({
       paddingHorizontal: theme.spacing.md,
       borderRadius: theme.radius.pill,
       borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
       alignSelf: 'flex-start',
     };
 
@@ -83,8 +85,8 @@ export const Chip: React.FC<ChipProps> = ({
     }
 
     if (selected) {
-      base.backgroundColor = theme.colors.primary;
-      base.borderColor = theme.colors.primary;
+      base.backgroundColor = colors.primary;
+      base.borderColor = colors.primary;
     }
 
     return base;
@@ -93,7 +95,7 @@ export const Chip: React.FC<ChipProps> = ({
   const getTextColor = (): string => {
     if (selected) return '#FFFFFF';
     if (emotionConfig) return emotionConfig.primary;
-    return theme.colors.textSecondary;
+    return colors.textSecondary;
   };
 
   const content = (
@@ -116,7 +118,7 @@ export const Chip: React.FC<ChipProps> = ({
           <Ionicons
             name="close"
             size={14}
-            color={selected ? '#FFFFFF' : theme.colors.textMuted}
+            color={selected ? '#FFFFFF' : colors.textMuted}
           />
         </Pressable>
       )}

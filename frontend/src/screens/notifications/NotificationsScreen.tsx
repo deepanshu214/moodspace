@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -176,6 +177,7 @@ function formatRelativeTimestamp(iso: string): string {
 }
 
 export const NotificationsScreen: React.FC = () => {
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<FilterCategory>('all');
   const [respondingIds, setRespondingIds] = useState<Record<string, boolean>>({});
@@ -343,7 +345,7 @@ export const NotificationsScreen: React.FC = () => {
               </View>
             )}
           </View>
-          <Typography variant="body" color={theme.colors.textSecondary} style={styles.subtitle}>
+          <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
             Empathy echoes, resonance matches, and sanctuary pulses.
           </Typography>
         </View>
@@ -354,8 +356,8 @@ export const NotificationsScreen: React.FC = () => {
             activeOpacity={0.75}
             style={styles.markReadBtn}
           >
-            <Ionicons name="checkmark-done-outline" size={15} color={theme.colors.primaryLight} />
-            <Typography variant="bodySmall" color={theme.colors.primaryLight} weight="semibold">
+            <Ionicons name="checkmark-done-outline" size={15} color={colors.primaryLight} />
+            <Typography variant="bodySmall" color={colors.primaryLight} weight="semibold">
               Read all
             </Typography>
           </TouchableOpacity>
@@ -363,7 +365,7 @@ export const NotificationsScreen: React.FC = () => {
       </View>
 
       {/* ── Filter Tabs ── */}
-      <View style={styles.tabContainer}>
+      <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -376,17 +378,21 @@ export const NotificationsScreen: React.FC = () => {
                 key={tab.value}
                 activeOpacity={0.75}
                 onPress={() => setActiveTab(tab.value)}
-                style={[styles.tabChip, isActive && styles.tabChipActive]}
+                style={[
+                  styles.tabChip,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  isActive && styles.tabChipActive,
+                ]}
               >
                 <Ionicons
                   name={tab.icon as any}
                   size={12}
-                  color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                  color={isActive ? '#FFFFFF' : colors.textSecondary}
                 />
                 <Typography
                   variant="caption"
                   weight={isActive ? 'bold' : 'medium'}
-                  color={isActive ? '#FFFFFF' : theme.colors.textSecondary}
+                  color={isActive ? '#FFFFFF' : colors.textSecondary}
                 >
                   {tab.label}
                   {tab.value === 'unread' && unreadCount > 0 ? ` (${unreadCount})` : ''}
@@ -420,7 +426,7 @@ export const NotificationsScreen: React.FC = () => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={theme.colors.primary}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
@@ -441,7 +447,6 @@ export const NotificationsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -482,7 +487,6 @@ const styles = StyleSheet.create({
   tabContainer: {
     paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   tabScroll: {
     paddingHorizontal: theme.spacing.lg,
@@ -494,9 +498,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: theme.radius.round,
-    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     gap: 5,
   },
   tabChipActive: {

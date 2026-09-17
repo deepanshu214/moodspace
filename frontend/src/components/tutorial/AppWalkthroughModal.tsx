@@ -7,6 +7,7 @@ import {
   Pressable,
 } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -116,6 +117,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
   visible,
   onClose,
 }) => {
+  const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!visible) return null;
@@ -164,7 +166,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               style={styles.skipBtn}
             >
-              <Typography variant="bodySmall" color={theme.colors.textMuted} weight="medium">
+              <Typography variant="bodySmall" color={colors.textMuted} weight="medium">
                 Skip
               </Typography>
             </TouchableOpacity>
@@ -197,7 +199,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
 
             <Typography
               variant="body"
-              color={theme.colors.textSecondary}
+              color={colors.textSecondary}
               align="center"
               style={styles.description}
             >
@@ -209,7 +211,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
               {currentSlide.features.map((feat, idx) => (
                 <View key={idx} style={styles.featureItem}>
                   <Ionicons name="checkmark-circle" size={16} color={currentSlide.color} />
-                  <Typography variant="bodySmall" color={theme.colors.textPrimary} style={styles.featureText}>
+                  <Typography variant="bodySmall" color={colors.textPrimary} style={styles.featureText}>
                     {feat}
                   </Typography>
                 </View>
@@ -259,7 +261,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
               variant="primary"
               size="md"
               onPress={handleNext}
-              style={[styles.nextBtn, isLast && { backgroundColor: theme.colors.primary }]}
+              style={[styles.nextBtn, isLast && { backgroundColor: colors.primary }]}
             />
           </View>
         </View>

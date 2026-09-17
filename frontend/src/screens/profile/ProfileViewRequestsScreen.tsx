@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { RequestCard } from '@/components/social/RequestCard';
@@ -13,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<ProfileStackParamList, 'ProfileViewRequests'>;
 
 export const ProfileViewRequestsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [requests, setRequests] = useState([
     {
       id: 'pvr-1',
@@ -30,7 +32,7 @@ export const ProfileViewRequestsScreen: React.FC<Props> = ({ navigation }) => {
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topBar}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
@@ -40,7 +42,7 @@ export const ProfileViewRequestsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={{ width: 44 }} />
       </View>
 
-      <Typography variant="bodySmall" color={theme.colors.textSecondary} style={styles.explainer}>
+      <Typography variant="bodySmall" color={colors.textSecondary} style={styles.explainer}>
         When you post incognito, listeners who resonated deeply can ask to view your identity. You
         are never obligated to approve.
       </Typography>

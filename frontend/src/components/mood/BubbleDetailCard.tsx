@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Card } from '../common/Card';
@@ -54,6 +55,7 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
   onAuthorPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const emotionConfig = theme.getEmotionConfig(emotion);
 
   return (
@@ -77,8 +79,8 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
                 {isAnonymous ? 'Anonymous' : authorName}
               </Typography>
               {isAnonymous && (
-                <View style={styles.anonymousBadge}>
-                  <Typography variant="caption" color={theme.colors.textMuted}>
+                <View style={[styles.anonymousBadge, { backgroundColor: colors.surfaceHighlight }]}>
+                  <Typography variant="caption" color={colors.textMuted}>
                     Incognito
                   </Typography>
                 </View>
@@ -88,12 +90,12 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
             <View style={styles.subMetaRow}>
               {auraScore !== undefined && !isAnonymous && (
                 <View style={styles.auraPill}>
-                  <Typography variant="caption" weight="bold" color={theme.colors.primaryLight}>
+                  <Typography variant="caption" weight="bold" color={colors.primaryLight}>
                     ⚡ {auraScore} Aura
                   </Typography>
                 </View>
               )}
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {timestamp}
               </Typography>
             </View>
@@ -102,7 +104,7 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
 
         {onReportPress && (
           <IconButton
-            icon={<Ionicons name="ellipsis-horizontal" size={18} color={theme.colors.textMuted} />}
+            icon={<Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />}
             size="sm"
             variant="ghost"
             onPress={onReportPress}
@@ -121,8 +123,8 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
 
         {locationCity && (
           <View style={styles.locationTag}>
-            <Ionicons name="location-outline" size={14} color={theme.colors.textMuted} />
-            <Typography variant="caption" color={theme.colors.textSecondary} style={styles.locationText}>
+            <Ionicons name="location-outline" size={14} color={colors.textMuted} />
+            <Typography variant="caption" color={colors.textSecondary} style={styles.locationText}>
               {locationCity}
               {weatherTemp !== undefined ? ` • ${weatherTemp}°C` : ''}
               {weatherCondition ? ` ${weatherCondition}` : ''}
@@ -133,13 +135,13 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
 
       {/* Content Text */}
       {content ? (
-        <Typography variant="body" style={styles.content}>
+        <Typography variant="body" style={[styles.content, { color: colors.textPrimary }]}>
           {content}
         </Typography>
       ) : null}
 
       {/* Footer Actions */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={onLikePress}
@@ -148,12 +150,12 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
           <Ionicons
             name={isLiked ? 'heart' : 'heart-outline'}
             size={22}
-            color={isLiked ? theme.colors.error : theme.colors.textSecondary}
+            color={isLiked ? colors.error : colors.textSecondary}
           />
           <Typography
             variant="bodySmall"
             weight={isLiked ? 'semibold' : 'regular'}
-            color={isLiked ? theme.colors.error : theme.colors.textSecondary}
+            color={isLiked ? colors.error : colors.textSecondary}
             style={styles.actionCount}
           >
             {likesCount} {likesCount === 1 ? 'Support' : 'Supports'}
@@ -168,11 +170,11 @@ export const BubbleDetailCard: React.FC<BubbleDetailCardProps> = ({
           <Ionicons
             name="chatbubble-outline"
             size={20}
-            color={theme.colors.textSecondary}
+            color={colors.textSecondary}
           />
           <Typography
             variant="bodySmall"
-            color={theme.colors.textSecondary}
+            color={colors.textSecondary}
             style={styles.actionCount}
           >
             {commentsCount} {commentsCount === 1 ? 'Comment' : 'Comments'}
@@ -212,7 +214,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
-    backgroundColor: theme.colors.surfaceHighlight,
   },
   subMetaRow: {
     flexDirection: 'row',
@@ -239,14 +240,12 @@ const styles = StyleSheet.create({
   },
   content: {
     lineHeight: 22,
-    color: theme.colors.textPrimary,
     marginBottom: theme.spacing.lg,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
     paddingTop: theme.spacing.md,
   },
   actionBtn: {

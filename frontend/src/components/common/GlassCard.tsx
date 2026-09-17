@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Pressable, ViewStyle, StyleProp, GestureResponderEvent, Platform, View } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -10,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { haptics } from '@/theme/haptics';
+import { useTheme } from '@/context';
 
 export type GlassCardVariant = 'default' | 'hero' | 'compact' | 'stat';
 
@@ -47,72 +47,64 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   onPress,
   style,
 }) => {
+  const { colors, isDark } = useTheme();
   const isPressed = useSharedValue(0);
 
   const startBorder = useMemo(
-    () => (glowColor ? parseColorToRgba(glowColor, 0.15) : theme.colors.glass.border),
-    [glowColor]
+    () => (glowColor ? parseColorToRgba(glowColor, 0.22) : colors.glass.border),
+    [glowColor, colors]
   );
   const endBorder = useMemo(
-    () => (glowColor ? parseColorToRgba(glowColor, 0.40) : theme.colors.glass.borderGlow),
-    [glowColor]
+    () => (glowColor ? parseColorToRgba(glowColor, 0.50) : colors.glass.borderGlow),
+    [glowColor, colors]
   );
 
-  const handlePressIn = (e: GestureResponderEvent) => {
+  const handlePressIn = () => {
     isPressed.value = withSpring(1, theme.springs.stiff);
     haptics.light();
   };
 
-  const handlePressOut = (e: GestureResponderEvent) => {
+  const handlePressOut = () => {
     isPressed.value = withSpring(0, theme.springs.stiff);
   };
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: withSpring(1 - 0.03 * isPressed.value, theme.springs.stiff) }
-      ],
-      borderColor: interpolateColor(
-        isPressed.value,
-        [0, 1],
-        [startBorder, endBorder]
-      ),
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withSpring(1 - 0.025 * isPressed.value, theme.springs.stiff) }],
+    borderColor: interpolateColor(isPressed.value, [0, 1], [startBorder, endBorder]),
+  }));
 
   const getVariantStyles = (): ViewStyle => {
     switch (variant) {
       case 'hero':
-        return {
-          padding: theme.spacing.xl * 2,
-          minHeight: 200,
-        };
+        return { padding: theme.spacing.xl * 2, minHeight: 200 };
       case 'compact':
-        return {
-          padding: 12,
-        };
+        return { padding: 10 };
       case 'stat':
-        return {
-          padding: theme.spacing.md,
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 140,
-        };
-      case 'default':
+        return { padding: theme.spacing.md, alignItems: 'center', justifyContent: 'center', minHeight: 120 };
       default:
-        return {
-          padding: theme.spacing.lg,
-        };
+        return { padding: theme.spacing.lg };
     }
   };
 
-  const Container = Platform.OS === 'android' ? View : BlurView;
-  const containerProps = Platform.OS === 'android' 
-    ? { style: [styles.blurContainer, { backgroundColor: theme.colors.glass.surface }] }
-    : { intensity: 25, tint: 'dark' as const, style: styles.blurContainer };
+  // Light mode: pure white cards with warm shadow — always visible on cream bg
+  // Dark mode: translucent indigo cards
+  const cardBg = isDark ? colors.glass.surface : colors.surface;
+  const shadowStyle: ViewStyle = isDark ? {} : {
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 3,
+  };
 
   return (
-    <Animated.View style={[styles.container, animatedStyle, style]}>
+    <Animated.View style={[
+      styles.container,
+      animatedStyle,
+      style,
+      { borderColor: startBorder },
+      shadowStyle,
+    ]}>
       <Pressable
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -120,14 +112,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         disabled={!onPress}
         style={styles.pressable}
       >
-        <Container {...containerProps}>
-          {Platform.OS === 'android' ? null : (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.glass.surface }]} />
-          )}
-          
+        <View style={[styles.inner, { backgroundColor: cardBg }]}>
           {variant === 'hero' && (
             <LinearGradient
-              colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0)']}
+              colors={['rgba(255,107,53,0.06)', 'rgba(255,159,28,0.03)']}
               style={StyleSheet.absoluteFill}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -136,7 +124,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           <View style={getVariantStyles()}>
             {children}
           </View>
-        </Container>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -146,12 +134,12 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: theme.radius.xl,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   pressable: {
     flex: 1,
   },
-  blurContainer: {
+  inner: {
     flex: 1,
   },
 });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Button } from '../common/Button';
@@ -27,6 +28,7 @@ export const FollowUserTile: React.FC<FollowUserTileProps> = ({
   onPress,
   onFollowToggle,
 }) => {
+  const { colors } = useTheme();
   const [following, setFollowing] = useState(initialFollowing);
 
   const handleToggle = () => {
@@ -54,7 +56,7 @@ export const FollowUserTile: React.FC<FollowUserTileProps> = ({
         </View>
 
         {bio ? (
-          <Typography variant="caption" color={theme.colors.textSecondary} numberOfLines={1}>
+          <Typography variant="caption" color={colors.textSecondary} numberOfLines={1}>
             {bio}
           </Typography>
         ) : null}

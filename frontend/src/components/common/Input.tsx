@@ -16,6 +16,7 @@ import Animated, {
   interpolateColor,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -45,6 +46,7 @@ export const Input = forwardRef<TextInput, InputProps>(({
   editable = true,
   ...rest
 }, ref) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const internalInputRef = useRef<TextInput>(null);
@@ -74,9 +76,9 @@ export const Input = forwardRef<TextInput, InputProps>(({
   const hasError = !!error;
 
   const animatedBorderStyle = useAnimatedStyle(() => {
-    const errorColor = theme.colors.error;
-    const defaultBorderColor = theme.colors.glass.border;
-    const focusedColor = theme.colors.primaryLight;
+    const errorColor = colors.error;
+    const defaultBorderColor = colors.glass.border;
+    const focusedColor = colors.primaryLight;
     
     return {
       borderColor: hasError 
@@ -93,7 +95,7 @@ export const Input = forwardRef<TextInput, InputProps>(({
 
   const Container = Platform.OS === 'android' ? View : BlurView;
   const containerProps = Platform.OS === 'android' 
-    ? { style: [StyleSheet.absoluteFill, { backgroundColor: editable ? theme.colors.glass.surface : theme.colors.backgroundSecondary }] }
+    ? { style: [StyleSheet.absoluteFill, { backgroundColor: editable ? colors.glass.surface : colors.backgroundSecondary }] }
     : { intensity: 25, tint: 'dark' as const, style: StyleSheet.absoluteFill };
 
   return (
@@ -102,7 +104,7 @@ export const Input = forwardRef<TextInput, InputProps>(({
         <Typography
           variant="bodySmall"
           weight="medium"
-          color={hasError ? theme.colors.error : theme.colors.textSecondary}
+          color={hasError ? colors.error : colors.textSecondary}
           style={styles.label}
         >
           {label}
@@ -113,7 +115,7 @@ export const Input = forwardRef<TextInput, InputProps>(({
         <Animated.View style={[styles.inputWrapper, animatedBorderStyle]}>
           <Container {...containerProps}>
              {Platform.OS !== 'android' && (
-               <View style={[StyleSheet.absoluteFill, { backgroundColor: editable ? theme.colors.glass.surface : theme.colors.backgroundSecondary }]} />
+               <View style={[StyleSheet.absoluteFill, { backgroundColor: editable ? colors.glass.surface : colors.backgroundSecondary }]} />
              )}
           </Container>
 
@@ -129,12 +131,12 @@ export const Input = forwardRef<TextInput, InputProps>(({
               style={[
                 styles.textInput,
                 {
-                  color: editable ? theme.colors.textPrimary : theme.colors.textDisabled,
+                  color: editable ? colors.textPrimary : colors.textDisabled,
                   fontFamily: theme.typography.fontFamily,
                 },
                 style,
               ]}
-              placeholderTextColor={theme.colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               secureTextEntry={isPassword ? !showPassword : secureTextEntry}
               onFocus={handleFocus}
               onBlur={handleBlur}
@@ -152,7 +154,7 @@ export const Input = forwardRef<TextInput, InputProps>(({
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={theme.colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             ) : (
@@ -167,11 +169,11 @@ export const Input = forwardRef<TextInput, InputProps>(({
       </Pressable>
 
       {error ? (
-        <Typography variant="caption" color={theme.colors.error} style={styles.feedbackText}>
+        <Typography variant="caption" color={colors.error} style={styles.feedbackText}>
           {error}
         </Typography>
       ) : helperText ? (
-        <Typography variant="caption" color={theme.colors.textMuted} style={styles.feedbackText}>
+        <Typography variant="caption" color={colors.textMuted} style={styles.feedbackText}>
           {helperText}
         </Typography>
       ) : null}

@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { RequestCard } from '@/components/social/RequestCard';
@@ -14,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<ProfileStackParamList, 'FollowRequests'>;
 
 export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [requests, setRequests] = useState([
     {
       id: 'req-1',
@@ -42,7 +44,7 @@ export const FollowRequestsScreen: React.FC<Props> = ({ navigation }) => {
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       <View style={styles.topBar}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />

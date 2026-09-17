@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Button } from '../common/Button';
@@ -56,6 +57,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
   isResponding = false,
   style,
 }) => {
+  const { colors } = useTheme();
   const getCategoryConfig = () => {
     const key = category || type;
     switch (key) {
@@ -63,7 +65,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       case 'like':
         return {
           icon: 'heart',
-          color: theme.colors.error,
+          color: colors.error,
           bg: 'rgba(255, 118, 117, 0.15)',
           label: 'Empathy',
         };
@@ -71,7 +73,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       case 'comment':
         return {
           icon: 'chatbubble',
-          color: theme.colors.accent,
+          color: colors.accent,
           bg: 'rgba(0, 206, 201, 0.15)',
           label: 'Echo',
         };
@@ -87,7 +89,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       case 'follow_request':
         return {
           icon: 'person-add',
-          color: theme.colors.primaryLight,
+          color: colors.primaryLight,
           bg: 'rgba(108, 92, 231, 0.15)',
           label: 'Connection',
         };
@@ -95,7 +97,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       case 'follow_accept':
         return {
           icon: 'people',
-          color: theme.colors.success,
+          color: colors.success,
           bg: 'rgba(0, 184, 148, 0.15)',
           label: 'Connected',
         };
@@ -127,7 +129,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       default:
         return {
           icon: 'notifications',
-          color: theme.colors.info,
+          color: colors.info,
           bg: 'rgba(9, 132, 227, 0.15)',
           label: 'Signal',
         };
@@ -144,7 +146,10 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
       onPress={onPress}
       style={[
         styles.container,
-        !isRead ? styles.unreadContainer : styles.readContainer,
+        { borderColor: colors.border },
+        !isRead
+          ? { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight }
+          : { backgroundColor: colors.surface },
         emotionCfg && { borderLeftColor: emotionCfg.primary, borderLeftWidth: 3 },
         style,
       ]}
@@ -157,7 +162,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
           size="md"
           emotion={emotion}
         />
-        <View style={[styles.typeBadge, { backgroundColor: config.color }]}>
+        <View style={[styles.typeBadge, { backgroundColor: config.color, borderColor: colors.background }]}>
           <Ionicons name={config.icon as any} size={10} color="#FFFFFF" />
         </View>
       </View>
@@ -178,7 +183,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
             ) : null}
           </View>
 
-          <Typography variant="caption" color={theme.colors.textMuted} style={styles.timestamp}>
+          <Typography variant="caption" color={colors.textMuted} style={styles.timestamp}>
             {timestamp}
           </Typography>
         </View>
@@ -186,7 +191,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         {/* Message body */}
         <Typography
           variant="bodySmall"
-          color={!isRead ? theme.colors.textPrimary : theme.colors.textSecondary}
+          color={!isRead ? colors.textPrimary : colors.textSecondary}
           numberOfLines={2}
           style={styles.messageText}
         >
@@ -196,8 +201,8 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         {/* Resonance or Community badge */}
         {data?.resonance_score !== undefined && data.resonance_score > 0 && (
           <View style={styles.resonancePill}>
-            <Ionicons name="sparkles" size={10} color={theme.colors.secondary} />
-            <Typography variant="caption" color={theme.colors.secondary} style={styles.badgeText}>
+            <Ionicons name="sparkles" size={10} color={colors.secondary} />
+            <Typography variant="caption" color={colors.secondary} style={styles.badgeText}>
               {data.resonance_score}% Resonance Match
             </Typography>
           </View>
@@ -205,8 +210,8 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
 
         {data?.community_name && (
           <View style={styles.communityPill}>
-            <Ionicons name="planet-outline" size={10} color={theme.colors.primaryLight} />
-            <Typography variant="caption" color={theme.colors.primaryLight} style={styles.badgeText}>
+            <Ionicons name="planet-outline" size={10} color={colors.primaryLight} />
+            <Typography variant="caption" color={colors.primaryLight} style={styles.badgeText}>
               {data.community_name}
             </Typography>
           </View>
@@ -250,14 +255,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  readContainer: {
-    backgroundColor: theme.colors.surface,
-  },
-  unreadContainer: {
-    backgroundColor: theme.colors.surfaceElevated,
-    borderColor: theme.colors.borderLight,
   },
   avatarWrapper: {
     position: 'relative',
@@ -273,7 +270,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: theme.colors.background,
   },
   content: {
     flex: 1,

@@ -11,6 +11,7 @@ import Animated, {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useAuthStore } from '@/stores/authStore';
@@ -18,6 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { isAuthenticated, isInitializing } = useAuthStore();
   const scale = useSharedValue(0.85);
   const opacity = useSharedValue(0.4);
@@ -63,15 +65,15 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.centerContent}>
         <Animated.View style={[styles.glowHalo, animatedOrbStyle]} />
 
-        <View style={styles.logoOrb}>
+        <View style={[styles.logoOrb, { backgroundColor: colors.surfaceElevated }]}>
           <Typography variant="display">🔮</Typography>
         </View>
 
-        <Typography variant="display" weight="heavy" color={theme.colors.primaryLight} style={styles.brandTitle}>
+        <Typography variant="display" weight="heavy" color={colors.primaryLight} style={styles.brandTitle}>
           MoodSpace
         </Typography>
 
-        <Typography variant="body" color={theme.colors.textMuted} style={styles.tagline}>
+        <Typography variant="body" color={colors.textMuted} style={styles.tagline}>
           Express, Connect & Resonate
         </Typography>
       </View>
@@ -102,7 +104,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 2,
     borderColor: theme.colors.primary,
     alignItems: 'center',

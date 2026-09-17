@@ -10,6 +10,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -85,6 +86,7 @@ const MOCK_ECHO_MATCHES: EchoMatchResponse[] = [
 type FilterType = 'all' | 'high' | 'same_city';
 
 export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [filter, setFilter] = useState<FilterType>('all');
   const [connectingMatchId, setConnectingMatchId] = useState<string | null>(null);
 
@@ -165,9 +167,9 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper style={styles.container}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
@@ -175,54 +177,66 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
           <Typography variant="h2" weight="bold">
             1-on-1 Matches
           </Typography>
-          <Typography variant="caption" color={theme.colors.textSecondary}>
+          <Typography variant="caption" color={colors.textSecondary}>
             Connect with people experiencing similar feelings
           </Typography>
         </View>
         <IconButton
-          icon={<Ionicons name="sparkles" size={20} color={theme.colors.secondary} />}
+          icon={<Ionicons name="sparkles" size={20} color={colors.secondary} />}
           variant="ghost"
           onPress={() => refetch()}
         />
       </View>
 
       {/* Filter Tabs */}
-      <View style={styles.filterBar}>
+      <View style={[styles.filterBar, { borderBottomColor: colors.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           <TouchableOpacity
-            style={[styles.filterChip, filter === 'all' && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              filter === 'all' && styles.filterChipActive,
+            ]}
             onPress={() => setFilter('all')}
           >
             <Typography
               variant="caption"
               weight={filter === 'all' ? 'bold' : 'medium'}
-              color={filter === 'all' ? '#FFFFFF' : theme.colors.textSecondary}
+              color={filter === 'all' ? '#FFFFFF' : colors.textSecondary}
             >
               All Matches ({rawMatches.length})
             </Typography>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filter === 'high' && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              filter === 'high' && styles.filterChipActive,
+            ]}
             onPress={() => setFilter('high')}
           >
             <Typography
               variant="caption"
               weight={filter === 'high' ? 'bold' : 'medium'}
-              color={filter === 'high' ? '#FFFFFF' : theme.colors.textSecondary}
+              color={filter === 'high' ? '#FFFFFF' : colors.textSecondary}
             >
               ⚡ Close Match (≥85%)
             </Typography>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filter === 'same_city' && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              filter === 'same_city' && styles.filterChipActive,
+            ]}
             onPress={() => setFilter('same_city')}
           >
             <Typography
               variant="caption"
               weight={filter === 'same_city' ? 'bold' : 'medium'}
-              color={filter === 'same_city' ? '#FFFFFF' : theme.colors.textSecondary}
+              color={filter === 'same_city' ? '#FFFFFF' : colors.textSecondary}
             >
               📍 Nearby Currents
             </Typography>
@@ -253,7 +267,7 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={theme.colors.primary}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
@@ -274,7 +288,6 @@ export const EchoMatchScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -282,7 +295,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   headerTitles: {
     flex: 1,
@@ -291,7 +303,6 @@ const styles = StyleSheet.create({
   filterBar: {
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   filterScroll: {
     paddingHorizontal: theme.spacing.lg,
@@ -301,9 +312,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: theme.radius.round,
-    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   filterChipActive: {
     backgroundColor: theme.colors.primary,

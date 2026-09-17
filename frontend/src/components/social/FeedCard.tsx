@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Share, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Card } from '../common/Card';
@@ -63,6 +64,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   onCommentPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [totalReactions, setTotalReactions] = useState(reactionsCount);
   const [floaterKey, setFloaterKey] = useState(0);
@@ -123,7 +125,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
 
           <View style={styles.authorTexts}>
             <View style={styles.nameRow}>
-              <Typography variant="body" weight="bold" color={theme.colors.textPrimary}>
+              <Typography variant="body" weight="bold" color={colors.textPrimary}>
                 {isAnonymous ? 'Anonymous Friend' : authorName}
               </Typography>
               {isAnonymous && (
@@ -136,11 +138,11 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             </View>
 
             <View style={styles.subMeta}>
-              <Typography variant="caption" color={theme.colors.textMuted}>
+              <Typography variant="caption" color={colors.textMuted}>
                 {timestamp}
               </Typography>
               {locationCity && (
-                <Typography variant="caption" color={theme.colors.textSecondary}>
+                <Typography variant="caption" color={colors.textSecondary}>
                   • 📍 {locationCity}
                 </Typography>
               )}
@@ -157,7 +159,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       {(weatherCondition || weatherTemp !== undefined) && (
         <View style={styles.weatherCapsule}>
           <Ionicons name="cloud-outline" size={13} color={emotionConfig.primary} />
-          <Typography variant="caption" color={theme.colors.textSecondary}>
+          <Typography variant="caption" color={colors.textSecondary}>
             {weatherCondition || 'Calm skies'}
             {weatherTemp !== undefined ? ` • ${weatherTemp}°C` : ''}
           </Typography>
@@ -182,7 +184,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       >
         <Typography
           variant="body"
-          color={theme.colors.textPrimary}
+          color={colors.textPrimary}
           style={styles.reflectionText}
         >
           {content}
@@ -213,7 +215,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
               <Typography
                 variant="caption"
                 weight={isSelected ? 'bold' : 'medium'}
-                color={isSelected ? rx.color : theme.colors.textSecondary}
+                color={isSelected ? rx.color : colors.textSecondary}
               >
                 {rx.label}
               </Typography>
@@ -225,7 +227,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       {/* Footer Stats & Actions */}
       <View style={styles.footer}>
         <View style={styles.statsSummary}>
-          <Typography variant="caption" color={theme.colors.textMuted}>
+          <Typography variant="caption" color={colors.textMuted}>
             {totalReactions} Resonances • {commentsCount} Echoes
           </Typography>
         </View>
@@ -236,8 +238,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             onPress={onCommentPress || onPress}
             style={styles.iconBtn}
           >
-            <Ionicons name="chatbubble-outline" size={17} color={theme.colors.textSecondary} />
-            <Typography variant="caption" color={theme.colors.textSecondary}>
+            <Ionicons name="chatbubble-outline" size={17} color={colors.textSecondary} />
+            <Typography variant="caption" color={colors.textSecondary}>
               Echo
             </Typography>
           </TouchableOpacity>
@@ -247,8 +249,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             onPress={handleShare}
             style={styles.iconBtn}
           >
-            <Ionicons name="share-outline" size={17} color={theme.colors.textSecondary} />
-            <Typography variant="caption" color={theme.colors.textSecondary}>
+            <Ionicons name="share-outline" size={17} color={colors.textSecondary} />
+            <Typography variant="caption" color={colors.textSecondary}>
               Share
             </Typography>
           </TouchableOpacity>

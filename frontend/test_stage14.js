@@ -55,7 +55,7 @@ console.log('\n2. Checking Glass Component Library:');
 const glassCardPath = path.join(FRONTEND_DIR, 'src/components/common/GlassCard.tsx');
 assert(fs.existsSync(glassCardPath), 'GlassCard.tsx component exists');
 const glassCardContent = fs.readFileSync(glassCardPath, 'utf-8');
-assert(glassCardContent.includes('BlurView') && glassCardContent.includes('withSpring'), 'GlassCard uses BlurView and spring press physics');
+assert(glassCardContent.includes('useTheme') && glassCardContent.includes('withSpring'), 'GlassCard is theme-aware (useTheme) with spring press physics');
 
 const buttonPath = path.join(FRONTEND_DIR, 'src/components/common/Button.tsx');
 const buttonContent = fs.readFileSync(buttonPath, 'utf-8');

@@ -9,6 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -45,6 +46,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
   onCirclesPress,
   onTourPress,
 }) => {
+  const { colors } = useTheme();
   const emotionConfig = theme.getEmotionConfig(dominantEmotion);
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.4);
@@ -95,7 +97,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
 
           <View style={styles.titleColumn}>
             <View style={styles.titleRow}>
-              <Typography variant="bodySmall" weight="bold" color={theme.colors.textPrimary}>
+              <Typography variant="bodySmall" weight="bold" color={colors.textPrimary}>
                 Today's Mood: {emotionConfig.label}
               </Typography>
               <View style={styles.badgePill}>
@@ -105,7 +107,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               </View>
             </View>
 
-            <Typography variant="caption" color={theme.colors.textMuted}>
+            <Typography variant="caption" color={colors.textMuted}>
               {activeBubblesCount} check-ins around the world
             </Typography>
           </View>
@@ -119,7 +121,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="App Tour Guide"
             >
-              <Ionicons name="help-circle-outline" size={19} color={theme.colors.primaryLight} />
+              <Ionicons name="help-circle-outline" size={19} color={colors.primaryLight} />
             </TouchableOpacity>
           )}
 
@@ -130,7 +132,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="Community Circles"
             >
-              <Ionicons name="planet-outline" size={18} color={theme.colors.primaryLight} />
+              <Ionicons name="planet-outline" size={18} color={colors.primaryLight} />
             </TouchableOpacity>
           )}
 
@@ -141,7 +143,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="Feed Stream"
             >
-              <Ionicons name="list" size={18} color={theme.colors.textPrimary} />
+              <Ionicons name="list" size={18} color={colors.textPrimary} />
             </TouchableOpacity>
           )}
 
@@ -152,7 +154,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               style={styles.recenterBtn}
               accessibilityLabel="Recenter Map"
             >
-              <Ionicons name="locate" size={18} color={theme.colors.primaryLight} />
+              <Ionicons name="locate" size={18} color={colors.primaryLight} />
             </TouchableOpacity>
           )}
         </View>
@@ -167,7 +169,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
         {emotionFilters.map((item) => {
           const isSelected = selectedFilter === item.id;
           const itemConfig = item.id ? theme.getEmotionConfig(item.id) : null;
-          const activeBorder = itemConfig ? itemConfig.primary : theme.colors.primaryLight;
+          const activeBorder = itemConfig ? itemConfig.primary : colors.primaryLight;
           const activeBg = itemConfig ? itemConfig.background : 'rgba(108, 92, 231, 0.2)';
 
           return (
@@ -193,7 +195,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
               <Typography
                 variant="caption"
                 weight={isSelected ? 'bold' : 'medium'}
-                color={isSelected ? '#FFFFFF' : theme.colors.textSecondary}
+                color={isSelected ? '#FFFFFF' : colors.textSecondary}
               >
                 {item.label}
               </Typography>

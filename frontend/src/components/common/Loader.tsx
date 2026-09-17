@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 
 export interface LoaderProps {
@@ -13,18 +14,20 @@ export interface LoaderProps {
 
 export const Loader: React.FC<LoaderProps> = ({
   size = 'large',
-  color = theme.colors.primary,
+  color,
   message,
   fullScreen = false,
   style,
 }) => {
+  const { colors } = useTheme();
+  const spinnerColor = color ?? colors.primary;
   const content = (
     <View style={[styles.container, style]}>
-      <ActivityIndicator size={size} color={color} />
+      <ActivityIndicator size={size} color={spinnerColor} />
       {message && (
         <Typography
           variant="bodySmall"
-          color={theme.colors.textSecondary}
+          color={colors.textSecondary}
           style={styles.message}
         >
           {message}
@@ -34,7 +37,7 @@ export const Loader: React.FC<LoaderProps> = ({
   );
 
   if (fullScreen) {
-    return <View style={styles.fullScreenOverlay}>{content}</View>;
+    return <View style={[styles.fullScreenOverlay, { backgroundColor: colors.overlay }]}>{content}</View>;
   }
 
   return content;
@@ -51,7 +54,6 @@ const styles = StyleSheet.create({
   },
   fullScreenOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: theme.colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 999,

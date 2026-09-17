@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -17,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -80,7 +82,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       <IconButton
-        icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+        icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
         variant="ghost"
         onPress={() => navigation.goBack()}
         style={styles.backBtn}
@@ -90,7 +92,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         <Typography variant="h1" weight="bold">
           Begin Your Journey
         </Typography>
-        <Typography variant="body" color={theme.colors.textSecondary} style={styles.subtitle}>
+        <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
           Join a mindful space where emotions are respected and shared with care.
         </Typography>
       </View>
@@ -106,7 +108,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           }}
           error={nameError || undefined}
           helperText="You can use an anonymous pseudonym for privacy"
-          leftIcon={<Ionicons name="person-outline" size={18} color={theme.colors.textMuted} />}
+          leftIcon={<Ionicons name="person-outline" size={18} color={colors.textMuted} />}
         />
 
         <Input
@@ -120,7 +122,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           error={emailError || undefined}
           autoCapitalize="none"
           keyboardType="email-address"
-          leftIcon={<Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />}
+          leftIcon={<Ionicons name="mail-outline" size={18} color={colors.textMuted} />}
         />
 
         <Input
@@ -134,7 +136,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           error={passwordError || undefined}
           isPassword
           helperText="Must be at least 8 characters"
-          leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.colors.textMuted} />}
+          leftIcon={<Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />}
         />
 
         <Input
@@ -147,7 +149,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           }}
           error={dobError || undefined}
           helperText="Must be 18+ to join community"
-          leftIcon={<Ionicons name="calendar-outline" size={18} color={theme.colors.textMuted} />}
+          leftIcon={<Ionicons name="calendar-outline" size={18} color={colors.textMuted} />}
         />
 
         <Button
@@ -162,11 +164,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <View style={styles.footer}>
-        <Typography variant="bodySmall" color={theme.colors.textSecondary}>
+        <Typography variant="bodySmall" color={colors.textSecondary}>
           Already have an account?{' '}
         </Typography>
         <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.7}>
-          <Typography variant="bodySmall" weight="bold" color={theme.colors.primaryLight}>
+          <Typography variant="bodySmall" weight="bold" color={colors.primaryLight}>
             Sign In
           </Typography>
         </TouchableOpacity>

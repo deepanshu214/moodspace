@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import {
   Typography,
   Button,
@@ -34,6 +35,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 export const DesignSystemShowcase: React.FC = () => {
+  const { colors } = useTheme();
   const [inputText, setInputText] = useState('');
   const [selectedChip, setSelectedChip] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,12 +63,12 @@ export const DesignSystemShowcase: React.FC = () => {
       {/* Header Banner */}
       <View style={styles.headerBanner}>
         <View style={styles.brandRow}>
-          <Typography variant="display" color={theme.colors.primaryLight} weight="heavy">
+          <Typography variant="display" color={colors.primaryLight} weight="heavy">
             MoodSpace
           </Typography>
           <Badge count={6} variant="secondary" />
         </View>
-        <Typography variant="body" color={theme.colors.textSecondary}>
+        <Typography variant="body" color={colors.textSecondary}>
           Stage 2: Design System & Emotional Component Library
         </Typography>
       </View>
@@ -75,15 +77,15 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 1. EMOTION PALETTE */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           1. Emotional Color Palette
         </Typography>
-        <Typography variant="bodySmall" color={theme.colors.textMuted} style={styles.sectionSub}>
+        <Typography variant="bodySmall" color={colors.textMuted} style={styles.sectionSub}>
           Dynamic hues representing user mental state & atmosphere
         </Typography>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalRow}>
-          {Object.entries(theme.colors.emotions).map(([key, config]) => (
+          {Object.entries(colors.emotions).map(([key, config]) => (
             <View key={key} style={styles.emotionItem}>
               <View
                 style={[
@@ -93,7 +95,7 @@ export const DesignSystemShowcase: React.FC = () => {
               >
                 <Typography variant="body">{config.emoji}</Typography>
               </View>
-              <Typography variant="caption" weight="medium" color={theme.colors.textSecondary}>
+              <Typography variant="caption" weight="medium" color={colors.textSecondary}>
                 {config.label}
               </Typography>
             </View>
@@ -105,10 +107,10 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 2. MOOD BUBBLE & FLOATING MARKERS */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           2. Product: Floating Mood Bubbles
         </Typography>
-        <Typography variant="bodySmall" color={theme.colors.textMuted} style={styles.sectionSub}>
+        <Typography variant="bodySmall" color={colors.textMuted} style={styles.sectionSub}>
           Animated map & feed bubbles pulsing with intensity
         </Typography>
 
@@ -148,7 +150,7 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 3. MOOD TAGS & CHIPS */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           3. Mood Tags & Filter Chips
         </Typography>
         <View style={styles.tagsWrap}>
@@ -174,10 +176,10 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 4. BUBBLE DETAIL CARD */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           4. Bubble Detail Card
         </Typography>
-        <Typography variant="bodySmall" color={theme.colors.textMuted} style={styles.sectionSub}>
+        <Typography variant="bodySmall" color={colors.textMuted} style={styles.sectionSub}>
           Deep emotional post presentation on feed or map bottom sheet
         </Typography>
 
@@ -210,7 +212,7 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 5. AURA & REPUTATION DISPLAY */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           5. Aura & Emotional Standing
         </Typography>
         <View style={{ gap: 12, marginTop: 8 }}>
@@ -226,7 +228,7 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 6. SOCIAL: COMMENTS & NOTIFICATIONS & REQUESTS */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           6. Social & Interaction Components
         </Typography>
 
@@ -282,7 +284,7 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 7. FORM & INPUTS */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           7. Form Inputs & Interactive Buttons
         </Typography>
 
@@ -292,7 +294,7 @@ export const DesignSystemShowcase: React.FC = () => {
           value={inputText}
           onChangeText={setInputText}
           helperText="Your notes are end-to-end encrypted"
-          leftIcon={<Ionicons name="sparkles" size={18} color={theme.colors.primaryLight} />}
+          leftIcon={<Ionicons name="sparkles" size={18} color={colors.primaryLight} />}
         />
 
         <Input
@@ -331,7 +333,7 @@ export const DesignSystemShowcase: React.FC = () => {
 
       {/* 8. SKELETON & EMPTY STATE */}
       <View style={styles.section}>
-        <Typography variant="h3" weight="bold" color={theme.colors.textPrimary}>
+        <Typography variant="h3" weight="bold" color={colors.textPrimary}>
           8. Loaders & Empty States
         </Typography>
         <SkeletonCard style={{ marginTop: 8 }} />
@@ -359,7 +361,7 @@ export const DesignSystemShowcase: React.FC = () => {
           />
         }
       >
-        <Typography variant="body" color={theme.colors.textSecondary}>
+        <Typography variant="body" color={colors.textSecondary}>
           MoodSpace protects your vulnerable emotional moments. You can choose to post
           publicly, with mutual connections only, or completely incognito.
         </Typography>

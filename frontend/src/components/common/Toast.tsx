@@ -11,6 +11,7 @@ import Animated, {
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { haptics } from '@/theme/haptics';
@@ -34,6 +35,7 @@ export const Toast: React.FC<ToastProps> = ({
   onDismiss,
   style,
 }) => {
+  const { colors } = useTheme();
   const translateY = useSharedValue(-100);
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
@@ -80,30 +82,30 @@ export const Toast: React.FC<ToastProps> = ({
       case 'success':
         return {
           icon: 'checkmark-circle' as const,
-          color: theme.colors.success,
-          gradient: [theme.colors.success, '#00b894'] as [string, string],
+          color: colors.success,
+          gradient: [colors.success, '#00b894'] as [string, string],
           border: 'rgba(0, 184, 148, 0.4)',
         };
       case 'error':
         return {
           icon: 'alert-circle' as const,
-          color: theme.colors.error,
-          gradient: [theme.colors.error, '#ff7675'] as [string, string],
+          color: colors.error,
+          gradient: [colors.error, '#ff7675'] as [string, string],
           border: 'rgba(255, 118, 117, 0.4)',
         };
       case 'warning':
         return {
           icon: 'warning' as const,
-          color: theme.colors.warning,
-          gradient: [theme.colors.warning, '#fdcb6e'] as [string, string],
+          color: colors.warning,
+          gradient: [colors.warning, '#fdcb6e'] as [string, string],
           border: 'rgba(253, 203, 110, 0.4)',
         };
       case 'info':
       default:
         return {
           icon: 'information-circle' as const,
-          color: theme.colors.info,
-          gradient: [theme.colors.info, '#0984e3'] as [string, string],
+          color: colors.info,
+          gradient: [colors.info, '#0984e3'] as [string, string],
           border: 'rgba(9, 132, 227, 0.4)',
         };
     }
@@ -113,14 +115,14 @@ export const Toast: React.FC<ToastProps> = ({
 
   const Container = Platform.OS === 'android' ? View : BlurView;
   const containerProps = Platform.OS === 'android'
-    ? { style: [styles.glassContainer, { backgroundColor: theme.colors.glass.surface }] }
-    : { intensity: 25, tint: 'dark' as const, style: styles.glassContainer };
+    ? { style: [styles.glassContainer, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }] }
+    : { intensity: 25, tint: 'dark' as const, style: [styles.glassContainer, { borderColor: colors.glass.border }] };
 
   return (
     <Animated.View style={[styles.container, animatedStyle, style]}>
       <Container {...containerProps}>
         {Platform.OS !== 'android' && (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.glass.surface }]} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glass.surface }]} />
         )}
         
         <View style={styles.accentStripWrapper}>
@@ -134,12 +136,12 @@ export const Toast: React.FC<ToastProps> = ({
 
         <View style={styles.contentRow}>
           <Ionicons name={config.icon} size={20} color={config.color} style={styles.icon} />
-          <Typography variant="bodySmall" color={theme.colors.textPrimary} style={styles.message}>
+          <Typography variant="bodySmall" color={colors.textPrimary} style={styles.message}>
             {message}
           </Typography>
           {onDismiss && (
             <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={16} color={theme.colors.textMuted} />
+              <Ionicons name="close" size={16} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -162,7 +164,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
     overflow: 'hidden',
   },
   contentRow: {

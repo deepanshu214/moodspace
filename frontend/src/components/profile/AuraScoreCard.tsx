@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { AuraScoreBreakdown } from '@/api/types';
@@ -14,6 +15,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
   aura,
   onExploreAuraHelp,
 }) => {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   const {
@@ -36,15 +38,15 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
   ];
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       {/* ── Top Header: Tier & Score ── */}
       <View style={styles.header}>
         <View style={styles.tierInfo}>
-          <View style={[styles.glowRing, { borderColor: tier_color }]}>
+          <View style={[styles.glowRing, { backgroundColor: colors.surfaceElevated, borderColor: tier_color }]}>
             <Typography variant="h2" weight="bold" color={tier_color}>
               {total_score}
             </Typography>
-            <Typography variant="caption" color={theme.colors.textMuted} style={styles.auraLabel}>
+            <Typography variant="caption" color={colors.textMuted} style={styles.auraLabel}>
               AURA
             </Typography>
           </View>
@@ -55,7 +57,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
                 {tier_emoji} {tier}
               </Typography>
             </View>
-            <Typography variant="caption" color={theme.colors.textSecondary} style={styles.nextTierText}>
+            <Typography variant="caption" color={colors.textSecondary} style={styles.nextTierText}>
               {points_to_next_tier} pts to {next_tier}
             </Typography>
           </View>
@@ -64,19 +66,19 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
         <TouchableOpacity
           onPress={() => setExpanded(!expanded)}
           activeOpacity={0.7}
-          style={styles.expandBtn}
+          style={[styles.expandBtn, { backgroundColor: colors.surfaceElevated }]}
         >
           <Ionicons
             name={expanded ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={theme.colors.textSecondary}
+            color={colors.textSecondary}
           />
         </TouchableOpacity>
       </View>
 
       {/* ── Tier Progress Bar ── */}
       <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
+        <View style={[styles.progressBar, { backgroundColor: colors.surfaceElevated }]}>
           <View
             style={[
               styles.progressFill,
@@ -84,15 +86,15 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
             ]}
           />
         </View>
-        <Typography variant="caption" color={theme.colors.textMuted} style={styles.percentageText}>
+        <Typography variant="caption" color={colors.textMuted} style={styles.percentageText}>
           {progress_percentage}%
         </Typography>
       </View>
 
       {/* ── Contributing Factors (Expandable) ── */}
       {expanded && (
-        <View style={styles.breakdownSection}>
-          <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.breakdownTitle}>
+        <View style={[styles.breakdownSection, { borderTopColor: colors.border }]}>
+          <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.breakdownTitle}>
             CONTRIBUTING HARMONICS
           </Typography>
 
@@ -100,17 +102,17 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
             <View key={metric.label} style={styles.metricRow}>
               <View style={styles.metricLabelCol}>
                 <Ionicons name={metric.icon as any} size={14} color={metric.color} style={styles.metricIcon} />
-                <Typography variant="caption" color={theme.colors.textSecondary}>
+                <Typography variant="caption" color={colors.textSecondary}>
                   {metric.label}
                 </Typography>
               </View>
-              <Typography variant="caption" weight="bold" color={theme.colors.textPrimary}>
+              <Typography variant="caption" weight="bold" color={colors.textPrimary}>
                 +{metric.value} pts
               </Typography>
             </View>
           ))}
 
-          <Typography variant="caption" color={theme.colors.textMuted} style={styles.philosophyNote}>
+          <Typography variant="caption" color={colors.textMuted} style={styles.philosophyNote}>
             Aura reflects vulnerability, authentic support, and emotional presence — never social status.
           </Typography>
         </View>
@@ -121,11 +123,9 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     marginBottom: theme.spacing.lg,
   },
   header: {
@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.surfaceElevated,
     marginRight: theme.spacing.md,
   },
   auraLabel: {
@@ -171,7 +170,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -183,7 +181,6 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 6,
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.round,
     overflow: 'hidden',
   },
@@ -200,7 +197,6 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
     gap: 8,
   },
   breakdownTitle: {

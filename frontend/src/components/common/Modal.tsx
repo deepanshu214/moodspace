@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from './Typography';
 import { IconButton } from './IconButton';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,7 @@ export const Modal: React.FC<ModalProps> = ({
   dismissible = true,
   style,
 }) => {
+  const { colors } = useTheme();
   const translateY = useSharedValue(1000);
   const opacity = useSharedValue(0);
 
@@ -71,7 +73,7 @@ export const Modal: React.FC<ModalProps> = ({
       <TouchableWithoutFeedback onPress={dismissible ? onClose : undefined}>
         <Overlay {...overlayProps}>
           <TouchableWithoutFeedback>
-            <Animated.View style={[styles.dialogCard, animatedStyle, style]}>
+            <Animated.View style={[styles.dialogCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }, animatedStyle, style]}>
               {(title || dismissible) && (
                 <View style={styles.header}>
                   <Typography variant="h3" weight="semibold" style={styles.headerTitle}>
@@ -79,7 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
                   </Typography>
                   {dismissible && (
                     <IconButton
-                      icon={<Ionicons name="close" size={20} color={theme.colors.textSecondary} />}
+                      icon={<Ionicons name="close" size={20} color={colors.textSecondary} />}
                       size="sm"
                       variant="ghost"
                       onPress={onClose}
@@ -109,10 +111,8 @@ const styles = StyleSheet.create({
   dialogCard: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: theme.colors.surfaceElevated,
     borderRadius: theme.radius.xl,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.xl,
     ...theme.shadows.elevated,
   },

@@ -10,6 +10,7 @@ import {
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 
 export interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -24,10 +25,12 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   children,
   scrollable = false,
   edges = ['top', 'left', 'right'],
-  backgroundColor = theme.colors.background,
+  backgroundColor,
   style,
   contentContainerStyle,
 }) => {
+  const { colors } = useTheme();
+  const resolvedBackground = backgroundColor ?? colors.background;
   const content = scrollable ? (
     <ScrollView
       style={[styles.scroll, style]}
@@ -42,7 +45,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]} edges={edges}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: resolvedBackground }]} edges={edges}>
       <StatusBar style="light" />
       <KeyboardAvoidingView
         style={styles.keyboardView}

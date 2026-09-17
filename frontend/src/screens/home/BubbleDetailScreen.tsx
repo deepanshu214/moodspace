@@ -3,6 +3,7 @@ import { View, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -13,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<HomeStackParamList, 'BubbleDetails'>;
 
 export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
+  const { colors } = useTheme();
   const {
     bubbleId = 'bubble-main',
     emotion = 'calm',
@@ -83,7 +85,7 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       {/* Header Bar */}
       <View style={styles.header}>
         <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />}
+          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
           variant="ghost"
           onPress={() => navigation.goBack()}
         />
@@ -91,7 +93,7 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           <Typography variant="title" weight="bold">
             Emotional Resonance
           </Typography>
-          <Typography variant="caption" color={theme.colors.textMuted}>
+          <Typography variant="caption" color={colors.textMuted}>
             Echoing across space
           </Typography>
         </View>
@@ -123,7 +125,7 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           <Typography variant="title" weight="bold">
             Supportive Echoes ({comments.length})
           </Typography>
-          <Typography variant="caption" color={theme.colors.primaryLight}>
+          <Typography variant="caption" color={colors.primaryLight}>
             Safe & Empathetic
           </Typography>
         </View>
@@ -145,10 +147,10 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       <View style={styles.inputBar}>
         <TextInput
           placeholder="Send an empathetic echo..."
-          placeholderTextColor={theme.colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={commentText}
           onChangeText={setCommentText}
-          style={styles.commentInput}
+          style={[styles.commentInput, { color: colors.textPrimary }]}
         />
         <TouchableOpacity
           onPress={handleSendComment}
@@ -215,7 +217,6 @@ const styles = StyleSheet.create({
   },
   commentInput: {
     flex: 1,
-    color: theme.colors.textPrimary,
     fontSize: 14,
     fontFamily: theme.typography.fontFamily,
   },

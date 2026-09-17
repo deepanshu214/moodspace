@@ -16,6 +16,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { AuraDisplay } from '../social/AuraDisplay';
@@ -63,6 +64,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   onSendEcho,
   onNavigateDetails,
 }) => {
+  const { colors } = useTheme();
   if (!bubble) return null;
 
   const [echoText, setEchoText] = useState('');
@@ -146,10 +148,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                   />
                 )}
                 <View style={styles.authorTexts}>
-                  <Typography variant="body" weight="bold" color={theme.colors.textPrimary}>
+                  <Typography variant="body" weight="bold" color={colors.textPrimary}>
                     {authorTitle}
                   </Typography>
-                  <Typography variant="caption" color={theme.colors.textMuted}>
+                  <Typography variant="caption" color={colors.textMuted}>
                     {bubble.timestamp || 'Moments ago'}
                   </Typography>
                 </View>
@@ -163,8 +165,8 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             {/* Context Weather Capsule (if available) */}
             {(bubble.locationCity || bubble.weatherCondition) && (
               <View style={styles.weatherPill}>
-                <Ionicons name="location-sharp" size={12} color={theme.colors.primaryLight} />
-                <Typography variant="caption" color={theme.colors.textSecondary} style={styles.weatherText}>
+                <Ionicons name="location-sharp" size={12} color={colors.primaryLight} />
+                <Typography variant="caption" color={colors.textSecondary} style={styles.weatherText}>
                   {bubble.locationCity || 'Nearby'}
                   {bubble.weatherCondition ? ` • ${bubble.weatherCondition}` : ''}
                   {bubble.weatherTemp ? ` (${bubble.weatherTemp}°C)` : ''}
@@ -194,7 +196,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
 
                 {bubble.secondaryEmotion && (
                   <View style={styles.secondaryPill}>
-                    <Typography variant="caption" color={theme.colors.textSecondary}>
+                    <Typography variant="caption" color={colors.textSecondary}>
                       + {bubble.secondaryEmotion}
                     </Typography>
                   </View>
@@ -225,7 +227,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             <View style={styles.contentBox}>
               <Typography
                 variant="body"
-                color={theme.colors.textPrimary}
+                color={colors.textPrimary}
                 style={styles.reflectionText}
               >
                 "{bubble.content}"
@@ -234,7 +236,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
 
             {/* Empathy Reaction Bar */}
             <View style={styles.reactionSection}>
-              <Typography variant="overline" color={theme.colors.textMuted} style={{ marginBottom: 8 }}>
+              <Typography variant="overline" color={colors.textMuted} style={{ marginBottom: 8 }}>
                 SEND WARMTH & EMPATHY ({resonanceCount})
               </Typography>
 
@@ -261,7 +263,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                       <Typography
                         variant="caption"
                         weight={isSelected ? 'bold' : 'semibold'}
-                        color={isSelected ? rx.color : theme.colors.textSecondary}
+                        color={isSelected ? rx.color : colors.textSecondary}
                       >
                         {rx.label}
                       </Typography>
@@ -279,10 +281,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                   }}
                   style={styles.detailLinkBtn}
                 >
-                  <Typography variant="caption" weight="semibold" color={theme.colors.primaryLight}>
+                  <Typography variant="caption" weight="semibold" color={colors.primaryLight}>
                     Open Full Thread
                   </Typography>
-                  <Ionicons name="arrow-forward" size={14} color={theme.colors.primaryLight} />
+                  <Ionicons name="arrow-forward" size={14} color={colors.primaryLight} />
                 </TouchableOpacity>
               )}
             </View>
@@ -291,10 +293,10 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
             <View style={styles.replyBar}>
               <TextInput
                 placeholder="Send a comforting echo..."
-                placeholderTextColor={theme.colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={echoText}
                 onChangeText={setEchoText}
-                style={styles.replyInput}
+                style={[styles.replyInput, { color: colors.textPrimary }]}
               />
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -302,6 +304,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                 disabled={!echoText.trim()}
                 style={[
                   styles.replySendBtn,
+                  { backgroundColor: colors.primary },
                   !echoText.trim() && { opacity: 0.4 },
                 ]}
               >
@@ -494,7 +497,6 @@ const styles = StyleSheet.create({
   },
   replyInput: {
     flex: 1,
-    color: theme.colors.textPrimary,
     fontSize: 14,
     fontFamily: theme.typography.fontFamily,
     paddingVertical: 6,
@@ -503,7 +505,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

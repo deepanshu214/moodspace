@@ -11,6 +11,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -96,6 +97,7 @@ const FALLBACK_CIRCLES: FallbackCircle[] = [
 ];
 
 export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -138,15 +140,15 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.appBar}>
         <View style={styles.titleColumn}>
           <View style={styles.headerBadge}>
-            <Ionicons name="people" size={14} color={theme.colors.primaryLight} />
-            <Typography variant="caption" weight="bold" color={theme.colors.primaryLight} style={styles.badgeText}>
+            <Ionicons name="people" size={14} color={colors.primaryLight} />
+            <Typography variant="caption" weight="bold" color={colors.primaryLight} style={styles.badgeText}>
               Communities
             </Typography>
           </View>
-          <Typography variant="h2" weight="bold" color={theme.colors.textPrimary}>
+          <Typography variant="h2" weight="bold" color={colors.textPrimary}>
             Groups & Circles
           </Typography>
-          <Typography variant="bodySmall" color={theme.colors.textMuted}>
+          <Typography variant="bodySmall" color={colors.textMuted}>
             Join spaces to talk, share feelings, and support each other
           </Typography>
         </View>
@@ -165,17 +167,17 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Search Input Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={theme.colors.textMuted} style={styles.searchIcon} />
+        <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search groups by name or topic..."
-          placeholderTextColor={theme.colors.textMuted}
-          style={styles.searchInput}
+          placeholderTextColor={colors.textMuted}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="close-circle" size={16} color={theme.colors.textMuted} />
+            <Ionicons name="close-circle" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         )}
       </View>
@@ -202,7 +204,7 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
                 <Typography
                   variant="caption"
                   weight={isSelected ? 'bold' : 'medium'}
-                  color={isSelected ? '#FFFFFF' : theme.colors.textSecondary}
+                  color={isSelected ? '#FFFFFF' : colors.textSecondary}
                 >
                   {item}
                 </Typography>
@@ -221,7 +223,7 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={theme.colors.primaryLight}
+            tintColor={colors.primaryLight}
           />
         }
         renderItem={({ item }) => (
@@ -266,7 +268,6 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   appBar: {
     paddingHorizontal: 20,
@@ -319,7 +320,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: theme.colors.textPrimary,
     fontSize: 14,
   },
   categoriesWrapper: {
