@@ -11,6 +11,15 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withSpring,
+  Easing,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { getUserPostedBubbles, UserPostBubble } from '@/utils/userPosts';
@@ -202,6 +211,113 @@ const EMOTION_FILTERS = [
 
 
 
+/** Small heartbeat-style pulsing dot used on the live "echoes worldwide" chip */
+const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#00B894' }) => {
+  const pulse = useSharedValue(1);
+
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.6, { duration: 550, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 550, easing: Easing.in(Easing.ease) }),
+        withTiming(1, { duration: 700 })
+      ),
+      -1,
+      false
+    );
+  }, [pulse]);
+
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+    opacity: 0.55 + (pulse.value - 1) * -0.25,
+  }));
+
+  return (
+    <View style={{ width: 8, height: 8, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View
+        style={[
+          { width: 8, height: 8, borderRadius: 4, backgroundColor: color },
+          dotStyle,
+        ]}
+      />
+    </View>
+  );
+};
+
+/** One echo/feed card — owns its own like animation state */
+const FeedEchoCard: React.FC<{
+  bubble: DisplayBubble;
+  colors: any;
+  onPress: () => void;
+}> = ({ bubble, colors, onPress }) => {
+  const config = getEmotionConfig(bubble.emotion);
+  const [liked, setLiked] = useState(false);
+  const heartScale = useSharedValue(1);
+
+  const displayLikes = bubble.likesCount + (liked ? 1 : 0);
+
+  const handleReact = () => {
+    haptics.light();
+    setLiked((prev) => !prev);
+    heartScale.value = withSequence(
+      withSpring(1.5, { damping: 6, stiffness: 260, mass: 0.6 }),
+      withSpring(1, { damping: 10, stiffness: 200 })
+    );
+  };
+
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  return (
+    <GlassCard
+      variant="default"
+      glowColor={config.glow}
+      onPress={onPress}
+      style={[styles.feedCard, { borderLeftWidth: 3, borderLeftColor: config.primary }]}
+    >
+      <View style={styles.cardHeader}>
+        <View style={[styles.emotionDot, { backgroundColor: config.primary }]} />
+        <Typography
+          variant="caption"
+          weight="semibold"
+          style={{ color: colors.textPrimary, flex: 1 }}
+          numberOfLines={1}
+        >
+          {bubble.authorName}
+        </Typography>
+        <Typography variant="caption">{config.emoji}</Typography>
+      </View>
+
+      <Typography
+        variant="bodySmall"
+        style={{ color: colors.textSecondary, marginVertical: 8 }}
+        numberOfLines={3}
+      >
+        "{bubble.content}"
+      </Typography>
+
+      <View style={styles.cardFooter}>
+        <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 10 }}>
+          {bubble.locationCity?.split(',')[0]}
+        </Typography>
+        <TouchableOpacity
+          onPress={handleReact}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={styles.heartTapArea}
+        >
+          <Animated.Text style={[{ fontSize: 13 }, heartStyle]}>
+            {liked ? '❤️' : '🤍'}
+          </Animated.Text>
+          <Typography variant="caption" style={{ color: liked ? colors.secondary : colors.textMuted, marginLeft: 3 }}>
+            {displayLikes}
+          </Typography>
+        </TouchableOpacity>
+      </View>
+    </GlassCard>
+  );
+};
+
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const mapRef = useRef<any>(null);
   const { isDark, colors, setThemeMode } = useTheme();
@@ -340,18 +456,33 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const activeBubblesCount = pulseData?.active_bubbles_count || allBubbles.length * 18;
 
+  // Shimmer sweep for the "share your vibe" bar, triggered on press
+  const shimmerX = useSharedValue(-140);
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shimmerX.value }],
+  }));
+  const triggerShimmer = () => {
+    shimmerX.value = -140;
+    shimmerX.value = withTiming(SCREEN_WIDTH, { duration: 750, easing: Easing.out(Easing.ease) });
+  };
+
   return (
     <ScreenWrapper backgroundColor={colors.background} style={styles.container}>
-      {/* ── Top Floating Navigation & Theme Bar ── */}
-      <View style={[styles.topHeader, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
+      {/* ── Top Gradient Navigation & Theme Bar ── */}
+      <LinearGradient
+        colors={['#FF6B35', '#FF9F1C']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.2 }}
+        style={[styles.topHeader, { borderColor: 'rgba(255,255,255,0.25)' }]}
+      >
         <View style={styles.headerTitles}>
           <View style={styles.brandRow}>
             <Typography style={{ fontSize: 18, marginRight: 6 }}>✨</Typography>
-            <Typography variant="h3" weight="heavy" style={{ color: colors.textPrimary }}>
+            <Typography variant="h3" weight="heavy" style={{ color: '#FFFFFF' }}>
               MoodSpace
             </Typography>
           </View>
-          <Typography variant="caption" style={{ color: colors.textMuted }}>
+          <Typography variant="caption" style={{ color: 'rgba(255,255,255,0.85)' }}>
             How is your heart feeling today?
           </Typography>
         </View>
@@ -359,7 +490,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.headerActions}>
           {/* Quick Theme Switcher Button (☀️ / 🌙) */}
           <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            style={[styles.headerIconButton, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
             onPress={() => {
               setThemeMode(isDark ? 'light' : 'dark');
               haptics.selection();
@@ -371,31 +502,31 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Interactive Feature Guide Button */}
           <TouchableOpacity
-            style={[styles.headerActionPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            style={[styles.headerActionPill, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
             onPress={() => {
               setShowTourModal(true);
               haptics.light();
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="sparkles" size={14} color={colors.primary} />
-            <Typography variant="caption" weight="bold" style={{ color: colors.primary, marginLeft: 4 }}>
+            <Ionicons name="sparkles" size={14} color="#FFFFFF" />
+            <Typography variant="caption" weight="bold" style={{ color: '#FFFFFF', marginLeft: 4 }}>
               Guide
             </Typography>
           </TouchableOpacity>
 
           {/* Recenter Location Button */}
           <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            style={[styles.headerIconButton, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
             onPress={handleRecenter}
             activeOpacity={0.7}
           >
-            <Ionicons name="locate" size={16} color={colors.primary} />
+            <Ionicons name="locate" size={16} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* App Settings Button */}
           <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            style={[styles.headerIconButton, { backgroundColor: 'rgba(255,255,255,0.22)', borderColor: 'rgba(255,255,255,0.35)' }]}
             onPress={() => {
               haptics.light();
               (navigation as any).navigate('ProfileTab', { screen: 'Settings' });
@@ -403,10 +534,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
             accessibilityLabel="App Settings"
           >
-            <Ionicons name="settings-outline" size={16} color={colors.textPrimary} />
+            <Ionicons name="settings-outline" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         scrollEnabled={isScrollEnabled}
@@ -486,7 +617,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Frosted Fade-out Bottom Gradient */}
           <LinearGradient
-            colors={['transparent', isDark ? 'rgba(10, 11, 20, 0.7)' : 'rgba(248, 249, 253, 0.7)', colors.background]}
+            colors={['transparent', isDark ? 'rgba(24, 8, 46, 0.75)' : 'rgba(255, 245, 235, 0.85)', colors.background]}
             locations={[0, 0.7, 1]}
             style={styles.heroFadeMask}
             pointerEvents="none"
@@ -536,7 +667,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Floating Live Echoes Status Chip */}
           <View style={[styles.mapStatusChip, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
-            <View style={styles.pulsingDot} />
+            <HeartbeatDot color="#00B894" />
             <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
               {activeBubblesCount} echoes worldwide
             </Typography>
@@ -590,7 +721,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.quickShareBar, {
               backgroundColor: colors.primary,
               shadowColor: colors.primary,
+              overflow: 'hidden',
             }]}>
+              <Animated.View style={[styles.shimmerStrip, shimmerStyle]} pointerEvents="none">
+                <LinearGradient
+                  colors={['transparent', 'rgba(255,255,255,0.45)', 'transparent']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
+              </Animated.View>
               <View style={styles.quickShareLeft}>
                 <Typography style={{ fontSize: 22 }}>✨</Typography>
                 <View style={{ marginLeft: 10 }}>
@@ -605,6 +745,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 onPress={() => {
                   haptics.medium();
+                  triggerShimmer();
                   (navigation as any).navigate('CreateBubbleModal');
                 }}
                 style={styles.quickShareBtn}
@@ -645,6 +786,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         backgroundColor: isActive ? item.color : colors.surface,
                         borderColor: isActive ? item.color : colors.border,
                         shadowColor: isActive ? item.color : 'transparent',
+                        shadowOpacity: isActive ? 0.5 : 0.25,
+                        shadowRadius: isActive ? 10 : 6,
+                        elevation: isActive ? 7 : 3,
                       },
                     ]}
                   >
@@ -699,9 +843,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* ⑥ Recent Echoes Feed */}
             <View style={styles.feedHeader}>
-              <Typography variant="caption" weight="bold" style={{ color: colors.textMuted, letterSpacing: 1 }}>
-                RECENT ECHOES 🌍
-              </Typography>
+              <View>
+                <Typography variant="h4" weight="heavy" style={{ color: colors.textPrimary }}>
+                  Recent Echoes 🌍
+                </Typography>
+                <View style={[styles.sectionUnderline, { backgroundColor: colors.primary }]} />
+              </View>
               {selectedFilter && (
                 <TouchableOpacity
                   onPress={() => setSelectedFilter(null)}
@@ -715,48 +862,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <BentoGrid columns={2} gap={12} animated>
-              {filteredBubbles.map((bubble) => {
-                const config = getEmotionConfig(bubble.emotion);
-                return (
-                  <GlassCard
-                    key={bubble.id}
-                    variant="default"
-                    glowColor={config.glow}
-                    onPress={() => handleBubblePress(bubble)}
-                    style={styles.feedCard}
-                  >
-                    <View style={styles.cardHeader}>
-                      <View style={[styles.emotionDot, { backgroundColor: config.primary }]} />
-                      <Typography
-                        variant="caption"
-                        weight="semibold"
-                        style={{ color: colors.textPrimary, flex: 1 }}
-                        numberOfLines={1}
-                      >
-                        {bubble.authorName}
-                      </Typography>
-                      <Typography variant="caption">{config.emoji}</Typography>
-                    </View>
-
-                    <Typography
-                      variant="bodySmall"
-                      style={{ color: colors.textSecondary, marginVertical: 8 }}
-                      numberOfLines={3}
-                    >
-                      "{bubble.content}"
-                    </Typography>
-
-                    <View style={styles.cardFooter}>
-                      <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 10 }}>
-                        {bubble.locationCity?.split(',')[0]}
-                      </Typography>
-                      <Typography variant="caption" style={{ color: colors.secondary }}>
-                        ❤️ {bubble.likesCount}
-                      </Typography>
-                    </View>
-                  </GlassCard>
-                );
-              })}
+              {filteredBubbles.map((bubble) => (
+                <FeedEchoCard
+                  key={bubble.id}
+                  bubble={bubble}
+                  colors={colors}
+                  onPress={() => handleBubblePress(bubble)}
+                />
+              ))}
             </BentoGrid>
           </View>
         )}
@@ -947,6 +1060,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  shimmerStrip: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 140,
+    zIndex: 1,
+  },
   quickShareBtn: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 18,
@@ -990,6 +1111,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
+  sectionUnderline: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 4,
+  },
   clearFilterPill: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -1017,6 +1144,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.05)',
     paddingTop: 8,
+  },
+  heartTapArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   ambientCanvas: {
     flex: 1,
