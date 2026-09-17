@@ -14,7 +14,10 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { theme, colors, shadows } from '@/theme';
+import { theme, shadows } from '@/theme';
+// This bottom sheet is an intentionally always-dark glass surface regardless
+// of the app's light/dark theme, so it pulls text colors from the dark palette.
+import { darkColors as colors } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Button } from '../common/Button';
 import { Avatar } from '../common/Avatar';

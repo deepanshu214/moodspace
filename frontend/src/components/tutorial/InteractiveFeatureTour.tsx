@@ -10,7 +10,11 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, theme, shadows } from '@/theme';
+import { theme, shadows } from '@/theme';
+// This tour tooltip is an intentionally always-dark glass card (like a spotlight
+// overlay) regardless of the app's light/dark theme, so it always pulls text
+// colors from the dark palette rather than the reactive theme.
+import { darkColors as colors } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { ReactionFloater } from '@/components/mood/ReactionFloater';
 import { haptics } from '@/theme/haptics';

@@ -6,7 +6,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { colors, springs, shadows, getEmotionConfig } from '@/theme';
+import { springs, shadows, getEmotionConfig } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { haptics } from '@/theme/haptics';
 
@@ -24,6 +25,7 @@ const TrendPill: React.FC<{
   item: TrendItem;
   onPress?: () => void;
 }> = ({ item, onPress }) => {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
   const config = getEmotionConfig(item.emotion);
 
@@ -46,7 +48,7 @@ const TrendPill: React.FC<{
       <Animated.View
         style={[
           styles.pill,
-          { borderColor: config.border },
+          { backgroundColor: colors.glass.surface, borderColor: config.border },
           shadows.neonEdge(config.primary),
           animatedStyle,
         ]}
@@ -113,9 +115,11 @@ export const TrendingMoodsTicker: React.FC<TrendingMoodsTickerProps> = ({
     }, 3000);
   };
 
+  const { colors } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Typography variant="overline" style={styles.sectionLabel}>
+      <Typography variant="overline" style={[styles.sectionLabel, { color: colors.textMuted }]}>
         TRENDING
       </Typography>
       <ScrollView
@@ -155,7 +159,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   sectionLabel: {
-    color: colors.textMuted,
     paddingHorizontal: 20,
     marginBottom: 10,
   },
@@ -166,7 +169,6 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.glass.surface,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,

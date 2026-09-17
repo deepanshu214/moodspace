@@ -13,7 +13,8 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
 import { RootStackParamList } from '@/navigation/types';
-import { theme, colors, getEmotionConfig, shadows } from '@/theme';
+import { theme, getEmotionConfig, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { IconButton } from '@/components/common/IconButton';
@@ -53,6 +54,7 @@ const INTENSITY_DESCRIPTORS: Record<number, string> = {
 };
 
 export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [content, setContent] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState('calm');
   const [intensity, setIntensity] = useState(7);
@@ -156,7 +158,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.outerWrapper}>
+    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
       {/* Emotion-reactive Aurora Background */}
       <AuroraBackground emotion={selectedEmotion} />
 
@@ -193,7 +195,11 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
           {/* Ambient Context Capsule (Location & Climate) */}
           <View style={styles.contextPillRow}>
             <TouchableOpacity
-              style={[styles.contextPill, styles.locationPillInteractive]}
+              style={[
+                styles.contextPill,
+                { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
+                styles.locationPillInteractive,
+              ]}
               onPress={() => {
                 setShowLocationPicker(true);
                 haptics.light();
@@ -205,7 +211,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
                 {locationName} ▾
               </Typography>
             </TouchableOpacity>
-            <View style={styles.contextPill}>
+            <View style={[styles.contextPill, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
               <Ionicons name="cloudy-night-outline" size={13} color={colors.accent} />
               <Typography variant="caption" color={colors.textSecondary}>
                 {weatherCondition} • {weatherTemp}°C
@@ -217,6 +223,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
           <View
             style={[
               styles.inputCard,
+              { backgroundColor: colors.glass.surface },
               shadows.glassGlow(emotionConfig.primary, 0.15),
               { borderColor: emotionConfig.border },
             ]}
@@ -227,7 +234,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
               value={content}
               onChangeText={setContent}
               multiline
-              style={styles.textArea}
+              style={[styles.textArea, { color: colors.textPrimary }]}
               maxLength={350}
             />
             <View style={styles.inputFooter}>
@@ -304,7 +311,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
               </Typography>
             </View>
 
-            <View style={styles.intensitySelectorRow}>
+            <View style={[styles.intensitySelectorRow, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => {
                 const isActive = intensity === val;
                 return (
@@ -355,6 +362,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
                 }}
                 style={[
                   styles.privacyCard,
+                  { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
                   !isAnonymous && styles.privacyCardActive,
                 ]}
               >
@@ -385,6 +393,7 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
                 }}
                 style={[
                   styles.privacyCard,
+                  { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
                   isAnonymous && styles.privacyCardActiveGhost,
                 ]}
               >
@@ -425,7 +434,6 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   outerWrapper: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     paddingHorizontal: 20,
@@ -454,20 +462,17 @@ const styles = StyleSheet.create({
   contextPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.glass.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     gap: 6,
     borderWidth: 1,
-    borderColor: colors.glass.border,
   },
   locationPillInteractive: {
     borderColor: 'rgba(108, 92, 231, 0.4)',
     backgroundColor: 'rgba(108, 92, 231, 0.12)',
   },
   inputCard: {
-    backgroundColor: colors.glass.surface,
     borderRadius: 20,
     borderWidth: 1,
     padding: 18,
@@ -478,7 +483,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     lineHeight: 24,
-    color: colors.textPrimary,
     textAlignVertical: 'top',
     minHeight: 90,
   },
@@ -529,11 +533,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.glass.surface,
     padding: 8,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: colors.glass.border,
   },
   intensityPill: {
     width: 28,
@@ -549,18 +551,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   privacyCard: {
-    backgroundColor: colors.glass.surface,
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.glass.border,
   },
   privacyCardActive: {
-    borderColor: colors.primaryLight,
+    borderColor: theme.colors.primaryLight,
     backgroundColor: 'rgba(108, 92, 231, 0.15)',
   },
   privacyCardActiveGhost: {
-    borderColor: colors.accent,
+    borderColor: theme.colors.accent,
     backgroundColor: 'rgba(0, 206, 201, 0.12)',
   },
   privacyHeader: {

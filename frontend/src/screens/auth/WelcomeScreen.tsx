@@ -2,7 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
-import { theme, colors, shadows } from '@/theme';
+import { theme, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -14,20 +15,27 @@ import { haptics } from '@/theme/haptics';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { toggleDemoAuth } = useAuthStore();
 
   return (
-    <View style={styles.outerWrapper}>
+    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
       <AuroraBackground emotion="joy" />
       <ParticleCanvas count={15} />
 
       <ScreenWrapper style={styles.container}>
         <View style={styles.content}>
           <View style={styles.heroSection}>
-            <View style={[styles.orb, shadows.neonPulse(colors.primary)]}>
+            <View
+              style={[
+                styles.orb,
+                { backgroundColor: colors.glass.surface, borderColor: colors.glass.borderGlow },
+                shadows.neonPulse(colors.primary),
+              ]}
+            >
               <Typography variant="display">🌌</Typography>
             </View>
-            <Typography variant="display" weight="heavy" align="center" style={styles.title}>
+            <Typography variant="display" weight="heavy" align="center" style={[styles.title, { color: colors.textPrimary }]}>
               MoodSpace
             </Typography>
             <Typography
@@ -84,7 +92,6 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   outerWrapper: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -104,15 +111,12 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: colors.glass.surface,
     borderWidth: 2,
-    borderColor: colors.glass.borderGlow,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
   title: {
-    color: colors.textPrimary,
     marginBottom: 8,
   },
   subtitle: {

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/types';
-import { theme, colors, shadows } from '@/theme';
+import { theme, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -21,6 +22,7 @@ import { haptics } from '@/theme/haptics';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.outerWrapper}>
+    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
       {/* Background Aurora */}
       <AuroraBackground emotion="calm" />
 
@@ -149,11 +151,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             />
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.glass.border }]} />
               <Typography variant="caption" color={colors.textMuted} style={styles.dividerText}>
                 OR
               </Typography>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.glass.border }]} />
             </View>
 
             <Button
@@ -162,7 +164,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               fullWidth
               size="lg"
               onPress={handleGuestLogin}
-              style={styles.guestBtn}
+              style={[styles.guestBtn, { borderColor: colors.glass.borderLight }]}
             />
           </View>
         </GlassCard>
@@ -210,7 +212,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   outerWrapper: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     padding: 20,
@@ -250,14 +251,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.glass.border,
   },
   dividerText: {
     marginHorizontal: 12,
   },
-  guestBtn: {
-    borderColor: colors.glass.borderLight,
-  },
+  guestBtn: {},
   footer: {
     flexDirection: 'row',
     alignItems: 'center',

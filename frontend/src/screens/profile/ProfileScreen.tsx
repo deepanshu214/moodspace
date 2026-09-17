@@ -3,7 +3,8 @@ import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { ProfileStackParamList } from '@/navigation/types';
-import { theme, colors, shadows } from '@/theme';
+import { theme, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { IconButton } from '@/components/common/IconButton';
@@ -39,6 +40,7 @@ import { haptics } from '@/theme/haptics';
 type Props = NativeStackScreenProps<ProfileStackParamList, 'MyProfile'>;
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
   const { user: storeUser } = useAuthStore();
   const { data: apiUser } = useCurrentUser();
   const { data: moodHistory } = useMoodHistory(10, 0);
@@ -194,7 +196,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           isOnline
         />
 
-        <Typography variant="h2" weight="bold" style={styles.name}>
+        <Typography variant="h2" weight="bold" style={[styles.name, { color: colors.textPrimary }]}>
           {isIncognito ? '👻 Anonymous User' : displayName}
         </Typography>
 
@@ -468,7 +470,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 110,
-    backgroundColor: colors.background,
   },
   topBar: {
     flexDirection: 'row',
@@ -509,7 +510,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   name: {
-    color: colors.textPrimary,
     marginTop: 14,
     marginBottom: 4,
   },

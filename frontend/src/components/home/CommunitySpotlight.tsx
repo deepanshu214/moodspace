@@ -7,7 +7,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { colors, springs, shadows } from '@/theme';
+import { springs, shadows } from '@/theme';
+import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { haptics } from '@/theme/haptics';
 
@@ -32,6 +33,7 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
   emotion,
   onJoinPress,
 }) => {
+  const { colors } = useTheme();
   const joinScale = useSharedValue(1);
 
   const joinAnimatedStyle = useAnimatedStyle(() => ({
@@ -51,9 +53,9 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
   const extraCount = memberCount - displayAvatars.length;
 
   return (
-    <View style={[styles.container, shadows.glassGlow(colors.primary, 0.12)]}>
+    <View style={[styles.container, { borderColor: colors.glass.border }, shadows.glassGlow(colors.primary, 0.12)]}>
       <BlurView tint="dark" intensity={25} style={styles.blur}>
-        <View style={styles.content}>
+        <View style={[styles.content, { backgroundColor: colors.glass.surface }]}>
           {/* Gradient accent at top */}
           <LinearGradient
             colors={[colors.primary, colors.accent]}
@@ -87,6 +89,7 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
                   key={index}
                   style={[
                     styles.avatarCircle,
+                    { borderColor: colors.background },
                     {
                       marginLeft: index > 0 ? -10 : 0,
                       zIndex: displayAvatars.length - index,
@@ -100,7 +103,7 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
                 </View>
               ))}
               {extraCount > 0 && (
-                <View style={[styles.avatarCircle, { marginLeft: -10, backgroundColor: colors.glass.surfaceActive }]}>
+                <View style={[styles.avatarCircle, { borderColor: colors.background, marginLeft: -10, backgroundColor: colors.glass.surfaceActive }]}>
                   <Typography variant="caption" weight="semibold" style={{ color: colors.textSecondary, fontSize: 10 }}>
                     +{extraCount > 99 ? '99' : extraCount}
                   </Typography>
@@ -142,14 +145,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.glass.border,
   },
   blur: {
     overflow: 'hidden',
   },
   content: {
     padding: 20,
-    backgroundColor: colors.glass.surface,
   },
   accentStrip: {
     position: 'absolute',
@@ -178,7 +179,6 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+// This card is an intentionally always-dark "constellation" surface regardless
+// of the app's light/dark theme, so it pulls text colors from the dark palette.
+import { darkColors as colors } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { MoodHeatmapDay } from '@/api/types';
 import { haptics } from '@/theme/haptics';
