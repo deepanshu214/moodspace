@@ -42,6 +42,8 @@ import { storage } from '@/utils/storage';
 import { haptics } from '@/theme/haptics';
 import { useTheme } from '@/context';
 import { darkMapStyle, lightMapStyle } from '@/theme/mapStyle';
+import Svg, { Line, Ellipse } from 'react-native-svg';
+import { MoodSpaceLogo } from '@/components/common/MoodSpaceLogo';
 
 import {
   BentoGrid,
@@ -273,6 +275,116 @@ const FloatingHeart: React.FC<{ onDone: () => void }> = ({ onDone }) => {
     <Animated.Text pointerEvents="none" style={[styles.floatingHeart, floatStyle]}>
       ❤️
     </Animated.Text>
+  );
+};
+
+/** World mood canvas for web — SVG lat/long grid with bubbles at real world coordinates */
+const WorldMoodCanvas: React.FC<{
+  bubbles: DisplayBubble[];
+  colors: any;
+  onBubblePress: (bubble: DisplayBubble) => void;
+}> = ({ bubbles, colors, onBubblePress }) => {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+
+  const LAT_LINES = [-60, -30, 0, 30, 60];
+  const LON_LINES = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
+
+  // Rough continent silhouettes as ellipses (normalized to canvas fraction)
+  const CONTINENTS = [
+    { cx: 0.222, cy: 0.27, rx: 0.095, ry: 0.200 },
+    { cx: 0.305, cy: 0.600, rx: 0.060, ry: 0.170 },
+    { cx: 0.530, cy: 0.21, rx: 0.050, ry: 0.120 },
+    { cx: 0.555, cy: 0.520, rx: 0.070, ry: 0.200 },
+    { cx: 0.735, cy: 0.24, rx: 0.180, ry: 0.210 },
+    { cx: 0.870, cy: 0.64, rx: 0.055, ry: 0.075 },
+  ];
+
+  const toXY = (lat: number, lon: number) => ({
+    x: ((lon + 180) / 360) * size.w,
+    y: ((90 - lat) / 180) * size.h,
+  });
+
+  return (
+    <View
+      style={{ flex: 1, overflow: 'hidden' }}
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      <LinearGradient
+        colors={['#08152A', '#0D1E3C', '#0A1628']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {size.w > 0 && (
+        <Svg style={StyleSheet.absoluteFill} width={size.w} height={size.h}>
+          {CONTINENTS.map((c, i) => (
+            <Ellipse
+              key={i}
+              cx={c.cx * size.w}
+              cy={c.cy * size.h}
+              rx={c.rx * size.w}
+              ry={c.ry * size.h}
+              fill="rgba(80,160,110,0.14)"
+              stroke="rgba(80,200,130,0.09)"
+              strokeWidth="0.5"
+            />
+          ))}
+          {LAT_LINES.map((lat) => {
+            const y = ((90 - lat) / 180) * size.h;
+            const major = lat === 0;
+            return (
+              <Line
+                key={`lat-${lat}`}
+                x1={0} y1={y} x2={size.w} y2={y}
+                stroke={major ? 'rgba(100,180,255,0.30)' : 'rgba(80,130,220,0.11)'}
+                strokeWidth={major ? 1 : 0.5}
+              />
+            );
+          })}
+          {LON_LINES.map((lon) => {
+            const x = ((lon + 180) / 360) * size.w;
+            const major = lon === 0;
+            return (
+              <Line
+                key={`lon-${lon}`}
+                x1={x} y1={0} x2={x} y2={size.h}
+                stroke={major ? 'rgba(100,180,255,0.30)' : 'rgba(80,130,220,0.11)'}
+                strokeWidth={major ? 1 : 0.5}
+              />
+            );
+          })}
+        </Svg>
+      )}
+
+      {size.w > 0 && bubbles.map((bubble) => {
+        const pos = toXY(bubble.latitude, bubble.longitude);
+        return (
+          <View
+            key={bubble.id}
+            style={[styles.canvasMarkerWrapper, { left: pos.x - 19, top: pos.y - 19 }]}
+          >
+            <LuminousMoodBubble
+              id={bubble.id}
+              emotion={bubble.emotion}
+              intensity={bubble.intensity}
+              authorName={bubble.authorName}
+              isAnonymous={bubble.isAnonymous}
+              size="sm"
+              isFloating
+              onPress={() => onBubblePress(bubble)}
+            />
+          </View>
+        );
+      })}
+
+      <View style={styles.worldMapLiveBadge}>
+        <View style={styles.worldMapLiveDot} />
+        <Typography variant="caption" weight="bold" style={{ color: '#FFFFFF', fontSize: 10, letterSpacing: 0.8 }}>
+          LIVE WORLD MAP
+        </Typography>
+      </View>
+    </View>
   );
 };
 
@@ -525,8 +637,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       >
         <View style={styles.headerTitles}>
           <View style={styles.brandRow}>
-            <Typography style={{ fontSize: 18, marginRight: 6 }}>✨</Typography>
-            <Typography variant="h3" weight="heavy" style={{ color: '#FFFFFF' }}>
+            <MoodSpaceLogo size={28} showBackground animated={false} />
+            <Typography variant="h3" weight="heavy" style={{ color: '#FFFFFF', marginLeft: 8 }}>
               MoodSpace
             </Typography>
           </View>
@@ -637,30 +749,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </MapContainer>
           ) : (
-            <View style={[styles.ambientCanvas, { backgroundColor: colors.background }]}>
-              <View style={styles.ambientGlow1} />
-              <View style={styles.ambientGlow2} />
-              {filteredBubbles.map((bubble) => (
-                <View
-                  key={bubble.id}
-                  style={[
-                    styles.canvasMarkerWrapper,
-                    { left: (bubble.canvasX || 100) * 0.8, top: (bubble.canvasY || 100) * 0.5 },
-                  ]}
-                >
-                  <LuminousMoodBubble
-                    id={bubble.id}
-                    emotion={bubble.emotion}
-                    intensity={bubble.intensity}
-                    authorName={bubble.authorName}
-                    isAnonymous={bubble.isAnonymous}
-                    size="sm"
-                    isFloating
-                    onPress={() => handleBubblePress(bubble)}
-                  />
-                </View>
-              ))}
-            </View>
+            <WorldMoodCanvas
+              bubbles={filteredBubbles}
+              colors={colors}
+              onBubblePress={handleBubblePress}
+            />
           )}
 
           {/* Frosted Fade-out Bottom Gradient */}
@@ -1244,5 +1337,23 @@ const styles = StyleSheet.create({
   },
   canvasMarkerWrapper: {
     position: 'absolute',
+  },
+  worldMapLiveBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  worldMapLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00FF88',
   },
 });
