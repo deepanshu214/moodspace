@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
@@ -34,7 +35,7 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
   onPass,
   isConnecting,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const emotionCfg = theme.getEmotionConfig(match.current_emotion);
   const isAnon = match.is_anonymous;
 
@@ -42,11 +43,11 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: emotionCfg.primary + '40' }]}>
       {/* Emotion glow strip */}
       <View style={[styles.emotionStrip, { backgroundColor: emotionCfg.background }]}>
-        <Typography variant="caption" color={emotionCfg.primary} style={styles.emotionLabel}>
+        <Typography variant="caption" color={emotionInk(emotionCfg, isDark)} style={styles.emotionLabel}>
           {emotionCfg.emoji} {emotionCfg.label}
         </Typography>
         {match.expires_at && (
-          <Ionicons name="time-outline" size={12} color={emotionCfg.primary} />
+          <Ionicons name="time-outline" size={12} color={emotionInk(emotionCfg, isDark)} />
         )}
       </View>
 
@@ -90,7 +91,7 @@ export const ResonanceMatchCard: React.FC<ResonanceMatchCardProps> = ({
           </Typography>
           <Typography
             variant="title"
-            color={emotionCfg.primary}
+            color={emotionInk(emotionCfg, isDark)}
             weight="bold"
           >
             {match.resonance_score}%
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   icebreaker: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(108, 92, 231, 0.08)',
+    backgroundColor: 'rgba(255, 92, 56, 0.08)',
     marginHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.md,
     padding: theme.spacing.md,

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkOnPastel, inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { MoodStreakInfo, StreakBadge } from '@/api/types';
@@ -19,7 +20,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
   onCheckInPress,
   onBadgePress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const {
     current_streak,
     longest_streak,
@@ -35,14 +36,14 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
       <View style={styles.topRow}>
         <View style={styles.counterBlock}>
           <View style={styles.flameCircle}>
-            <Ionicons name="flame" size={26} color="#FD79A8" />
+            <Ionicons name="flame" size={26} color={inkFor('#F87171', isDark)} />
           </View>
           <View style={styles.counterMeta}>
             <View style={styles.streakNumberRow}>
               <Typography variant="h2" weight="bold" color={colors.textPrimary}>
                 {current_streak}
               </Typography>
-              <Typography variant="title" weight="semibold" color="#FD79A8" style={styles.daysLabel}>
+              <Typography variant="title" weight="semibold" color={inkFor('#F87171', isDark)} style={styles.daysLabel}>
                 Day Streak
               </Typography>
             </View>
@@ -60,7 +61,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
             activeOpacity={0.8}
             onPress={onCheckInPress}
           >
-            <Typography variant="caption" weight="bold" color="#FFFFFF">
+            <Typography variant="caption" weight="bold" color={inkOnPastel}>
               Check In
             </Typography>
           </TouchableOpacity>
@@ -137,7 +138,7 @@ export const MoodStreakTracker: React.FC<MoodStreakTrackerProps> = ({
                 <Ionicons
                   name={badge.icon as any}
                   size={14}
-                  color={badge.unlocked ? '#FD79A8' : colors.textMuted}
+                  color={badge.unlocked ? inkFor('#F87171', isDark) : colors.textMuted}
                 />
               </View>
               <View>
@@ -182,9 +183,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(253, 121, 168, 0.15)',
+    backgroundColor: 'rgba(248, 113, 113, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(253, 121, 168, 0.3)',
+    borderColor: 'rgba(248, 113, 113, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: theme.spacing.md,
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   checkInCta: {
-    backgroundColor: '#FD79A8',
+    backgroundColor: '#F87171',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: theme.radius.round,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dayDotActive: {
-    backgroundColor: '#FD79A8',
+    backgroundColor: '#F87171',
   },
   dayLabel: {
     fontSize: 10,
@@ -267,8 +268,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badgeUnlocked: {
-    backgroundColor: 'rgba(253, 121, 168, 0.08)',
-    borderColor: 'rgba(253, 121, 168, 0.3)',
+    backgroundColor: 'rgba(248, 113, 113, 0.08)',
+    borderColor: 'rgba(248, 113, 113, 0.3)',
   },
   badgeIconWrapper: {
     width: 24,
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconUnlocked: {
-    backgroundColor: 'rgba(253, 121, 168, 0.2)',
+    backgroundColor: 'rgba(248, 113, 113, 0.2)',
   },
   badgeDays: {
     fontSize: 10,

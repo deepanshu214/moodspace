@@ -39,7 +39,7 @@ export const OfflineBanner: React.FC = () => {
               : 'cloud-upload-outline'
           }
           size={16}
-          color={!isOnline ? '#FFD166' : colors.primaryLight}
+          color={!isOnline ? colors.secondaryInk : colors.accentInk}
         />
 
         <Typography variant="caption" weight="semibold" color={colors.textPrimary} style={styles.text}>
@@ -82,12 +82,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   bannerOffline: {
-    backgroundColor: 'rgba(255, 209, 102, 0.12)',
-    borderColor: 'rgba(255, 209, 102, 0.35)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
+    borderColor: 'rgba(255, 92, 56, 0.35)',
   },
   bannerSyncing: {
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
-    borderColor: 'rgba(108, 92, 231, 0.35)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
+    borderColor: 'rgba(255, 92, 56, 0.35)',
   },
   content: {
     flexDirection: 'row',

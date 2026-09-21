@@ -136,7 +136,6 @@ export const FollowersListScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',

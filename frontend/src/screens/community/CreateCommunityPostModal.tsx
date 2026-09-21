@@ -9,16 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   Switch,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk, inkFor } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useCreateCommunityPost } from '@/hooks/useCommunity';
+import { showAlert } from '@/components/common/AppDialog';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<CommunityStackParamList, 'CreateCommunityPost'>;
@@ -42,7 +43,7 @@ const EMOTIONS = [
 ];
 
 export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { communityId, communityName } = route.params;
 
   const [postType, setPostType] = useState('reflection');
@@ -55,7 +56,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
 
   const handleSubmit = () => {
     if (content.trim().length < 5) {
-      Alert.alert('Reflection Needed', 'Please share a few more words for your reflection (minimum 5 characters).');
+      showAlert('Reflection Needed', 'Please share a few more words for your reflection (minimum 5 characters).');
       return;
     }
 
@@ -71,7 +72,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
           navigation.goBack();
         },
         onError: (err: any) => {
-          Alert.alert('Unable to release reflection', err?.message || 'Please check your connection and try again.');
+          showAlert('Unable to release reflection', err?.message || 'Please check your connection and try again.');
         },
       }
     );
@@ -170,7 +171,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
               <Typography variant="caption" weight="bold" color={colors.textSecondary}>
                 EMOTIONAL FREQUENCY
               </Typography>
-              <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
+              <Typography variant="caption" weight="bold" color={emotionInk(emotionConfig, isDark)}>
                 {emotionConfig.label}
               </Typography>
             </View>
@@ -231,7 +232,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
           <View style={styles.toggleCard}>
             <View style={styles.toggleTextWrap}>
               <View style={styles.toggleTitleRow}>
-                <Ionicons name="finger-print-outline" size={16} color="#A29BFE" />
+                <Ionicons name="finger-print-outline" size={16} color={inkFor('#C084FC', isDark)} />
                 <Typography variant="bodySmall" weight="bold" color={colors.textPrimary} style={styles.toggleTitle}>
                   Cloak Identity (Post Anonymously)
                 </Typography>
@@ -243,8 +244,8 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
             <Switch
               value={isAnonymous}
               onValueChange={setIsAnonymous}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#6C5CE7' }}
-              thumbColor={isAnonymous ? '#FFFFFF' : '#888888'}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#FF5C38' }}
+              thumbColor={isAnonymous ? '#FFFFFF' : '#A1A1AA'}
             />
           </View>
 
@@ -252,7 +253,7 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
           <View style={styles.toggleCard}>
             <View style={styles.toggleTextWrap}>
               <View style={styles.toggleTitleRow}>
-                <Ionicons name="eye-off-outline" size={16} color="#FD79A8" />
+                <Ionicons name="eye-off-outline" size={16} color={inkFor('#F87171', isDark)} />
                 <Typography variant="bodySmall" weight="bold" color={colors.textPrimary} style={styles.toggleTitle}>
                   Shield Sensitive Content
                 </Typography>
@@ -264,8 +265,8 @@ export const CreateCommunityPostModal: React.FC<Props> = ({ route, navigation })
             <Switch
               value={hasContentWarning}
               onValueChange={setHasContentWarning}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#FD79A8' }}
-              thumbColor={hasContentWarning ? '#FFFFFF' : '#888888'}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#F87171' }}
+              thumbColor={hasContentWarning ? '#FFFFFF' : '#A1A1AA'}
             />
           </View>
 
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   circleDestPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: theme.radius.round,

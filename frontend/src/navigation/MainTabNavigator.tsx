@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,19 +11,20 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 import { MainTabParamList } from './types';
 import { HomeNavigator } from './HomeNavigator';
+import { MapScreen } from '@/screens/map/MapScreen';
 import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
 import { ChatNavigator } from './ChatNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
-import { theme, colors, springs, shadows } from '@/theme';
+import { springs } from '@/theme';
 import { haptics } from '@/theme/haptics';
 
 import { useTheme } from '@/context';
+import { inkOnPastel } from '@/theme/colors';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -35,6 +37,7 @@ interface CenterFabButtonProps {
   onPress: () => void;
 }
 
+/** The raised tangerine "+" that drops a bubble, per the Stitch tab bar. */
 const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
   const { colors } = useTheme();
   const scale = useSharedValue(1);
@@ -51,40 +54,37 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
     );
   }, []);
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.9, springs.stiff);
-    haptics.medium();
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, springs.bouncy);
-  };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const pulseAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
-    opacity: 0.25,
+    opacity: 0.2,
   }));
 
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPressIn={() => {
+        scale.value = withSpring(0.9, springs.stiff);
+        haptics.medium();
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, springs.bouncy);
+      }}
+      accessibilityRole="button"
+      accessibilityLabel="Drop a mood bubble"
       style={styles.centerBtnContainer}
     >
       <Animated.View style={[styles.centerFabGlow, pulseAnimatedStyle, { backgroundColor: colors.primary }]} />
-      <Animated.View style={[styles.centerFab, animatedStyle, { borderColor: colors.glass.border }]}>
+      {/* hard ink block, then the surface — the Neo-Editorial press */}
+      <View style={[styles.centerFabShadow, { backgroundColor: colors.hardShadow }]} />
+      <Animated.View style={[styles.centerFab, animatedStyle, { borderColor: colors.ink }]}>
         <LinearGradient
-          colors={[colors.primary, colors.secondary]}
+          colors={[colors.primary, '#FB923C']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.centerFabGradient}
         >
-          <Ionicons name="add" size={28} color="#FFFFFF" />
+          <Ionicons name="add" size={28} color={inkOnPastel} />
         </LinearGradient>
       </Animated.View>
     </Pressable>
@@ -92,60 +92,37 @@ const CenterFabButton: React.FC<CenterFabButtonProps> = ({ onPress }) => {
 };
 
 export const MainTabNavigator: React.FC = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <Tab.Navigator
+      initialRouteName="HomeTab"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: 'transparent',
-          borderTopWidth: 0,
-          borderWidth: 0,
-          borderRadius: 32,
-          marginHorizontal: 16,
-          marginBottom: Platform.OS === 'ios' ? 24 : 14,
-          height: Platform.OS === 'ios' ? 76 : 66,
-          paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 16 : 8,
+          backgroundColor: colors.surface,
+          borderTopWidth: 2,
+          borderTopColor: colors.ink,
+          height: Platform.OS === 'ios' ? 86 : 72,
+          paddingTop: 10,
+          paddingBottom: Platform.OS === 'ios' ? 26 : 12,
           position: 'absolute',
-          elevation: 16,
-          ...shadows.medium,
+          elevation: 0,
         },
-        tabBarBackground: () => (
-          <View style={[styles.tabBackgroundWrapper, { borderColor: colors.glass.border }]}>
-            {Platform.OS === 'ios' ? (
-              <BlurView
-                tint={isDark ? 'dark' : 'light'}
-                intensity={85}
-                style={StyleSheet.absoluteFill}
-              />
-            ) : null}
-            <View
-              style={[
-                styles.tabDarkBackdrop,
-                {
-                  backgroundColor: isDark ? 'rgba(12, 14, 23, 0.88)' : 'rgba(255, 255, 255, 0.90)',
-                },
-              ]}
-            />
-          </View>
-        ),
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '600',
-          letterSpacing: 0.3,
+          letterSpacing: 0.4,
           marginTop: 2,
         },
       }}
     >
-      {/* 1. HOME / MAP */}
+      {/* 1. MAP — the living atlas at full height */}
       <Tab.Screen
-        name="HomeTab"
-        component={HomeNavigator}
+        name="MapTab"
+        component={MapScreen}
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: ({ color, focused }) => (
@@ -154,18 +131,14 @@ export const MainTabNavigator: React.FC = () => {
         }}
       />
 
-      {/* 2. ACTIVITY */}
+      {/* 2. FEED — the Stitch home screen */}
       <Tab.Screen
-        name="NotificationsTab"
-        component={NotificationsScreen}
+        name="HomeTab"
+        component={HomeNavigator}
         options={{
-          tabBarLabel: 'Activity',
+          tabBarLabel: 'Feed',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'notifications' : 'notifications-outline'}
-              size={21}
-              color={color}
-            />
+            <Ionicons name={focused ? 'layers' : 'layers-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -177,25 +150,19 @@ export const MainTabNavigator: React.FC = () => {
         options={({ navigation }) => ({
           tabBarLabel: '',
           tabBarButton: () => (
-            <CenterFabButton
-              onPress={() => (navigation as any).navigate('CreateBubbleModal')}
-            />
+            <CenterFabButton onPress={() => (navigation as any).navigate('CreateBubbleModal')} />
           ),
         })}
       />
 
-      {/* 4. CHATS */}
+      {/* 4. ALERTS */}
       <Tab.Screen
-        name="ChatsTab"
-        component={ChatNavigator}
+        name="NotificationsTab"
+        component={NotificationsScreen}
         options={{
-          tabBarLabel: 'Chats',
+          tabBarLabel: 'Alerts',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
-              size={21}
-              color={color}
-            />
+            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -211,52 +178,57 @@ export const MainTabNavigator: React.FC = () => {
           ),
         }}
       />
+
+      {/* Chats keeps its route (reached from the feed masthead) but has no tab,
+          matching the Stitch five-slot bar. */}
+      <Tab.Screen
+        name="ChatsTab"
+        component={ChatNavigator}
+        options={({ route }) => {
+          // Inside a conversation the floating bar would sit on top of the
+          // message composer, so it steps aside. These screens carry their own
+          // back button, so nothing is stranded.
+          const focused = getFocusedRouteNameFromRoute(route) ?? 'Conversations';
+          const immersive = focused === 'ChatDetail' || focused === 'EchoMatch' || focused === 'IcebreakerPicker';
+          return {
+            tabBarButton: () => null,
+            tabBarItemStyle: { display: 'none' },
+            tabBarStyle: immersive ? { display: 'none' } : undefined,
+          };
+        }}
+      />
     </Tab.Navigator>
   );
 };
 
 const styles = StyleSheet.create({
-  tabBackgroundWrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  tabDarkBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(12, 14, 23, 0.88)',
-  },
   centerBtnContainer: {
-    top: -12,
+    top: -16,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 58,
-    height: 58,
+    width: 64,
+    height: 64,
   },
   centerFabGlow: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+  },
+  centerFabShadow: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    top: 8,
+    left: 8,
   },
   centerFab: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    ...shadows.glow(colors.primary, 0.5),
   },
   centerFabGradient: {
     flex: 1,

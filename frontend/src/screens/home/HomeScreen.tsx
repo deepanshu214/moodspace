@@ -3,9 +3,12 @@ import {
   View,
   StyleSheet,
   Dimensions,
+  Image,
   Platform,
   TouchableOpacity,
   ScrollView,
+  Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
@@ -19,30 +22,37 @@ import Animated, {
   withTiming,
   withSpring,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { getUserPostedBubbles, UserPostBubble } from '@/utils/userPosts';
+import { DisplayBubble, toDisplayBubbles, mergeLocalBubbles, filterByEmotion } from '@/utils/bubbles';
 
 
 import { HomeStackParamList, MainTabParamList } from '@/navigation/types';
-import { theme, getEmotionConfig } from '@/theme';
+import { theme, getEmotionConfig, emotionInk } from '@/theme';
+import { staggeredEntrance } from '@/theme/animations';
+import { inkOnPastel } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { GlassCard } from '@/components/common/GlassCard';
 import { SkeletonCard } from '@/components/common/Skeleton';
 import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
+import { MoodPinTag } from '@/components/mood/MoodPinTag';
+import { MoodGlyph, ReactionGlyph, toMoodKey, ReactionKey } from '@/components/mood/MoodGlyph';
+import { VoiceTape } from '@/components/mood/VoiceTape';
+import { Tactile } from '@/components/common/Tactile';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
+import { ReactionFloater } from '@/components/mood/ReactionFloater';
 import { InteractiveFeatureTour, AppWalkthroughModal } from '@/components/tutorial';
 import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
-import { MapContainer, Marker, PROVIDER_GOOGLE } from '@/components/map';
+import { MapContainer, Marker, PROVIDER_GOOGLE, WorldMoodCanvas } from '@/components/map';
 import { storage } from '@/utils/storage';
 import { haptics } from '@/theme/haptics';
 import { useTheme } from '@/context';
 import { darkMapStyle, lightMapStyle } from '@/theme/mapStyle';
-import Svg, { Line, Ellipse } from 'react-native-svg';
 import { MoodSpaceLogo } from '@/components/common/MoodSpaceLogo';
 
 import {
@@ -51,6 +61,8 @@ import {
   TrendingMoodsTicker,
   StreakWidget,
   CommunitySpotlight,
+  LuckyVibeCard,
+  LiveAtmosphereStrip,
 } from '@/components/home';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -60,29 +72,9 @@ type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList>
 >;
 
-export interface DisplayBubble {
-  id: string;
-  authorName: string;
-  authorAvatar?: string;
-  auraScore: number;
-  emotion: string;
-  secondaryEmotion?: string;
-  intensity: number;
-  content: string;
-  locationCity: string;
-  weatherCondition: string;
-  weatherTemp: number;
-  timestamp: string;
-  likesCount: number;
-  commentsCount: number;
-  isAnonymous?: boolean;
-  latitude: number;
-  longitude: number;
-  canvasX?: number;
-  canvasY?: number;
-}
+export type { DisplayBubble };
 
-const DEFAULT_BUBBLES: DisplayBubble[] = [
+export const DEFAULT_BUBBLES: DisplayBubble[] = [
   {
     id: 'b-1',
     authorName: 'Aarav Sharma',
@@ -205,26 +197,62 @@ const SAMPLE_PULSE_DATA = [
 ];
 
 const EMOTION_FILTERS = [
-  { id: 'all', label: 'All', emoji: '🌎', color: '#FFCDB2', ink: '#A9583A' },
-  { id: 'joy', label: 'Joy', emoji: '☀️', color: '#FFE082', ink: '#B07D18' },
-  { id: 'calm', label: 'Calm', emoji: '🌿', color: '#A7D7C5', ink: '#3F8B72' },
-  { id: 'love', label: 'Love', emoji: '💖', color: '#F8BBD0', ink: '#C2557E' },
-  { id: 'sadness', label: 'Reflective', emoji: '💜', color: '#C5CAE9', ink: '#5567A8' },
-  { id: 'anxiety', label: 'Heavy', emoji: '🌧️', color: '#E1BEE7', ink: '#8E5C99' },
+  { id: 'all', label: 'All', emoji: '🌎' },
+  { id: 'joy', label: 'Joy', emoji: '☀️' },
+  { id: 'calm', label: 'Calm', emoji: '🌿' },
+  { id: 'love', label: 'Love', emoji: '💖' },
+  { id: 'sadness', label: 'Reflective', emoji: '💜' },
+  { id: 'anxiety', label: 'Heavy', emoji: '🌧️' },
 ];
 
-/** Frosted pastel header ink + pill treatment (same band in light and dark). */
-const HEADER_INK = '#2D241E';
-const HEADER_INK_SOFT = '#5F5048';
+/** Opaque navy header band: shell ink and translucent paper pills (same in both modes). */
+const HEADER_INK = '#FFFDF9';
+const HEADER_INK_SOFT = '#9EA3AE';
 const HEADER_PILL = {
-  backgroundColor: 'rgba(255,255,255,0.78)',
-  borderColor: 'rgba(255,255,255,0.95)',
+  backgroundColor: 'rgba(255, 255, 255,0.12)',
+  borderColor: 'rgba(255, 255, 255,0.24)',
 };
 
 
 
-/** Small heartbeat-style pulsing dot used on the live "echoes worldwide" chip */
-const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#4DB6A0' }) => {
+const formatCompact = (n: number) =>
+  n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n);
+
+/** "● 1.4k feeling right now" — the chip breathes so the map reads as live. */
+const LiveActivityPulse: React.FC<{ count: number; colors: any }> = ({ count, colors }) => {
+  const breath = useSharedValue(1);
+
+  useEffect(() => {
+    breath.value = withRepeat(
+      withSequence(
+        withTiming(0.82, { duration: 1600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      false
+    );
+  }, []);
+
+  const breathStyle = useAnimatedStyle(() => ({ opacity: breath.value }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.mapStatusChip,
+        { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
+        breathStyle,
+      ]}
+    >
+      <HeartbeatDot color={colors.successInk} />
+      <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
+        {formatCompact(count)} feeling right now
+      </Typography>
+    </Animated.View>
+  );
+};
+
+/** Small heartbeat-style pulsing dot used on the live activity chip */
+const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#5CD694' }) => {
   const pulse = useSharedValue(1);
 
   useEffect(() => {
@@ -256,278 +284,230 @@ const HeartbeatDot: React.FC<{ color?: string }> = ({ color = '#4DB6A0' }) => {
   );
 };
 
-/** A single ❤️ that floats up and fades — spawned on each "like" tap */
-const FloatingHeart: React.FC<{ onDone: () => void }> = ({ onDone }) => {
-  const translateY = useSharedValue(0);
-  const scale = useSharedValue(0.7);
-  const opacity = useSharedValue(0);
-  const driftX = useMemo(() => (Math.random() - 0.5) * 22, []);
+const SELECTED_SCALE = 1.06;
+
+/** Springs a pill up while selected; `squeeze` gives a tap response that settles on the new state. */
+const useSelectionSpring = (isSelected: boolean) => {
+  const scale = useSharedValue(isSelected ? SELECTED_SCALE : 1);
 
   useEffect(() => {
-    scale.value = withSpring(1.15, theme.springs.bouncy);
-    translateY.value = withTiming(-44, { duration: 850, easing: Easing.out(Easing.ease) });
-    opacity.value = withSequence(
-      withTiming(1, { duration: 120 }),
-      withTiming(0, { duration: 550 }, (finished) => {
-        if (finished) runOnJS(onDone)();
-      })
+    scale.value = withSpring(isSelected ? SELECTED_SCALE : 1, theme.springs.pillowy);
+  }, [isSelected]);
+
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  const squeeze = (willBeSelected: boolean) => {
+    scale.value = withSequence(
+      withSpring(0.92, { damping: 14, stiffness: 420 }),
+      withSpring(willBeSelected ? SELECTED_SCALE : 1, theme.springs.pillowy)
     );
-  }, []);
+  };
 
-  const floatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }, { translateX: driftX }, { scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.Text pointerEvents="none" style={[styles.floatingHeart, floatStyle]}>
-      ❤️
-    </Animated.Text>
-  );
+  return { style, squeeze };
 };
 
-/** World mood canvas for web — SVG lat/long grid with bubbles at real world coordinates */
-const WorldMoodCanvas: React.FC<{
-  bubbles: DisplayBubble[];
-  colors: any;
-  onBubblePress: (bubble: DisplayBubble) => void;
-}> = ({ bubbles, colors, onBubblePress }) => {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-
-  const LAT_LINES = [-60, -30, 0, 30, 60];
-  const LON_LINES = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
-
-  // Rough continent silhouettes as ellipses (normalized to canvas fraction)
-  const CONTINENTS = [
-    { cx: 0.222, cy: 0.27, rx: 0.095, ry: 0.200 },
-    { cx: 0.305, cy: 0.600, rx: 0.060, ry: 0.170 },
-    { cx: 0.530, cy: 0.21, rx: 0.050, ry: 0.120 },
-    { cx: 0.555, cy: 0.520, rx: 0.070, ry: 0.200 },
-    { cx: 0.735, cy: 0.24, rx: 0.180, ry: 0.210 },
-    { cx: 0.870, cy: 0.64, rx: 0.055, ry: 0.075 },
-  ];
-
-  // Equirectangular projection, inset so author badges clear the map controls.
-  const toXY = (lat: number, lon: number) => ({
-    x: Math.min(Math.max(((lon + 180) / 360) * size.w, 28), Math.max(size.w - 76, 28)),
-    y: Math.min(Math.max(((90 - lat) / 180) * size.h, 46), Math.max(size.h - 74, 46)),
-  });
-
-  return (
-    <View
-      style={{ flex: 1, overflow: 'hidden' }}
-      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-    >
-      <LinearGradient
-        colors={['#DCEEF7', '#EAF4F0', '#FBF8F5']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {size.w > 0 && (
-        <Svg style={StyleSheet.absoluteFill} width={size.w} height={size.h}>
-          {CONTINENTS.map((c, i) => (
-            <Ellipse
-              key={i}
-              cx={c.cx * size.w}
-              cy={c.cy * size.h}
-              rx={c.rx * size.w}
-              ry={c.ry * size.h}
-              fill="#E4F5EB"
-              stroke="#CFE9DC"
-              strokeWidth="1"
-            />
-          ))}
-          {LAT_LINES.map((lat) => {
-            const y = ((90 - lat) / 180) * size.h;
-            const major = lat === 0;
-            return (
-              <Line
-                key={`lat-${lat}`}
-                x1={0} y1={y} x2={size.w} y2={y}
-                stroke={major ? 'rgba(126,156,216,0.45)' : 'rgba(126,156,216,0.18)'}
-                strokeWidth={major ? 1 : 0.5}
-              />
-            );
-          })}
-          {LON_LINES.map((lon) => {
-            const x = ((lon + 180) / 360) * size.w;
-            const major = lon === 0;
-            return (
-              <Line
-                key={`lon-${lon}`}
-                x1={x} y1={0} x2={x} y2={size.h}
-                stroke={major ? 'rgba(126,156,216,0.45)' : 'rgba(126,156,216,0.18)'}
-                strokeWidth={major ? 1 : 0.5}
-              />
-            );
-          })}
-        </Svg>
-      )}
-
-      {size.w > 0 && bubbles.map((bubble) => {
-        const pos = toXY(bubble.latitude, bubble.longitude);
-        return (
-          <View
-            key={bubble.id}
-            style={[styles.canvasMarkerWrapper, { left: pos.x - 19, top: pos.y - 19 }]}
-          >
-            <LuminousMoodBubble
-              id={bubble.id}
-              emotion={bubble.emotion}
-              intensity={bubble.intensity}
-              authorName={bubble.authorName}
-              isAnonymous={bubble.isAnonymous}
-              size="sm"
-              isFloating
-              onPress={() => onBubblePress(bubble)}
-            />
-          </View>
-        );
-      })}
-
-    </View>
-  );
-};
-
-/** Emotion filter pill with a springy press response */
+/** Global flow filter chip — mood glyph over a pigment fill, Stitch-style. */
 const SpringyFilterPill: React.FC<{
-  filter: { id: string; label: string; emoji: string; color: string; ink: string };
+  filter: { id: string; label: string; emoji: string };
   isSelected: boolean;
   colors: any;
+  isDark: boolean;
+  /** Shown on the "All" chip only. */
+  count?: string;
   onPress: () => void;
-}> = ({ filter, isSelected, colors, onPress }) => {
-  const scale = useSharedValue(1);
-  const pillStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+}> = ({ filter, isSelected, colors, isDark, count, onPress }) => {
+  // Deliberately no selected-scale here: a 1.06 pop left the chosen chip 2px
+  // taller than its neighbours, so the row never sat flush.
+  const spring = useSelectionSpring(false);
+  const isAll = filter.id === 'all';
+  const config = getEmotionConfig(filter.id);
+  const fill = isAll ? colors.primary : config.primary;
 
+  // Tapping always selects this pill, so the squeeze settles at the selected size.
   const handlePress = () => {
-    scale.value = withSequence(
-      withSpring(0.91, { damping: 14, stiffness: 420 }),
-      withSpring(1, theme.springs.bouncy)
-    );
+    haptics.light();
+    spring.squeeze(true);
     onPress();
   };
 
   return (
-    <Animated.View style={pillStyle}>
+    <Animated.View style={spring.style}>
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityState={{ selected: isSelected }}
+        accessibilityLabel={`Filter by ${filter.label}`}
         style={[
           styles.filterPill,
           {
-            backgroundColor: isSelected ? filter.color : colors.glass.surface,
-            borderColor: isSelected ? filter.ink : colors.glass.border,
-            borderWidth: isSelected ? 1.5 : 1,
+            backgroundColor: isSelected ? fill : colors.surface,
+            borderColor: colors.ink,
           },
         ]}
       >
-        <Typography style={{ fontSize: 13, marginRight: 4 }}>{filter.emoji}</Typography>
+        {isAll ? (
+          <Ionicons name="globe-outline" size={14} color={isSelected ? inkOnPastel : colors.textSecondary} />
+        ) : (
+          <MoodGlyph
+            mood={toMoodKey(filter.id)}
+            size={14}
+            color={isSelected ? inkOnPastel : emotionInk(config, isDark)}
+          />
+        )}
         <Typography
-          variant="caption"
-          weight={isSelected ? 'bold' : 'medium'}
-          style={{ color: isSelected ? filter.ink : colors.textSecondary }}
+          variant="label"
+          style={{ color: isSelected ? inkOnPastel : colors.textSecondary, marginLeft: 6 }}
         >
           {filter.label}
         </Typography>
+        {isAll && count && (
+          <View style={[styles.filterCount, { backgroundColor: isSelected ? inkOnPastel : colors.surfaceWarm }]}>
+            <Typography variant="overline" style={{ color: isSelected ? '#FFFDF9' : colors.textSecondary }}>
+              {count}
+            </Typography>
+          </View>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-/** One echo/feed card — owns its own like animation state */
+const REACTIONS: { key: ReactionKey; label: string }[] = [
+  { key: 'empathy', label: 'Support' },
+  { key: 'hug', label: 'Hug' },
+  { key: 'heart', label: 'With You' },
+  { key: 'celebrate', label: 'Celebrate' },
+];
+
+/** One echo/feed card — the Stitch field-note card with reaction pills. */
 const FeedEchoCard: React.FC<{
   bubble: DisplayBubble;
   colors: any;
+  isDark: boolean;
   onPress: () => void;
-}> = ({ bubble, colors, onPress }) => {
+}> = ({ bubble, colors, isDark, onPress }) => {
   const config = getEmotionConfig(bubble.emotion);
-  const [liked, setLiked] = useState(false);
-  const [bursts, setBursts] = useState<number[]>([]);
-  const burstIdRef = useRef(0);
-  const heartScale = useSharedValue(1);
+  const ink = emotionInk(config, isDark);
+  const [reacted, setReacted] = useState<ReactionKey | null>(null);
+  const [floaterKey, setFloaterKey] = useState(0);
+  const countScale = useSharedValue(1);
 
-  const displayLikes = bubble.likesCount + (liked ? 1 : 0);
-
-  const removeBurst = (id: number) => {
-    setBursts((prev) => prev.filter((b) => b !== id));
-  };
-
-  const handleReact = () => {
+  const handleReact = (rx: ReactionKey) => {
     haptics.light();
-    setLiked((prev) => {
-      const next = !prev;
-      if (next) {
-        const id = burstIdRef.current++;
-        setBursts((b) => [...b, id]);
-      }
-      return next;
-    });
-    heartScale.value = withSequence(
-      withSpring(1.5, { damping: 6, stiffness: 260, mass: 0.6 }),
-      withSpring(1, { damping: 10, stiffness: 200 })
+    const next = reacted === rx ? null : rx;
+    setReacted(next);
+    if (next) setFloaterKey((k) => k + 1);
+    countScale.value = withSequence(
+      withSpring(1.35, { damping: 8, stiffness: 320, mass: 0.6 }),
+      withSpring(1, theme.springs.pillowy)
     );
   };
 
-  const heartStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: heartScale.value }],
-  }));
+  const countStyle = useAnimatedStyle(() => ({ transform: [{ scale: countScale.value }] }));
 
   return (
-    <GlassCard
-      variant="default"
-      glowColor={config.glow}
-      onPress={onPress}
-      style={[styles.feedCard, { borderLeftWidth: 4, borderLeftColor: config.primary }]}
-    >
+    <Tactile offset={4} radius={24} contentStyle={styles.feedCard} onPress={onPress}>
       <View style={styles.cardHeader}>
-        <View style={[styles.emotionDot, { backgroundColor: config.primary }]} />
-        <Typography
-          variant="caption"
-          weight="semibold"
-          style={{ color: colors.textPrimary, flex: 1 }}
-          numberOfLines={1}
-        >
-          {bubble.authorName}
-        </Typography>
-        <Typography variant="caption">{config.emoji}</Typography>
+        <View style={[styles.avatarCircle, { backgroundColor: config.primary, borderColor: colors.ink }]}>
+          <Typography variant="label" style={{ color: inkOnPastel }}>
+            {(bubble.authorName || '?').charAt(0).toUpperCase()}
+          </Typography>
+        </View>
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.nameRow}>
+            <Typography variant="label" numberOfLines={1} style={{ color: colors.textPrimary }}>
+              {bubble.authorName}
+            </Typography>
+            <View style={[styles.cityTag, { borderColor: colors.ink, backgroundColor: colors.surfaceWarm }]}>
+              <Typography variant="overline" numberOfLines={1} style={{ color: colors.textPrimary }}>
+                {bubble.locationCity?.split(',')[0]}
+              </Typography>
+            </View>
+          </View>
+          <Typography variant="caption" numberOfLines={1} style={{ color: colors.textMuted }}>
+            {bubble.timestamp} • {bubble.weatherCondition} {bubble.weatherTemp}°
+          </Typography>
+        </View>
+        <View style={[styles.moodBadge, { backgroundColor: config.primary, borderColor: colors.ink }]}>
+          <MoodGlyph mood={toMoodKey(bubble.emotion)} size={12} color={inkOnPastel} />
+          <Typography variant="overline" style={{ color: inkOnPastel, marginLeft: 4 }}>
+            {(bubble.secondaryEmotion || config.label).toUpperCase()}
+          </Typography>
+        </View>
       </View>
 
-      <Typography
-        variant="bodySmall"
-        style={{ color: colors.textSecondary, marginVertical: 8 }}
-        numberOfLines={3}
-      >
-        "{bubble.content}"
+      <Typography variant="body" style={{ color: colors.textSecondary, marginTop: 12 }} numberOfLines={4}>
+        “{bubble.content}”
       </Typography>
 
-      <View style={styles.cardFooter}>
-        <Typography variant="caption" style={{ color: colors.textMuted, fontSize: 10 }}>
-          {bubble.locationCity?.split(',')[0]}
-        </Typography>
-        <TouchableOpacity
-          onPress={handleReact}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={styles.heartTapArea}
-        >
-          <Animated.Text style={[{ fontSize: 13 }, heartStyle]}>
-            {liked ? '❤️' : '🤍'}
-          </Animated.Text>
-          <Typography variant="caption" style={{ color: liked ? colors.secondary : colors.textMuted, marginLeft: 3 }}>
-            {displayLikes}
-          </Typography>
-          {bursts.map((id) => (
-            <FloatingHeart key={id} onDone={() => removeBurst(id)} />
+      {!!bubble.tags?.length && (
+        <View style={styles.tagRow}>
+          {bubble.tags.slice(0, 3).map((t) => (
+            <View key={t} style={[styles.echoTag, { borderColor: colors.border }]}>
+              <Typography variant="overline" style={{ color: colors.textMuted }}>
+                #{t.toUpperCase()}
+              </Typography>
+            </View>
           ))}
-        </TouchableOpacity>
+        </View>
+      )}
+
+      {!!bubble.photoUrl && (
+        <Image
+          source={{ uri: bubble.photoUrl }}
+          style={[styles.echoPhoto, { borderColor: colors.ink }]}
+          resizeMode="cover"
+          accessibilityLabel="Photo attached to this echo"
+        />
+      )}
+
+      {/* The tape only appears when the bubble actually carries a voice note. */}
+      {!!bubble.voiceUrl && (
+        <VoiceTape uri={bubble.voiceUrl} durationMs={bubble.voiceDurationMs} tint={config.primary} />
+      )}
+
+      <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+        {REACTIONS.map((rx) => {
+          const isOn = reacted === rx.key;
+          // Only two counts come back from the API; the rest stay blank until
+          // this reader reacts rather than showing an invented tally.
+          const base = rx.key === 'heart' ? bubble.likesCount : rx.key === 'empathy' ? bubble.commentsCount : 0;
+          const shown = base + (isOn ? 1 : 0);
+          return (
+            <TouchableOpacity
+              key={rx.key}
+              onPress={() => handleReact(rx.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isOn }}
+              accessibilityLabel={`${rx.label} this echo`}
+              style={[
+                styles.reactionPill,
+                { borderColor: colors.ink, backgroundColor: isOn ? config.background : colors.surface },
+              ]}
+            >
+              {isOn && rx.key === 'heart' && <ReactionFloater emoji="❤️" triggerKey={floaterKey} />}
+              <ReactionGlyph reaction={rx.key} size={13} color={isOn ? ink : colors.textMuted} />
+              {shown > 0 && (
+                <Animated.View style={isOn ? countStyle : undefined}>
+                  <Typography variant="overline" style={{ color: isOn ? ink : colors.textMuted, marginLeft: 4 }}>
+                    {shown}
+                  </Typography>
+                </Animated.View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
-    </GlassCard>
+    </Tactile>
   );
 };
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const mapRef = useRef<any>(null);
+  // Must be reactive: a module-level Dimensions snapshot can be 0 (page loaded in a
+  // hidden tab) and never updates on rotation or split-screen, collapsing the map.
+  const { height: windowHeight } = useWindowDimensions();
   const { isDark, colors, setThemeMode } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [activeBubble, setActiveBubble] = useState<DisplayBubble | null>(null);
@@ -537,6 +517,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [isFullMap, setIsFullMap] = useState(false);
   const [isScrollEnabled, setIsScrollEnabled] = useState(true);
   const [currentRegion, setCurrentRegion] = useState(INITIAL_REGION);
+  // The web atlas has no Google Maps camera, so it zooms about its own centre.
+  const [webZoom, setWebZoom] = useState(1);
 
 
   const handleZoom = (zoomIn: boolean) => {
@@ -549,6 +531,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       longitudeDelta: Math.max(0.01, Math.min(70, (currentRegion.longitudeDelta || 0.15) * factor)),
     };
     setCurrentRegion(newRegion);
+    setWebZoom((z) => Math.min(4, Math.max(1, zoomIn ? z * 1.4 : z / 1.4)));
     mapRef.current?.animateToRegion?.(newRegion, 300);
   };
 
@@ -576,48 +559,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // Combine and normalize bubbles
   const allBubbles = useMemo(() => {
     const base: DisplayBubble[] = (nearbyApiBubbles && nearbyApiBubbles.length > 0)
-      ? nearbyApiBubbles.map((item, idx) => ({
-          id: item.id || `api-${idx}`,
-          authorName: item.is_incognito ? 'Anonymous Friend' : (item.user_id || 'Traveler'),
-          auraScore: 250,
-          emotion: item.primary_emotion || 'calm',
-          secondaryEmotion: item.secondary_emotion,
-          intensity: item.intensity || 7,
-          content: item.notes || '',
-          locationCity: item.city || 'Worldwide',
-          weatherCondition: item.weather_condition || 'Starry Sky',
-          weatherTemp: item.weather_temp || 18,
-          timestamp: 'Recent',
-          likesCount: item.reactions_count || 0,
-          commentsCount: item.comments_count || 0,
-          isAnonymous: item.is_incognito,
-          latitude: item.latitude || INITIAL_REGION.latitude + (Math.random() - 0.5) * 0.05,
-          longitude: item.longitude || INITIAL_REGION.longitude + (Math.random() - 0.5) * 0.05,
-          canvasX: 40 + (idx * 75) % (SCREEN_WIDTH - 80),
-          canvasY: 60 + (idx * 55) % 180,
-        }))
+      ? toDisplayBubbles(nearbyApiBubbles, INITIAL_REGION.latitude, INITIAL_REGION.longitude)
       : DEFAULT_BUBBLES;
 
-    if (myLocalBubbles && myLocalBubbles.length > 0) {
-      const localMapped: DisplayBubble[] = myLocalBubbles.map((m, idx) => ({
-        ...m,
-        canvasX: 70 + (idx * 65) % (SCREEN_WIDTH - 120),
-        canvasY: 75 + (idx * 45) % 160,
-      }));
-      const existingIds = new Set(localMapped.map((b) => b.id));
-      return [...localMapped, ...base.filter((b) => !existingIds.has(b.id))];
-    }
-
-    return base;
+    return mergeLocalBubbles(base, myLocalBubbles);
   }, [nearbyApiBubbles, myLocalBubbles]);
 
   // Filter bubbles
-  const filteredBubbles = useMemo(() => {
-    if (!selectedFilter || selectedFilter === 'all') return allBubbles;
-    return allBubbles.filter(
-      (b) => b.emotion.toLowerCase() === selectedFilter.toLowerCase()
-    );
-  }, [allBubbles, selectedFilter]);
+  const filteredBubbles = useMemo(
+    () => filterByEmotion(allBubbles, selectedFilter),
+    [allBubbles, selectedFilter]
+  );
 
   // Auto-prompt walkthrough for new users
   useEffect(() => {
@@ -659,10 +611,26 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleRecenter = () => {
     mapRef.current?.animateToRegion?.(INITIAL_REGION, 1000);
+    setWebZoom(1);
     haptics.light();
   };
 
   const activeBubblesCount = pulseData?.active_bubbles_count || allBubbles.length * 18;
+
+  /** Cities represented on the map right now, and the mood leading them. */
+  const cityCount = useMemo(
+    () => new Set(allBubbles.map((b) => b.locationCity?.split(',')[0]).filter(Boolean)).size,
+    [allBubbles]
+  );
+
+  const dominantEmotion = useMemo(() => {
+    const tally = new Map<string, number>();
+    allBubbles.forEach((b) => tally.set(b.emotion, (tally.get(b.emotion) || 0) + 1));
+    return [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'calm';
+  }, [allBubbles]);
+
+  const dominantConfig = getEmotionConfig(dominantEmotion);
+  const dominantInk = emotionInk(dominantConfig, isDark);
 
   // Shimmer sweep for the "share your vibe" bar, triggered on press
   const shimmerX = useSharedValue(-140);
@@ -674,374 +642,353 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     shimmerX.value = withTiming(SCREEN_WIDTH, { duration: 750, easing: Easing.out(Easing.ease) });
   };
 
+  // Contrast: day title 13.7:1 / subtitle 10.1:1 on navy; night title 6.1:1 / subtitle 4.7:1 on citrus.
+  const shareTheme = isDark
+    ? { fill: ['#FF5C38', '#FFB4A3'] as const, title: '#1E1E1E', subtitle: '#252830', pill: '#1E1E1E', pillInk: '#FFFDF9', border: 'rgba(28, 30, 36,0.15)' }
+    : { fill: ['#1E1E1E', '#252830'] as const, title: '#FFFDF9', subtitle: '#5CD694', pill: '#FF5C38', pillInk: '#1E1E1E', border: 'rgba(255, 255, 255,0.10)' };
+
+  const shareScale = useSharedValue(1);
+  const shareScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: shareScale.value }],
+  }));
+  const openShare = () => {
+    haptics.medium();
+    triggerShimmer();
+    (navigation as any).navigate('CreateBubbleModal');
+  };
+
   return (
     <ScreenWrapper backgroundColor={colors.background} style={styles.container}>
-      {/* ── Frosted Pastel Navigation & Theme Bar ── */}
-      <LinearGradient
-        colors={['#FFE3D3', '#FFF2DC', '#E4F3EC']}
-        locations={[0, 0.55, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.topHeader, { borderColor: 'rgba(255,255,255,0.85)' }]}
-      >
-        <View style={styles.headerTitles}>
-          <View style={styles.brandRow}>
-            <MoodSpaceLogo size={30} showBackground animated={false} />
-            <Typography variant="h3" weight="heavy" style={{ color: HEADER_INK, marginLeft: 8 }}>
+      {/* ── Masthead: brand, guide, settings, profile ── */}
+      <View style={[styles.topHeader, { borderBottomColor: colors.border }]}>
+        <View style={styles.brandRow}>
+          <MoodSpaceLogo size={34} showBackground animated={false} />
+          <View style={{ marginLeft: 10, flexShrink: 1 }}>
+            <Typography variant="h4" numberOfLines={1} style={{ color: colors.textPrimary }}>
               MoodSpace
             </Typography>
+            <Typography variant="overline" style={{ color: colors.textMuted }}>
+              FEED
+            </Typography>
           </View>
-          <Typography variant="caption" style={{ color: HEADER_INK_SOFT }}>
-            How is your heart feeling today?
-          </Typography>
         </View>
 
         <View style={styles.headerActions}>
-          {/* Quick Theme Switcher Button (☀️ / 🌙) */}
-          <TouchableOpacity
-            style={[styles.headerIconButton, HEADER_PILL]}
-            onPress={() => {
-              setThemeMode(isDark ? 'light' : 'dark');
-              haptics.selection();
-            }}
-            activeOpacity={0.7}
-          >
-            <Typography style={{ fontSize: 16 }}>{isDark ? '☀️' : '🌙'}</Typography>
-          </TouchableOpacity>
+          {/* Light / Dark / System, spelled out rather than hidden in an icon */}
+          <ThemeToggle />
 
-          {/* Interactive Feature Guide Button */}
+          {/* Chats — no tab of its own in the Stitch bar */}
           <TouchableOpacity
-            style={[styles.headerActionPill, HEADER_PILL]}
+            style={[styles.headerIconButton, { borderColor: colors.ink, backgroundColor: colors.surface }]}
             onPress={() => {
-              setShowTourModal(true);
               haptics.light();
+              (navigation as any).navigate('ChatsTab');
             }}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Chats"
           >
-            <Ionicons name="sparkles" size={14} color={HEADER_INK} />
-            <Typography variant="caption" weight="bold" style={{ color: HEADER_INK, marginLeft: 4 }}>
-              Guide
-            </Typography>
+            <Ionicons name="chatbubbles-outline" size={16} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          {/* Recenter Location Button */}
+          {/* App settings */}
           <TouchableOpacity
-            style={[styles.headerIconButton, HEADER_PILL]}
-            onPress={handleRecenter}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="locate" size={16} color={HEADER_INK} />
-          </TouchableOpacity>
-
-          {/* App Settings Button */}
-          <TouchableOpacity
-            style={[styles.headerIconButton, HEADER_PILL]}
+            style={[styles.headerIconButton, { borderColor: colors.ink, backgroundColor: colors.surface }]}
             onPress={() => {
               haptics.light();
               (navigation as any).navigate('ProfileTab', { screen: 'Settings' });
             }}
             activeOpacity={0.7}
+            accessibilityRole="button"
             accessibilityLabel="App Settings"
           >
-            <Ionicons name="settings-outline" size={16} color={HEADER_INK} />
+            <Ionicons name="settings-outline" size={16} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         scrollEnabled={isScrollEnabled}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ─── Hero Living Mood Map ─── */}
-        <View
-          style={[
-            styles.heroMapContainer,
-            isFullMap ? styles.fullMap : { height: SCREEN_HEIGHT * 0.46 },
-            { borderColor: colors.glass.border },
-          ]}
-          onTouchStart={() => setIsScrollEnabled(false)}
-          onTouchEnd={() => setIsScrollEnabled(true)}
-          onTouchCancel={() => setIsScrollEnabled(true)}
-        >
-          {Platform.OS !== 'web' ? (
-            <MapContainer
-              ref={mapRef}
-              style={StyleSheet.absoluteFill}
-              provider={PROVIDER_GOOGLE}
-              initialRegion={INITIAL_REGION}
-              customMapStyle={isDark ? darkMapStyle : lightMapStyle}
-              userInterfaceStyle={isDark ? 'dark' : 'light'}
-              showsCompass={false}
-              showsUserLocation
-              onRegionChangeComplete={(r: any) => setCurrentRegion(r)}
-            >
-              {filteredBubbles.map((bubble) => (
-                <Marker
-                  key={bubble.id}
-                  coordinate={{
-                    latitude: bubble.latitude,
-                    longitude: bubble.longitude,
-                  }}
-                  onPress={() => handleBubblePress(bubble)}
-                >
-                  <LuminousMoodBubble
-                    id={bubble.id}
-                    emotion={bubble.emotion}
-                    intensity={bubble.intensity}
-                    authorName={bubble.authorName}
-                    isAnonymous={bubble.isAnonymous}
-                    size="sm"
-                    isFloating
-                  />
-                </Marker>
-              ))}
-            </MapContainer>
-          ) : (
-            <WorldMoodCanvas
-              bubbles={filteredBubbles}
-              colors={colors}
-              onBubblePress={handleBubblePress}
-            />
-          )}
-
-          {/* Frosted Fade-out Bottom Gradient */}
-          <LinearGradient
-            colors={['transparent', isDark ? 'rgba(24, 8, 46, 0.75)' : 'rgba(250, 247, 242, 0.85)', colors.background]}
-            locations={[0, 0.7, 1]}
-            style={styles.heroFadeMask}
-            pointerEvents="none"
-          />
-
-          {/* Floating On-Screen Map Zoom & Action Controls */}
-          <View style={styles.mapFloatingControls}>
-            <TouchableOpacity
-              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
-              onPress={() => handleZoom(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="add" size={18} color={colors.textPrimary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
-              onPress={() => handleZoom(false)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="remove" size={18} color={colors.textPrimary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
-              onPress={handleRecenter}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="locate" size={16} color={colors.primary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.mapControlBtn, { backgroundColor: isDark ? 'rgba(18, 20, 32, 0.88)' : 'rgba(255, 255, 255, 0.92)' }]}
-              onPress={() => {
-                setIsFullMap(!isFullMap);
-                haptics.selection();
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name={isFullMap ? 'contract-outline' : 'expand-outline'}
-                size={16}
-                color={colors.textPrimary}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Floating Live Echoes Status Chip */}
-          <View style={[styles.mapStatusChip, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
-            <HeartbeatDot color="#4DB6A0" />
-            <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
-              {activeBubblesCount} echoes worldwide
-            </Typography>
-          </View>
-
-          {/* Floating Emotion Filter Bar over lower edge of map */}
-          <View style={styles.mapFilterOverlay}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScroll}
-            >
-              {EMOTION_FILTERS.map((f) => {
-                const isSelected = (!selectedFilter && f.id === 'all') || selectedFilter === f.id;
-                return (
-                  <SpringyFilterPill
-                    key={f.id}
-                    filter={f}
-                    isSelected={isSelected}
-                    colors={colors}
-                    onPress={() => {
-                      haptics.selection();
-                      setSelectedFilter(f.id === 'all' ? null : f.id);
-                    }}
-                  />
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* ─── Feel-Good Community Section ─── */}
         {!isFullMap && (
-          <View style={styles.bentoSection}>
+          <>
+            {/* ① Live atmosphere strip */}
+            <Animated.View entering={staggeredEntrance(0)} style={styles.blockGap}>
+              <LiveAtmosphereStrip count={pulseData?.active_bubbles_count} />
+            </Animated.View>
 
-            {/* ① Quick Emotion Share — simple, inviting, one line */}
-            <LinearGradient
-              colors={['#FFC9AE', '#FFDFC0', '#FFEBC9']}
-              locations={[0, 0.55, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[styles.quickShareBar, {
-                shadowColor: colors.primary,
-                borderColor: 'rgba(255,255,255,0.9)',
-                overflow: 'hidden',
-              }]}
-            >
-              <Animated.View style={[styles.shimmerStrip, shimmerStyle]} pointerEvents="none">
-                <LinearGradient
-                  colors={['transparent', 'rgba(255,255,255,0.65)', 'transparent']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ flex: 1 }}
-                />
-              </Animated.View>
-              <View style={styles.quickShareLeft}>
-                <Typography style={{ fontSize: 22 }}>🫧</Typography>
-                <View style={{ marginLeft: 10 }}>
-                  <Typography variant="body" weight="bold" style={{ color: HEADER_INK }}>
-                    What's your vibe right now?
-                  </Typography>
-                  <Typography variant="caption" style={{ color: HEADER_INK_SOFT }}>
-                    Drop a mood bubble on the map
-                  </Typography>
-                </View>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  haptics.medium();
-                  triggerShimmer();
-                  (navigation as any).navigate('CreateBubbleModal');
-                }}
-                style={styles.quickShareBtn}
-                activeOpacity={0.82}
-              >
-                <Typography variant="caption" weight="bold" style={{ color: colors.primaryDark }}>
-                  Share
-                </Typography>
-              </TouchableOpacity>
-            </LinearGradient>
-
-            {/* ② Emotion pills — horizontal quick-filter row */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.emotionPillsRow}
-            >
-              {[
-                { emotion: 'joy', emoji: '☀️', label: 'Joy', color: '#F7B731' },
-                { emotion: 'calm', emoji: '🌿', label: 'Calm', color: '#26D0CE' },
-                { emotion: 'love', emoji: '💖', label: 'Love', color: '#FF85A1' },
-                { emotion: 'excitement', emoji: '🎉', label: 'Hype', color: '#FF6B35' },
-                { emotion: 'sadness', emoji: '💜', label: 'Blue', color: '#4776E6' },
-                { emotion: 'loneliness', emoji: '🕊️', label: 'Quiet', color: '#8E54E9' },
-              ].map((item) => {
-                const isActive = selectedFilter === item.emotion;
-                return (
-                  <TouchableOpacity
-                    key={item.emotion}
-                    activeOpacity={0.75}
-                    onPress={() => {
-                      haptics.selection();
-                      setSelectedFilter(isActive ? null : item.emotion);
-                    }}
-                    style={[
-                      styles.emotionPillChip,
-                      {
-                        backgroundColor: isActive ? item.color : colors.surface,
-                        borderColor: isActive ? item.color : colors.border,
-                        shadowColor: isActive ? item.color : 'transparent',
-                        shadowOpacity: isActive ? 0.5 : 0.25,
-                        shadowRadius: isActive ? 10 : 6,
-                        elevation: isActive ? 7 : 3,
-                      },
-                    ]}
-                  >
-                    <Typography style={{ fontSize: 18 }}>{item.emoji}</Typography>
-                    <Typography
-                      variant="caption"
-                      weight={isActive ? 'bold' : 'medium'}
-                      style={{ color: isActive ? '#FFFFFF' : colors.textSecondary, marginTop: 3, fontSize: 11 }}
-                    >
-                      {item.label}
-                    </Typography>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* ③ Trending Emotions Ticker */}
-            <TrendingMoodsTicker
-              trends={SAMPLE_TRENDS}
-              onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
-            />
-
-            {/* ④ Stats Row: Streak + Pulse */}
-            <View style={styles.bentoRow}>
-              <View style={styles.bentoHalf}>
-                <StreakWidget currentStreak={7} maxStreak={30} />
-              </View>
-              <View style={styles.bentoHalf}>
-                <View style={[styles.bentoFull]}>
-                  <MoodPulseCard
-                    data={SAMPLE_PULSE_DATA}
-                    onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* ⑤ Community Spotlight */}
-            <View style={styles.bentoFull}>
-              <CommunitySpotlight
-                name="Quiet Reflections"
-                description="A serene space to share calm moments, morning coffee thoughts, and peaceful sunsets."
-                memberCount={142}
-                memberAvatars={['Aarav', 'Sophie', 'Marcus', 'Elena']}
-                emotion="calm"
-                onJoinPress={() => {
-                  navigation.navigate('CommunityFlow');
-                  haptics.success();
-                }}
+            {/* ② Lucky Vibe deck */}
+            <Animated.View entering={staggeredEntrance(1)} style={styles.blockGap}>
+              <LuckyVibeCard
+                onVibePress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
               />
+            </Animated.View>
+          </>
+        )}
+
+        {/* ③ Planetary live vibe map */}
+        <Tactile offset={4} radius={24} style={styles.blockGap} contentStyle={styles.mapCard}>
+          <View style={styles.mapCardHeader}>
+            <Ionicons name="globe-outline" size={18} color={colors.textPrimary} />
+            <Typography variant="h4" style={{ color: colors.textPrimary, marginLeft: 8, flex: 1 }}>
+              Planetary Live Vibe
+            </Typography>
+            <View style={[styles.zoomBadge, { backgroundColor: colors.primary, borderColor: colors.ink }]}>
+              <Typography variant="overline" style={{ color: inkOnPastel }}>
+                ZOOMED {webZoom.toFixed(1)}x
+              </Typography>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.heroMapContainer,
+              { borderColor: colors.ink },
+              isFullMap ? [styles.fullMap, { height: windowHeight * 0.72 }] : { height: windowHeight * 0.34 },
+            ]}
+            onTouchStart={() => setIsScrollEnabled(false)}
+            onTouchEnd={() => setIsScrollEnabled(true)}
+            onTouchCancel={() => setIsScrollEnabled(true)}
+          >
+            {Platform.OS !== 'web' ? (
+              <MapContainer
+                ref={mapRef}
+                style={StyleSheet.absoluteFill}
+                provider={PROVIDER_GOOGLE}
+                initialRegion={INITIAL_REGION}
+                customMapStyle={isDark ? darkMapStyle : lightMapStyle}
+                userInterfaceStyle={isDark ? 'dark' : 'light'}
+                showsCompass={false}
+                showsUserLocation
+                onRegionChangeComplete={(r: any) => setCurrentRegion(r)}
+              >
+                {filteredBubbles.map((bubble) => (
+                  <Marker
+                    key={bubble.id}
+                    coordinate={{
+                      latitude: bubble.latitude,
+                      longitude: bubble.longitude,
+                    }}
+                    onPress={() => handleBubblePress(bubble)}
+                  >
+                    <LuminousMoodBubble
+                      id={bubble.id}
+                      emotion={bubble.emotion}
+                      intensity={bubble.intensity}
+                      authorName={bubble.authorName}
+                      isAnonymous={bubble.isAnonymous}
+                      size="sm"
+                      isFloating
+                    />
+                  </Marker>
+                ))}
+              </MapContainer>
+            ) : (
+              <WorldMoodCanvas
+                bubbles={filteredBubbles}
+                colors={colors}
+                isDark={isDark}
+                zoom={webZoom}
+                onBubblePress={handleBubblePress}
+              />
+            )}
+
+            {/* Floating on-screen map zoom & action controls */}
+            <View style={styles.mapFloatingControls}>
+              <TouchableOpacity
+                style={[styles.mapControlBtn, { backgroundColor: colors.surface, borderColor: colors.ink }]}
+                onPress={() => handleZoom(true)}
+                activeOpacity={0.8}
+                accessibilityLabel="Zoom in"
+              >
+                <Ionicons name="add" size={18} color={colors.textPrimary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.mapControlBtn, { backgroundColor: colors.surface, borderColor: colors.ink }]}
+                onPress={() => handleZoom(false)}
+                activeOpacity={0.8}
+                accessibilityLabel="Zoom out"
+              >
+                <Ionicons name="remove" size={18} color={colors.textPrimary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.mapControlBtn, { backgroundColor: colors.secondary, borderColor: colors.ink }]}
+                onPress={handleRecenter}
+                activeOpacity={0.8}
+                accessibilityLabel="Recenter map"
+              >
+                <Ionicons name="locate" size={16} color={inkOnPastel} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.mapControlBtn, { backgroundColor: colors.surface, borderColor: colors.ink }]}
+                onPress={() => {
+                  setIsFullMap(!isFullMap);
+                  haptics.selection();
+                }}
+                activeOpacity={0.8}
+                accessibilityLabel={isFullMap ? 'Exit full screen map' : 'Expand map'}
+              >
+                <Ionicons
+                  name={isFullMap ? 'contract-outline' : 'expand-outline'}
+                  size={16}
+                  color={colors.textPrimary}
+                />
+              </TouchableOpacity>
             </View>
 
-            {/* ⑥ Recent Echoes Feed */}
-            <View style={styles.feedHeader}>
-              <View>
-                <Typography variant="h4" weight="heavy" style={{ color: colors.textPrimary }}>
-                  Recent Echoes 🌍
+            {/* Live activity pulse */}
+            <LiveActivityPulse count={activeBubblesCount} colors={colors} />
+          </View>
+
+          <View style={styles.mapCardFooter}>
+            <Typography variant="caption" style={{ color: colors.textSecondary, flex: 1 }}>
+              Global dominant:{' '}
+              <Typography variant="caption" weight="bold" style={{ color: dominantInk }}>
+                {dominantConfig.label}
+              </Typography>
+            </Typography>
+            <TouchableOpacity
+              onPress={() => {
+                haptics.light();
+                setIsFullMap(true);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Explore the full atlas"
+            >
+              <Typography variant="caption" weight="bold" style={[styles.atlasLink, { color: colors.accentInk }]}>
+                Explore Atlas →
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </Tactile>
+
+        {!isFullMap && (
+          <View>
+            {/* ④ Drop a bubble */}
+            <Animated.View entering={staggeredEntrance(2)} style={[styles.blockGap, shareScaleStyle]}>
+              <Tactile
+                offset={4}
+                radius={16}
+                backgroundColor={colors.primary}
+                contentStyle={styles.ctaButton}
+                onPress={openShare}
+                accessibilityLabel="Drop a mood bubble on the map"
+              >
+                <Animated.View style={[styles.shimmerStrip, shimmerStyle]} pointerEvents="none">
+                  <LinearGradient
+                    colors={['transparent', 'rgba(255,255,255,0.65)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ flex: 1 }}
+                  />
+                </Animated.View>
+                <Ionicons name="add" size={20} color={inkOnPastel} />
+                <Typography variant="button" style={{ color: inkOnPastel, marginLeft: 6 }}>
+                  Drop a Mood Bubble on the Map
                 </Typography>
-                <View style={[styles.sectionUnderline, { backgroundColor: colors.primary }]} />
+              </Tactile>
+            </Animated.View>
+
+            {/* ⑤ Global flow filter */}
+            <Animated.View entering={staggeredEntrance(3)} style={styles.blockGap}>
+              <View style={styles.sectionHeader}>
+                <Typography variant="overline" style={{ color: colors.textMuted }}>
+                  GLOBAL FLOW FILTER
+                </Typography>
+                <Typography variant="caption" style={{ color: colors.textMuted }}>
+                  Tap to isolate
+                </Typography>
               </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterScroll}
+              >
+                {EMOTION_FILTERS.map((f) => {
+                  const isSelected = (!selectedFilter && f.id === 'all') || selectedFilter === f.id;
+                  return (
+                    <SpringyFilterPill
+                      key={f.id}
+                      filter={f}
+                      isSelected={isSelected}
+                      colors={colors}
+                      isDark={isDark}
+                      count={f.id === 'all' ? formatCompact(activeBubblesCount) : undefined}
+                      onPress={() => setSelectedFilter(f.id === 'all' ? null : f.id)}
+                    />
+                  );
+                })}
+              </ScrollView>
+            </Animated.View>
+
+            {/* ⑥ Community resonance stamps */}
+            <Animated.View entering={staggeredEntrance(4)} style={styles.blockGap}>
+              <TrendingMoodsTicker
+                trends={SAMPLE_TRENDS}
+                onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
+              />
+            </Animated.View>
+
+            {/* ⑦ Streak ticket + verified circle */}
+            <Animated.View entering={staggeredEntrance(5)} style={[styles.blockGap, styles.bentoRow]}>
+              <View style={styles.bentoWide}>
+                <StreakWidget
+                  style={styles.fillCard}
+                  currentStreak={7}
+                  maxStreak={30}
+                  onPress={() => {
+                    haptics.light();
+                    (navigation as any).navigate('ProfileTab');
+                  }}
+                />
+              </View>
+              <View style={styles.bentoNarrow}>
+                <CommunitySpotlight
+                  style={styles.fillCard}
+                  name="Quiet Reflections"
+                  description="A serene space for calm moments."
+                  memberCount={142}
+                  memberAvatars={['Aarav', 'Sophie', 'Marcus', 'Elena']}
+                  emotion="calm"
+                  onJoinPress={() => {
+                    navigation.navigate('CommunityFlow');
+                    haptics.success();
+                  }}
+                />
+              </View>
+            </Animated.View>
+
+            {/* ⑧ 24h emotional spectrum */}
+            <Animated.View entering={staggeredEntrance(6)} style={styles.blockGap}>
+              <MoodPulseCard
+                data={SAMPLE_PULSE_DATA}
+                onEmotionPress={(emotion) => setSelectedFilter(selectedFilter === emotion ? null : emotion)}
+              />
+            </Animated.View>
+
+            {/* ⑨ Recent echoes */}
+            <Animated.View entering={staggeredEntrance(7)} style={styles.feedHeader}>
+              <Typography variant="h3" style={{ color: colors.textPrimary }}>
+                Recent Echoes
+              </Typography>
               {selectedFilter && (
                 <TouchableOpacity
                   onPress={() => setSelectedFilter(null)}
-                  style={[styles.clearFilterPill, { backgroundColor: colors.surfaceHighlight }]}
+                  style={[styles.clearFilterPill, { backgroundColor: colors.surfaceWarm, borderColor: colors.ink }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Clear ${selectedFilter} filter`}
                 >
-                  <Typography variant="caption" weight="semibold" style={{ color: colors.primaryDark }}>
-                    Clear {selectedFilter} ✕
+                  <Typography variant="overline" style={{ color: colors.textPrimary }}>
+                    CLEAR {selectedFilter.toUpperCase()} ✕
                   </Typography>
                 </TouchableOpacity>
               )}
-            </View>
+            </Animated.View>
 
             {isFeedLoading && filteredBubbles.length === 0 ? (
               <View style={styles.feedSkeletonRow}>
@@ -1049,17 +996,27 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <SkeletonCard style={styles.feedSkeletonCard} />
               </View>
             ) : (
-              <BentoGrid columns={2} gap={12} animated>
+              <BentoGrid columns={1} gap={12} animated>
                 {filteredBubbles.map((bubble) => (
                   <FeedEchoCard
                     key={bubble.id}
                     bubble={bubble}
                     colors={colors}
+                    isDark={isDark}
                     onPress={() => handleBubblePress(bubble)}
                   />
                 ))}
               </BentoGrid>
             )}
+
+            {/* ⑩ Heartbeat footer */}
+            <View style={styles.heartbeatFooter}>
+              <HeartbeatDot color={colors.accent} />
+              <Typography variant="overline" style={{ color: colors.textMuted, marginHorizontal: 8 }}>
+                LIVE HEARTBEAT OF {cityCount} {cityCount === 1 ? 'CITY' : 'CITIES'}
+              </Typography>
+              <HeartbeatDot color={colors.accent} />
+            </View>
           </View>
         )}
       </ScrollView>
@@ -1104,280 +1061,252 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 8 : 12,
+    paddingTop: Platform.OS === 'ios' ? 4 : 8,
     paddingBottom: 10,
-    marginHorizontal: 14,
-    marginTop: 4,
-    borderRadius: 20,
-    borderWidth: 1,
+    borderBottomWidth: 2,
     zIndex: 10,
-  },
-  headerTitles: {
-    flex: 1,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 1,
+    marginRight: 8,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  headerActionPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
+    // The controls keep their size; the brand truncates instead of pushing
+    // them past the gutter on narrow phones.
+    flexShrink: 0,
   },
   headerIconButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 1,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 6,
   },
   scrollContent: {
-    paddingBottom: 110,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 140,
+  },
+  blockGap: {
+    marginBottom: 16,
+  },
+  mapCard: {
+    padding: 12,
+  },
+  mapCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  zoomBadge: {
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   heroMapContainer: {
-    width: SCREEN_WIDTH - 24,
-    marginHorizontal: 12,
-    marginTop: 10,
-    position: 'relative',
+    borderWidth: 2,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderRadius: 28,
-    borderWidth: 1,
   },
   fullMap: {
-    width: '100%',
-    marginHorizontal: 0,
-    borderRadius: 0,
-    height: SCREEN_HEIGHT * 0.85,
-    marginTop: 0,
+    borderRadius: 16,
   },
-  heroFadeMask: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 60,
+  mapCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  atlasLink: {
+    textDecorationLine: 'underline',
   },
   mapFloatingControls: {
     position: 'absolute',
-    top: 14,
-    right: 14,
-    flexDirection: 'column',
-    gap: 8,
-    zIndex: 20,
+    right: 10,
+    bottom: 10,
+    alignItems: 'center',
   },
   mapControlBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    marginTop: 6,
   },
   mapStatusChip: {
     position: 'absolute',
-    top: 14,
-    left: 14,
+    top: 10,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 8,
-    zIndex: 10,
-  },
-  pulsingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#4DB6A0',
-  },
-  mapFilterOverlay: {
-    position: 'absolute',
-    bottom: 12,
-    left: 12,
-    right: 12,
-    zIndex: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 2,
   },
   filterScroll: {
-    gap: 8,
-    paddingRight: 12,
+    paddingVertical: 4,
+    paddingRight: 8,
   },
   filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 18,
-    borderWidth: 1,
-  },
-  bentoSection: {
+    justifyContent: 'center',
+    // Fixed height: the glyph chips and the icon chip measured 40 vs 38 and the
+    // row sat a couple of pixels out of true.
+    height: 40,
     paddingHorizontal: 14,
-    paddingTop: 14,
-    gap: 16,
+    borderRadius: 999,
+    borderWidth: 2,
+    marginRight: 8,
   },
-  // Quick Vibe Share Bar — full-width pastel pill
-  quickShareBar: {
+  filterCount: {
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    marginLeft: 6,
+  },
+  sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     justifyContent: 'space-between',
-    borderRadius: 20,
-    borderWidth: 1,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 5,
+    marginBottom: 8,
   },
-  quickShareLeft: {
+  ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    height: 54,
+    overflow: 'hidden',
   },
   shimmerStrip: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    left: 0,
-    width: 140,
-    zIndex: 1,
-  },
-  quickShareBtn: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 20,
-    marginLeft: 12,
-  },
-  // Horizontal emotion pill chips
-  emotionPillsRow: {
-    gap: 10,
-    paddingRight: 14,
-    paddingBottom: 2,
-  },
-  emotionPillChip: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    minWidth: 60,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    width: 120,
   },
   bentoRow: {
     flexDirection: 'row',
-    gap: 12,
+    // Both cards in this row stretch to the taller one so their bases line up.
     alignItems: 'stretch',
   },
-  bentoHalf: {
+  bentoWide: {
+    flex: 3,
+    marginRight: 12,
+  },
+  fillCard: {
     flex: 1,
   },
-  bentoFull: {
-    width: '100%',
+  bentoNarrow: {
+    flex: 2,
   },
   feedHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
-  },
-  sectionUnderline: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 4,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   clearFilterPill: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 2,
   },
-
   feedCard: {
     padding: 14,
+  },
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
-  emotionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cityTag: {
+    borderWidth: 2,
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    marginLeft: 6,
+    maxWidth: 110,
+  },
+  moodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginLeft: 8,
   },
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-    paddingTop: 8,
+    flexWrap: 'wrap',
+    borderTopWidth: 2,
+    marginTop: 12,
+    paddingTop: 12,
   },
-  heartTapArea: {
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+  },
+  echoTag: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 6,
+    marginTop: 4,
+  },
+  echoPhoto: {
+    width: '100%',
+    height: 180,
+    borderWidth: 2,
+    borderRadius: 14,
+    marginTop: 12,
+  },
+  reactionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginRight: 8,
+    marginTop: 4,
+  },
+  heartbeatFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
   },
   feedSkeletonRow: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
   },
   feedSkeletonCard: {
     flex: 1,
-    marginBottom: 0,
-  },
-  floatingHeart: {
-    position: 'absolute',
-    bottom: 10,
-    left: 0,
-    fontSize: 15,
-  },
-  ambientCanvas: {
-    flex: 1,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  ambientGlow1: {
-    position: 'absolute',
-    top: '15%',
-    left: '10%',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(108, 92, 231, 0.18)',
-  },
-  ambientGlow2: {
-    position: 'absolute',
-    bottom: '20%',
-    right: '5%',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: 'rgba(0, 206, 201, 0.12)',
-  },
-  canvasMarkerWrapper: {
-    position: 'absolute',
+    height: 150,
+    marginHorizontal: 4,
   },
 });

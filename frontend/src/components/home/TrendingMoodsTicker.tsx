@@ -1,19 +1,19 @@
-import React, { useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
-import { springs, shadows, getEmotionConfig } from '@/theme';
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
+import { springs, getEmotionConfig, emotionInk, inkOnPastel } from '@/theme';
 import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
+import { MoodGlyph, toMoodKey } from '@/components/mood/MoodGlyph';
 import { haptics } from '@/theme/haptics';
 
 interface TrendItem {
   emotion: string;
   changePercent: number; // positive = trending up
+  /** Sticker title, e.g. "Caffeine Rush". Falls back to the mood label. */
+  label?: string;
+  /** Where it's resonating, e.g. "Echoing in 31 cafés". */
+  caption?: string;
 }
 
 interface TrendingMoodsTickerProps {
@@ -21,163 +21,171 @@ interface TrendingMoodsTickerProps {
   onEmotionPress?: (emotion: string) => void;
 }
 
-const TrendPill: React.FC<{
+/**
+ * A dashed sticker, tilted on the page and lifted off it by a hard ink block.
+ * Tapping stamps it — and straightens it, the way Stitch's sticker unrotates
+ * on hover.
+ */
+const StampSticker: React.FC<{
   item: TrendItem;
+  tilt: number;
   onPress?: () => void;
-}> = ({ item, onPress }) => {
-  const { colors } = useTheme();
+}> = ({ item, tilt, onPress }) => {
+  const { colors, isDark } = useTheme();
+  const [stamped, setStamped] = useState(false);
   const scale = useSharedValue(1);
   const config = getEmotionConfig(item.emotion);
+  const ink = emotionInk(config, isDark);
+  const rising = item.changePercent >= 0;
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${stamped ? 0 : tilt}deg` }, { scale: scale.value }],
   }));
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.93, springs.stiff);
-    haptics.light();
+  const handlePress = () => {
+    if (!stamped) {
+      setStamped(true);
+      haptics.success();
+    } else {
+      haptics.light();
+    }
+    scale.value = withSequence(withSpring(0.94, springs.stiff), withSpring(1, springs.stiff));
+    onPress?.();
   };
-  const handlePressOut = () => {
-    scale.value = withSpring(1, springs.bouncy);
-  };
-
-  const isUp = item.changePercent >= 0;
 
   return (
-    <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-      <Animated.View
+    <Animated.View style={[styles.stickerCell, animStyle]}>
+      {/* hard ink block — Stitch's shadow-[3px_3px_0px] */}
+      <View style={[styles.stickerShadow, { backgroundColor: colors.hardShadow }]} pointerEvents="none" />
+
+      <Pressable
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityState={{ selected: stamped }}
+        accessibilityLabel={`${item.label ?? config.label}, ${rising ? 'up' : 'down'} ${Math.abs(item.changePercent)} percent in 24 hours`}
         style={[
-          styles.pill,
-          { backgroundColor: colors.glass.surface, borderColor: config.border },
-          shadows.neonEdge(config.primary),
-          animatedStyle,
+          styles.sticker,
+          { borderColor: colors.ink, backgroundColor: stamped ? config.background : colors.surface },
         ]}
       >
-        <Typography variant="body" style={{ marginRight: 6 }}>
-          {config.emoji}
-        </Typography>
-        <Typography variant="caption" weight="semibold" style={{ color: colors.textPrimary }}>
-          {config.label}
-        </Typography>
-        <View
-          style={[
-            styles.badge,
-            { backgroundColor: isUp ? colors.successLight : colors.errorLight },
-          ]}
-        >
-          <Typography
-            variant="caption"
-            weight="bold"
-            style={{ color: isUp ? colors.success : colors.error, fontSize: 10 }}
-          >
-            {isUp ? '↑' : '↓'} {Math.abs(item.changePercent)}%
-          </Typography>
+        <View style={styles.stickerTop}>
+          <MoodGlyph mood={toMoodKey(item.emotion)} size={24} color={ink} />
+          <View style={[styles.countBadge, { backgroundColor: config.primary, borderColor: colors.ink }]}>
+            <Typography variant="overline" style={{ color: inkOnPastel }}>
+              {rising ? '+' : '−'}{Math.abs(item.changePercent)}%
+            </Typography>
+          </View>
         </View>
-      </Animated.View>
-    </Pressable>
+
+        <Typography variant="h4" numberOfLines={1} style={{ color: colors.textPrimary, marginTop: 8 }}>
+          {item.label ?? config.label}
+        </Typography>
+        <Typography variant="caption" numberOfLines={2} style={{ color: colors.textMuted, marginTop: 2 }}>
+          {item.caption ?? `${rising ? 'Rising' : 'Softening'} across the map in 24h`}
+        </Typography>
+
+        {stamped && (
+          <View style={[styles.stampedMark, { borderColor: ink }]}>
+            <Typography variant="overline" style={{ color: ink }}>
+              STAMPED
+            </Typography>
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 };
 
 /**
- * TrendingMoodsTicker — horizontal scrolling row of emotion trend pills
- * Auto-scrolls slowly, pauses on touch interaction
+ * TrendingMoodsTicker — the Stitch "Community Resonance" board: a two-up grid
+ * of tilted dashed stickers you tap to stamp, which also filters the feed.
  */
-export const TrendingMoodsTicker: React.FC<TrendingMoodsTickerProps> = ({
-  trends,
-  onEmotionPress,
-}) => {
-  const scrollRef = useRef<ScrollView>(null);
-  const scrollXRef = useRef(0);
-  const autoScrollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isPaused = useRef(false);
-
-  useEffect(() => {
-    autoScrollTimer.current = setInterval(() => {
-      if (!isPaused.current && scrollRef.current) {
-        scrollXRef.current += 1;
-        scrollRef.current.scrollTo({ x: scrollXRef.current, animated: false });
-      }
-    }, 40);
-
-    return () => {
-      if (autoScrollTimer.current) clearInterval(autoScrollTimer.current);
-    };
-  }, []);
-
-  const handleScrollBeginDrag = () => {
-    isPaused.current = true;
-  };
-
-  const handleScrollEndDrag = () => {
-    // Resume auto-scroll after 3 seconds
-    setTimeout(() => {
-      isPaused.current = false;
-    }, 3000);
-  };
-
+export const TrendingMoodsTicker: React.FC<TrendingMoodsTickerProps> = ({ trends, onEmotionPress }) => {
   const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
-      <Typography variant="overline" style={[styles.sectionLabel, { color: colors.textMuted }]}>
-        TRENDING
-      </Typography>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        onScrollBeginDrag={handleScrollBeginDrag}
-        onScrollEndDrag={handleScrollEndDrag}
-        onScroll={(e) => {
-          scrollXRef.current = e.nativeEvent.contentOffset.x;
-        }}
-        scrollEventThrottle={16}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {trends.map((item) => (
-          <TrendPill
+    <View>
+      <View style={styles.header}>
+        <Typography variant="h4" style={{ color: colors.textPrimary }}>
+          Community Resonance
+        </Typography>
+        <View style={[styles.hintBadge, { borderColor: colors.ink, backgroundColor: colors.secondary }]}>
+          <Typography variant="overline" style={{ color: inkOnPastel }}>
+            TAP TO STAMP
+          </Typography>
+        </View>
+      </View>
+
+      <View style={styles.grid}>
+        {trends.slice(0, 4).map((item, i) => (
+          <StampSticker
             key={item.emotion}
             item={item}
+            tilt={i % 2 === 0 ? -2 : 2}
             onPress={() => onEmotionPress?.(item.emotion)}
           />
         ))}
-        {/* Duplicate for infinite scroll illusion */}
-        {trends.map((item) => (
-          <TrendPill
-            key={`dup-${item.emotion}`}
-            item={item}
-            onPress={() => onEmotionPress?.(item.emotion)}
-          />
-        ))}
-      </ScrollView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: 8,
-  },
-  sectionLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  pill: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  badge: {
-    marginLeft: 8,
-    paddingHorizontal: 6,
+  hintBadge: {
+    borderWidth: 2,
+    borderRadius: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  stickerCell: {
+    width: '47%',
+    marginBottom: 14,
+    marginRight: 3,
+  },
+  stickerShadow: {
+    position: 'absolute',
+    top: 3,
+    left: 3,
+    right: -3,
+    bottom: -3,
+    borderRadius: 14,
+  },
+  sticker: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    padding: 12,
+    minHeight: 118,
+  },
+  stickerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  countBadge: {
+    borderWidth: 2,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  stampedMark: {
+    alignSelf: 'flex-start',
+    borderWidth: 1.5,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    marginTop: 8,
+    transform: [{ rotate: '-6deg' }],
   },
 });

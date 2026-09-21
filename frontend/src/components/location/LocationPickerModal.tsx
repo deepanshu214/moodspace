@@ -208,12 +208,12 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
                   <Ionicons
                     name="location-outline"
                     size={18}
-                    color={isSelected ? colors.primaryLight : colors.textMuted}
+                    color={isSelected ? colors.accentInk : colors.textMuted}
                   />
                   <Typography
                     variant="body"
                     weight={isSelected ? 'bold' : 'regular'}
-                    color={isSelected ? colors.primaryLight : colors.textPrimary}
+                    color={isSelected ? colors.accentInk : colors.textPrimary}
                     style={styles.presetText}
                   >
                     {preset.cityName}
@@ -234,11 +234,11 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 15, 0.75)',
+    backgroundColor: 'rgba(18, 19, 22, 0.75)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: 'rgba(18, 20, 32, 0.94)',
+    backgroundColor: 'rgba(28, 30, 36, 0.94)',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: theme.spacing.xl,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderBottomWidth: 0,
     borderColor: 'rgba(255, 255, 255, 0.12)',
-    shadowColor: '#6C5CE7',
+    shadowColor: '#FF5C38',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
@@ -261,9 +261,9 @@ const styles = StyleSheet.create({
   gpsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.35)',
+    borderColor: 'rgba(255, 92, 56, 0.35)',
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   presetRowActive: {
-    backgroundColor: 'rgba(108, 92, 231, 0.08)',
+    backgroundColor: 'rgba(255, 92, 56, 0.08)',
     borderRadius: theme.radius.sm,
   },
   presetText: {

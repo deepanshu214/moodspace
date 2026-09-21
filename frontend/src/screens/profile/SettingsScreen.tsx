@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Switch, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+  ScrollView,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
@@ -14,6 +20,7 @@ import { useTheme, ThemeMode } from '@/context';
 import { Ionicons } from '@expo/vector-icons';
 import { PrivacySettingsPayload } from '@/api/types';
 import { AppWalkthroughModal, InteractiveFeatureTour } from '@/components/tutorial';
+import { showAlert } from '@/components/common/AppDialog';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Settings'>;
 
@@ -49,22 +56,22 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleExportData = () => {
-    Alert.alert(
+    showAlert(
       'Export Emotional Journey',
       'A complete encrypted archive of your emotional check-ins, reflections, and sanctuary contributions will be prepared for export.',
-      [{ text: 'Cancel', style: 'cancel' }, { text: 'Download Archive', onPress: () => Alert.alert('Export Started', 'Your emotional data package is compiling.') }]
+      [{ text: 'Cancel', style: 'cancel' }, { text: 'Download Archive', onPress: () => showAlert('Export Started', 'Your emotional data package is compiling.') }]
     );
   };
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you wish to disconnect from MoodSpace?', [
+    showAlert('Sign Out', 'Are you sure you wish to disconnect from MoodSpace?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: () => logoutUser() },
     ]);
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    showAlert(
       'Delete Account',
       'Are you sure you want to permanently erase your emotional journey? This action cannot be undone.',
       [
@@ -77,16 +84,17 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
       {/* ── Top Bar ── */}
-      <View style={styles.topBar}>
-        <IconButton
-          icon={<Ionicons name="arrow-back" size={22} color={colors.textPrimary} />}
-          variant="ghost"
+      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
-        />
-        <Typography variant="title" weight="bold">
+          style={[styles.backBtn, { borderColor: colors.ink, backgroundColor: colors.surface }]}
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Typography variant="h4" style={{ color: colors.textPrimary, flex: 1, marginLeft: 12 }}>
           Settings & Privacy
         </Typography>
-        <View style={{ width: 44 }} />
       </View>
 
       {/* ── 0. APPEARANCE & THEME ── */}
@@ -118,12 +126,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                   <Ionicons
                     name={opt.icon as any}
                     size={20}
-                    color={active ? colors.primaryLight : colors.textMuted}
+                    color={active ? colors.accentInk : colors.textMuted}
                   />
                   <Typography
                     variant="caption"
                     weight={active ? 'bold' : 'medium'}
-                    color={active ? colors.primaryLight : colors.textSecondary}
+                    color={active ? colors.accentInk : colors.textSecondary}
                     style={{ marginTop: 4 }}
                   >
                     {opt.label}
@@ -421,8 +429,17 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingBottom: theme.spacing.md,
     marginBottom: theme.spacing.xl,
+    borderBottomWidth: 2,
+  },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   section: {
     marginBottom: theme.spacing.xl,
@@ -484,12 +501,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   themeOptionBtnActive: {
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
-    borderColor: theme.colors.primaryLight,
+    backgroundColor: theme.colors.surfaceWarm,
+    borderColor: theme.colors.ink,
   },
   versionText: {
     textAlign: 'center',

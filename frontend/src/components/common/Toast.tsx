@@ -83,30 +83,30 @@ export const Toast: React.FC<ToastProps> = ({
         return {
           icon: 'checkmark-circle' as const,
           color: colors.success,
-          gradient: [colors.success, '#00b894'] as [string, string],
-          border: 'rgba(0, 184, 148, 0.4)',
+          gradient: [colors.success, '#5CD694'] as [string, string],
+          border: 'rgba(92, 214, 148, 0.4)',
         };
       case 'error':
         return {
           icon: 'alert-circle' as const,
           color: colors.error,
-          gradient: [colors.error, '#ff7675'] as [string, string],
-          border: 'rgba(255, 118, 117, 0.4)',
+          gradient: [colors.error, '#F87171'] as [string, string],
+          border: 'rgba(248, 113, 113, 0.4)',
         };
       case 'warning':
         return {
           icon: 'warning' as const,
           color: colors.warning,
-          gradient: [colors.warning, '#fdcb6e'] as [string, string],
-          border: 'rgba(253, 203, 110, 0.4)',
+          gradient: [colors.warning, '#FF5C38'] as [string, string],
+          border: 'rgba(255, 92, 56, 0.4)',
         };
       case 'info':
       default:
         return {
           icon: 'information-circle' as const,
           color: colors.info,
-          gradient: [colors.info, '#0984e3'] as [string, string],
-          border: 'rgba(9, 132, 227, 0.4)',
+          gradient: [colors.info, '#60A5FA'] as [string, string],
+          border: 'rgba(96, 165, 250, 0.4)',
         };
     }
   };

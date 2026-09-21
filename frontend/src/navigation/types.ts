@@ -72,6 +72,7 @@ export type ProfileStackParamList = {
 
 // Main Bottom Tabs
 export type MainTabParamList = {
+  MapTab: undefined;
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
   CreateBubbleTab: undefined;
   NotificationsTab: undefined;

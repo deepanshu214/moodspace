@@ -97,7 +97,7 @@ const FALLBACK_CIRCLES: FallbackCircle[] = [
 ];
 
 export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -134,10 +134,20 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScreenWrapper style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       {/* Top App Bar */}
       <View style={styles.appBar}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.backBtn, { borderColor: colors.ink, backgroundColor: colors.surface }]}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+        </TouchableOpacity>
+
         <View style={styles.titleColumn}>
           <View style={styles.headerBadge}>
             <Ionicons name="people" size={14} color={colors.accentInk} />
@@ -268,6 +278,16 @@ export const CommunityListScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 2,
   },
   appBar: {
     paddingHorizontal: 20,

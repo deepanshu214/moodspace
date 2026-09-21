@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { IconButton } from '@/components/common/IconButton';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
@@ -14,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = NativeStackScreenProps<HomeStackParamList, 'BubbleDetails'>;
 
 export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const {
     bubbleId = 'bubble-main',
     emotion = 'calm',
@@ -161,7 +162,7 @@ export const BubbleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             !commentText.trim() && { opacity: 0.4 },
           ]}
         >
-          <Ionicons name="arrow-up-circle" size={34} color={emotionConfig.primary} />
+          <Ionicons name="arrow-up-circle" size={34} color={emotionInk(emotionConfig, isDark)} />
         </TouchableOpacity>
       </View>
     </ScreenWrapper>
@@ -172,7 +173,6 @@ const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
     paddingBottom: 80,
-    backgroundColor: '#07080D',
   },
   ambientAura: {
     position: 'absolute',
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(17, 20, 34, 0.9)',
+    backgroundColor: 'rgba(28, 30, 36, 0.9)',
     borderRadius: theme.radius.pill,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',

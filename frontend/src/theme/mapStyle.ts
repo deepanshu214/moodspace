@@ -1,197 +1,48 @@
 /**
- * Google Maps styling for MoodSpace.
- * lightMapStyle — soft pastel daylight: almond-cream land, serene pastel water,
- * crisp white roads and gentle sage parks, so pastel mood bubbles read clearly.
- * darkMapStyle — high-contrast twilight for night mode.
+ * Google Maps styling for MoodSpace — Playful Neo-Editorial.
+ * lightMapStyle — newsprint land, sky-wash water, crisp ink labels, mint parks.
+ * darkMapStyle — "Obsidian": charcoal land over deep twilight water.
  */
 export const darkMapStyle = [
-  {
-    elementType: 'geometry',
-    stylers: [{ color: '#101322' }],
-  },
-  {
-    elementType: 'labels.icon',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#8892B0' }],
-  },
-  {
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#101322' }, { weight: 2 }],
-  },
-  {
-    featureType: 'administrative',
-    elementType: 'geometry',
-    stylers: [{ color: '#2A3352' }],
-  },
-  {
-    featureType: 'administrative.country',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#404E78' }],
-  },
-  {
-    featureType: 'administrative.land_parcel',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#BAC2DE' }],
-  },
-  {
-    featureType: 'poi',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ color: '#1B3328' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#1E253D' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#6C7799' }],
-  },
-  {
-    featureType: 'road.arterial',
-    elementType: 'geometry',
-    stylers: [{ color: '#2A3454' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#3A4770' }],
-  },
-  {
-    featureType: 'road.highway.controlled_access',
-    elementType: 'geometry',
-    stylers: [{ color: '#4A5B8C' }],
-  },
-  {
-    featureType: 'road.local',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#5A678A' }],
-  },
-  {
-    featureType: 'transit',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    // high-contrast twilight water
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#182038' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#5A6D99' }],
-  },
+  { elementType: 'geometry', stylers: [{ color: '#1C1E24' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#9EA3AE' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#121316' }, { weight: 2.5 }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#333842' }] },
+  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#4A4F5A' }] },
+  { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#F5F6F8' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#173A2C' }, { visibility: 'on' }] },
+  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#2A2D35' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8A90A0' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#2E323B' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3A2A26' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#FF5C38' }, { weight: 0.6 }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  // high-contrast twilight water
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#182038' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#60A5FA' }] },
 ];
 
 export const lightMapStyle = [
-  {
-    // soft cream land
-    elementType: 'geometry',
-    stylers: [{ color: '#FBF8F5' }],
-  },
-  {
-    elementType: 'labels.icon',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#6B5C53' }],
-  },
-  {
-    elementType: 'labels.text.stroke',
-    stylers: [{ color: '#FFFFFF' }, { weight: 2.5 }],
-  },
-  {
-    featureType: 'administrative',
-    elementType: 'geometry',
-    stylers: [{ color: '#EBE1D7' }],
-  },
-  {
-    featureType: 'administrative.country',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#DCCEC1' }],
-  },
-  {
-    featureType: 'administrative.land_parcel',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#2D241E' }],
-  },
-  {
-    featureType: 'poi',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    // gentle sage parks
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ color: '#E4F5EB' }, { visibility: 'on' }],
-  },
-  {
-    featureType: 'landscape.natural',
-    elementType: 'geometry',
-    stylers: [{ color: '#F6F1EA' }],
-  },
-  {
-    // crisp white roads
-    featureType: 'road',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#FFFFFF' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#F0E7DD' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#8D7B70' }],
-  },
-  {
-    featureType: 'road.arterial',
-    elementType: 'geometry',
-    stylers: [{ color: '#FFFFFF' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#FFF3E6' }],
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#FFE0C7' }],
-  },
-  {
-    featureType: 'transit',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    // serene pastel water
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#DCEEF7' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#7E9CD8' }],
-  },
+  { elementType: 'geometry', stylers: [{ color: '#FCF9F8' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#52525B' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#FFFFFF' }, { weight: 2.5 }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#E5E2E1' }] },
+  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#8F7069' }] },
+  { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#1E1E1E' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#D9F5E6' }, { visibility: 'on' }] },
+  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#F6F3F2' }] },
+  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#FFFFFF' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#E5E2E1' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6B6B74' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#FFF4DC' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#FFD15C' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#D6ECFB' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#0767DE' }] },
 ];

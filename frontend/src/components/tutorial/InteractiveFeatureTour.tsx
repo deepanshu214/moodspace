@@ -14,7 +14,7 @@ import { theme, shadows } from '@/theme';
 // This tour tooltip is an intentionally always-dark glass card (like a spotlight
 // overlay) regardless of the app's light/dark theme, so it always pulls text
 // colors from the dark palette rather than the reactive theme.
-import { darkColors as colors } from '@/theme/colors';
+import { darkColors as colors, inkOnPastel } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { ReactionFloater } from '@/components/mood/ReactionFloater';
 import { haptics } from '@/theme/haptics';
@@ -57,7 +57,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'World Mood Map',
     badge: 'Step 1 of 7 • Explore',
     emoji: '🗺️',
-    color: '#00CEC9',
+    color: '#5CD694',
     description:
       'Explore live mood bubbles from people around you and worldwide. Pinch or tap +/− to zoom, tap any bubble to read their reflection.',
     dockPosition: 'bottom',
@@ -77,7 +77,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Check In Anytime (+)',
     badge: 'Step 2 of 7 • Express',
     emoji: '✨',
-    color: '#6C5CE7',
+    color: '#FF5C38',
     description:
       'Tap the center (+) button anytime to drop your mood bubble. Pick how you feel, set the intensity from 1 to 10, or post incognito.',
     dockPosition: 'top',
@@ -97,7 +97,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Live Mood Pulse & Waves',
     badge: 'Step 3 of 7 • Atmosphere',
     emoji: '🌊',
-    color: '#FFB800',
+    color: '#FF5C38',
     description:
       'See community mood distribution in real time. Tap any emotion pill to instantly filter the feed and map to that emotional vibe.',
     dockPosition: 'bottom',
@@ -117,7 +117,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Echoes & Warm Reactions',
     badge: 'Step 4 of 7 • Empathy',
     emoji: '💖',
-    color: '#FD79A8',
+    color: '#F87171',
     description:
       'Read honest reflections and send support. Tap Support ❤️, Gentle Hug 🤗, With You 🌊, or Celebrate ✨ to share instant warmth.',
     dockPosition: 'top',
@@ -137,7 +137,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Community Circles',
     badge: 'Step 5 of 7 • Safe Spaces',
     emoji: '🌱',
-    color: '#00B894',
+    color: '#5CD694',
     description:
       'Join dedicated circles like Mindful Morning, Ocean Walks, or Late Night Reflections with people going through similar life moments.',
     dockPosition: 'top',
@@ -157,7 +157,7 @@ const TOUR_STEPS: TourStep[] = [
     title: '1-on-1 Gentle Chats',
     badge: 'Step 6 of 7 • Connect',
     emoji: '💬',
-    color: '#A29BFE',
+    color: '#C084FC',
     description:
       'Privately connect with someone who resonates with your feeling. Safe, gentle, anonymous-friendly conversation.',
     dockPosition: 'top',
@@ -177,7 +177,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Daily Streak & Constellation',
     badge: 'Step 7 of 7 • Reflection',
     emoji: '🔥',
-    color: '#FF7675',
+    color: '#F87171',
     description:
       'Build your mindful check-in streak and view your entire month in soft organic mood pebbles and emotional colors on your Profile.',
     dockPosition: 'bottom',
@@ -260,7 +260,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
               }}
               style={[
                 styles.demoBubblePill,
-                demoBubbleTapped && { borderColor: '#00CEC9', backgroundColor: 'rgba(0, 206, 201, 0.2)' },
+                demoBubbleTapped && { borderColor: '#5CD694', backgroundColor: 'rgba(92, 214, 148, 0.2)' },
               ]}
             >
               <Typography style={{ fontSize: 18 }}>🌊</Typography>
@@ -269,7 +269,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
               </Typography>
             </TouchableOpacity>
             {demoBubbleTapped && (
-              <Typography variant="caption" color="#00CEC9" style={{ marginTop: 6, fontStyle: 'italic' }}>
+              <Typography variant="caption" color="#5CD694" style={{ marginTop: 6, fontStyle: 'italic' }}>
                 ✓ Bubble opened: "Listening to the quiet city sounds as morning breaks."
               </Typography>
             )}
@@ -318,10 +318,10 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
               ATMOSPHERE PULSE PREVIEW
             </Typography>
             <View style={styles.pulseBarContainer}>
-              <View style={[styles.pulseSegment, { flex: 4, backgroundColor: '#00CEC9' }]} />
-              <View style={[styles.pulseSegment, { flex: 3, backgroundColor: '#FFB800' }]} />
-              <View style={[styles.pulseSegment, { flex: 2, backgroundColor: '#FD79A8' }]} />
-              <View style={[styles.pulseSegment, { flex: 1, backgroundColor: '#A29BFE' }]} />
+              <View style={[styles.pulseSegment, { flex: 4, backgroundColor: '#5CD694' }]} />
+              <View style={[styles.pulseSegment, { flex: 3, backgroundColor: '#FF5C38' }]} />
+              <View style={[styles.pulseSegment, { flex: 2, backgroundColor: '#F87171' }]} />
+              <View style={[styles.pulseSegment, { flex: 1, backgroundColor: '#C084FC' }]} />
             </View>
             <Typography variant="caption" color={colors.textSecondary} style={{ marginTop: 6, textAlign: 'center' }}>
               40% Calm 🌿 • 30% Joy ☀️ • 20% Love 💖
@@ -384,10 +384,10 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
                 }}
                 style={[
                   styles.joinBtn,
-                  demoJoinedCircle && { backgroundColor: 'rgba(0, 184, 148, 0.2)', borderColor: '#00B894' },
+                  demoJoinedCircle && { backgroundColor: 'rgba(92, 214, 148, 0.2)', borderColor: '#5CD694' },
                 ]}
               >
-                <Typography variant="caption" weight="bold" color={demoJoinedCircle ? '#00B894' : colors.primaryLight}>
+                <Typography variant="caption" weight="bold" color={demoJoinedCircle ? '#5CD694' : colors.primaryLight}>
                   {demoJoinedCircle ? 'Joined ✓' : 'Join'}
                 </Typography>
               </TouchableOpacity>
@@ -431,7 +431,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
             >
               <Typography style={{ fontSize: 26 }}>🔥</Typography>
               <View style={{ marginLeft: 10 }}>
-                <Typography variant="body" weight="bold" color="#FF7675">
+                <Typography variant="body" weight="bold" color="#F87171">
                   {demoStreakCount} Days of Presence!
                 </Typography>
                 <Typography variant="caption" color={colors.textMuted}>
@@ -526,7 +526,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
                     style={[styles.nextButton, { backgroundColor: step.color }]}
                     activeOpacity={0.8}
                   >
-                    <Typography variant="label" weight="bold" style={{ color: '#FFFFFF' }}>
+                    <Typography variant="label" weight="bold" style={{ color: inkOnPastel }}>
                       {isLast ? 'Got it! Explore 🚀' : 'Next →'}
                     </Typography>
                   </TouchableOpacity>
@@ -543,7 +543,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 14, 0.78)',
+    backgroundColor: 'rgba(18, 19, 22, 0.78)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   tooltipContent: {
-    backgroundColor: 'rgba(18, 20, 32, 0.94)',
+    backgroundColor: 'rgba(28, 30, 36, 0.94)',
     padding: 20,
   },
   cardHeader: {
@@ -616,8 +616,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   demoEmotionBtnActive: {
-    borderColor: '#6C5CE7',
-    backgroundColor: 'rgba(108, 92, 231, 0.25)',
+    borderColor: '#FF5C38',
+    backgroundColor: 'rgba(255, 92, 56, 0.25)',
   },
   demoBubblePill: {
     flexDirection: 'row',
@@ -662,9 +662,9 @@ const styles = StyleSheet.create({
   icebreakerPill: {
     padding: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+    backgroundColor: 'rgba(255, 92, 56, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.3)',
+    borderColor: 'rgba(255, 92, 56, 0.3)',
   },
   streakDemoRow: {
     flexDirection: 'row',

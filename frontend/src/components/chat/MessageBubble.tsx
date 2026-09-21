@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { DirectMessage, MessageReactionResponse } from '@/api/types';
@@ -9,6 +10,8 @@ import { DirectMessage, MessageReactionResponse } from '@/api/types';
 interface MessageBubbleProps {
   message: DirectMessage;
   isMe: boolean;
+  /** Tap opens the reaction picker — long-press alone was undiscoverable. */
+  onPress?: (message: DirectMessage) => void;
   onLongPress?: (message: DirectMessage) => void;
   onReactionPress?: (message: DirectMessage) => void;
   currentUserId?: string;
@@ -31,10 +34,11 @@ function groupReactions(
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isMe,
+  onPress,
   onLongPress,
   onReactionPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const isIcebreaker = message.message_type === 'icebreaker';
   const isMoodShare = message.message_type === 'mood_share';
   const isDeleted = message.is_deleted;
@@ -61,7 +65,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* Mood share header */}
       {isMoodShare && !isDeleted && emotionCfg && (
         <View style={[styles.moodHeader, { backgroundColor: emotionCfg.background }]}>
-          <Typography variant="caption" color={emotionCfg.primary}>
+          <Typography variant="caption" color={emotionInk(emotionCfg, isDark)}>
             {emotionCfg.emoji} Shared their mood · {emotionCfg.label}
           </Typography>
         </View>
@@ -69,8 +73,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       <TouchableOpacity
         activeOpacity={0.8}
+        onPress={() => onPress?.(message)}
         onLongPress={() => onLongPress?.(message)}
         delayLongPress={350}
+        accessibilityRole="button"
+        accessibilityLabel={isDeleted ? 'Deleted message' : 'Message. Tap to react'}
         style={[
           styles.bubble,
           isMe

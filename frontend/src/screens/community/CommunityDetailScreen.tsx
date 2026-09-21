@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk, inkFor } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -98,7 +99,7 @@ const FALLBACK_POSTS: FallbackPost[] = [
 const POST_FILTER_TABS = ['All Echoes', 'Reflections', 'Discussions', 'Wins'];
 
 export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { communityId, communityName, category = 'Mindfulness', dominantEmotion = 'calm' } = route.params;
 
   const [isJoined, setIsJoined] = useState(true);
@@ -173,7 +174,7 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
           <Typography variant="body" weight="bold" color={colors.textPrimary} numberOfLines={1}>
             {communityName}
           </Typography>
-          <Typography variant="caption" color={emotionConfig.primary}>
+          <Typography variant="caption" color={emotionInk(emotionConfig, isDark)}>
             {category} Sanctuary
           </Typography>
         </View>
@@ -224,7 +225,7 @@ export const CommunityDetailScreen: React.FC<Props> = ({ route, navigation }) =>
                 style={styles.guidelinesHeader}
               >
                 <View style={styles.guidelinesTitleRow}>
-                  <Ionicons name="shield-checkmark" size={16} color="#A29BFE" />
+                  <Ionicons name="shield-checkmark" size={16} color={inkFor('#C084FC', isDark)} />
                   <Typography variant="bodySmall" weight="bold" color={colors.textPrimary} style={styles.guidelinesTitleText}>
                     Sanctuary Safe Space Charter
                   </Typography>

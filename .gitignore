@@ -16,3 +16,9 @@ htmlcov/
 .vscode/
 
 postgres_data/
+
+# Runtime uploads (photos, voice notes) written by the API
+media/
+
+# Local agent/editor launch config
+.claude/

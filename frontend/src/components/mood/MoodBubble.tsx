@@ -14,6 +14,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
+import { emotionInk } from '@/theme/colors';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 
@@ -38,6 +40,7 @@ export const MoodBubble: React.FC<MoodBubbleProps> = ({
   onPress,
   style,
 }) => {
+  const { isDark } = useTheme();
   const emotionConfig = theme.getEmotionConfig(emotion);
   const pulseScale = useSharedValue(1);
   const pulseGlow = useSharedValue(0.3);
@@ -134,7 +137,7 @@ export const MoodBubble: React.FC<MoodBubbleProps> = ({
           <Typography
             variant="caption"
             weight="bold"
-            color={emotionConfig.primary}
+            color={emotionInk(emotionConfig, isDark)}
             style={styles.label}
             numberOfLines={1}
           >

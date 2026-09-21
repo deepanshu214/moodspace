@@ -1,29 +1,26 @@
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
-import { springs, shadows } from '@/theme';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { useTheme } from '@/context';
+import { getEmotionConfig } from '@/theme';
 import { Typography } from '@/components/common/Typography';
-import { haptics } from '@/theme/haptics';
+import { Tactile } from '@/components/common/Tactile';
+import { MoodGlyph, toMoodKey } from '@/components/mood/MoodGlyph';
 
 interface CommunitySpotlightProps {
   name: string;
   description: string;
   memberCount: number;
-  memberAvatars: string[]; // URLs or placeholder names
+  /** Display names; initials are stacked into the ring. */
+  memberAvatars: string[];
   emotion: string;
   onJoinPress?: () => void;
+  /** Outer style, so a bento row can stretch this to match its sibling. */
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
- * CommunitySpotlight — wide glass hero card for featured community
- * Shows overlapping avatar stack + "Join" glass button
+ * CommunitySpotlight — the Stitch "VERIFIED" circle card: a mood-tinted ring
+ * of member initials under a mint verification badge.
  */
 export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
   name,
@@ -32,163 +29,103 @@ export const CommunitySpotlight: React.FC<CommunitySpotlightProps> = ({
   memberAvatars,
   emotion,
   onJoinPress,
+  style,
 }) => {
   const { colors } = useTheme();
-  const joinScale = useSharedValue(1);
-
-  const joinAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: joinScale.value }],
-  }));
-
-  const handleJoinPressIn = () => {
-    joinScale.value = withSpring(0.93, springs.stiff);
-    haptics.medium();
-  };
-  const handleJoinPressOut = () => {
-    joinScale.value = withSpring(1, springs.bouncy);
-  };
-
-  // Get first 4 avatars for the stack
-  const displayAvatars = memberAvatars.slice(0, 4);
-  const extraCount = memberCount - displayAvatars.length;
+  const config = getEmotionConfig(emotion);
 
   return (
-    <View style={[styles.container, { borderColor: colors.glass.border }, shadows.glassGlow(colors.primary, 0.12)]}>
-      <BlurView tint="dark" intensity={25} style={styles.blur}>
-        <View style={[styles.content, { backgroundColor: colors.glass.surface }]}>
-          {/* Gradient accent at top */}
-          <LinearGradient
-            colors={[colors.primary, colors.accent]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.accentStrip}
-          />
+    <Tactile
+      offset={4}
+      radius={20}
+      style={style}
+      fill
+      contentStyle={[styles.card, styles.fill]}
+      onPress={onJoinPress}
+      accessibilityLabel={`${name}, ${memberCount} members. Join community`}
+    >
+      <View style={[styles.verifiedBadge, { backgroundColor: colors.accent, borderColor: colors.ink }]}>
+        <Typography variant="overline" style={{ color: '#1E1E1E' }}>
+          VERIFIED
+        </Typography>
+      </View>
 
-          <View style={styles.header}>
-            <Typography variant="overline" style={{ color: colors.textMuted }}>
-              FEATURED COMMUNITY
-            </Typography>
-          </View>
+      <View style={[styles.ring, { backgroundColor: config.primary, borderColor: colors.ink }]}>
+        <MoodGlyph mood={toMoodKey(emotion)} size={26} color="#1E1E1E" />
+      </View>
 
-          <Typography variant="h3" style={{ color: colors.textPrimary, marginBottom: 4 }}>
-            {name}
-          </Typography>
-          <Typography
-            variant="bodySmall"
-            style={{ color: colors.textSecondary, marginBottom: 16 }}
-            numberOfLines={2}
-          >
-            {description}
-          </Typography>
+      <Typography variant="h4" numberOfLines={1} style={{ color: colors.textPrimary, marginTop: 10 }}>
+        {name}
+      </Typography>
+      <Typography variant="caption" numberOfLines={2} style={{ color: colors.textMuted, marginTop: 2 }}>
+        {description}
+      </Typography>
 
-          <View style={styles.footer}>
-            {/* Avatar stack */}
-            <View style={styles.avatarStack}>
-              {displayAvatars.map((avatar, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.avatarCircle,
-                    { borderColor: colors.background },
-                    {
-                      marginLeft: index > 0 ? -10 : 0,
-                      zIndex: displayAvatars.length - index,
-                      backgroundColor: colors.surfaceElevated,
-                    },
-                  ]}
-                >
-                  <Typography variant="caption" style={{ color: colors.textSecondary }}>
-                    {avatar.charAt(0).toUpperCase()}
-                  </Typography>
-                </View>
-              ))}
-              {extraCount > 0 && (
-                <View style={[styles.avatarCircle, { borderColor: colors.background, marginLeft: -10, backgroundColor: colors.glass.surfaceActive }]}>
-                  <Typography variant="caption" weight="semibold" style={{ color: colors.textSecondary, fontSize: 10 }}>
-                    +{extraCount > 99 ? '99' : extraCount}
-                  </Typography>
-                </View>
-              )}
-              <Typography variant="caption" style={{ color: colors.textMuted, marginLeft: 8 }}>
-                {memberCount} members
+      <View style={styles.footer}>
+        <View style={styles.initials}>
+          {memberAvatars.slice(0, 4).map((who, i) => (
+            <View
+              key={who}
+              style={[
+                styles.initial,
+                { backgroundColor: colors.surfaceWarm, borderColor: colors.ink, marginLeft: i === 0 ? 0 : -8 },
+              ]}
+            >
+              <Typography variant="overline" style={{ color: colors.textPrimary }}>
+                {who.charAt(0).toUpperCase()}
               </Typography>
             </View>
-
-            {/* Join button */}
-            <Pressable
-              onPress={onJoinPress}
-              onPressIn={handleJoinPressIn}
-              onPressOut={handleJoinPressOut}
-            >
-              <Animated.View style={[styles.joinButton, joinAnimatedStyle]}>
-                <LinearGradient
-                  colors={[colors.primary, colors.primaryLight]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.joinGradient}
-                >
-                  <Typography variant="label" weight="semibold" style={{ color: '#FFFFFF' }}>
-                    Join
-                  </Typography>
-                </LinearGradient>
-              </Animated.View>
-            </Pressable>
-          </View>
+          ))}
         </View>
-      </BlurView>
-    </View>
+        <Typography variant="caption" weight="bold" style={{ color: colors.textSecondary }}>
+          {memberCount} members
+        </Typography>
+      </View>
+    </Tactile>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
+  card: {
+    padding: 16,
+    alignItems: 'center',
   },
-  blur: {
-    overflow: 'hidden',
+  fill: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  content: {
-    padding: 20,
-  },
-  accentStrip: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  header: {
+  verifiedBadge: {
+    alignSelf: 'center',
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     marginBottom: 12,
-    marginTop: 4,
   },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  avatarStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  ring: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  joinButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
   },
-  joinGradient: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 16,
+  initials: {
+    flexDirection: 'row',
+    marginRight: 8,
+  },
+  initial: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

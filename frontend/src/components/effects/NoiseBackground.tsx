@@ -80,6 +80,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(13, 14, 21, 0.4)',
+    backgroundColor: 'rgba(28, 30, 36, 0.4)',
   },
 });

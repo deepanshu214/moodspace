@@ -12,6 +12,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -38,7 +39,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   isAnonymous = false,
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const pulseScale = useSharedValue(0.8);
   const rotation = useSharedValue(0);
 
@@ -118,7 +119,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             width: dimension,
             height: dimension,
             borderRadius: radius,
-            backgroundColor: isAnonymous ? '#201A30' : colors.surfaceElevated,
+            backgroundColor: isAnonymous ? '#252830' : colors.surfaceElevated,
             borderWidth: emotionConfig ? 2 : 1,
             borderColor: emotionConfig ? colors.background : colors.border,
           },
@@ -141,7 +142,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Typography
             variant={size === 'xs' || size === 'sm' ? 'caption' : size === 'xl' ? 'h2' : 'body'}
             weight="bold"
-            color={emotionConfig ? emotionConfig.primary : colors.primaryLight}
+            color={emotionConfig ? emotionInk(emotionConfig, isDark) : colors.accentInk}
           >
             {getInitials(name)}
           </Typography>

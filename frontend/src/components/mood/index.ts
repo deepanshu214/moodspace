@@ -6,3 +6,6 @@ export * from './AtmosphericPulseRibbon';
 export * from './LuminousMoodBubble';
 export * from './BubbleDetailSheet';
 export * from './ReactionFloater';
+export * from './MoodGlyph';
+export * from './MoodPinTag';
+export * from './VoiceTape';

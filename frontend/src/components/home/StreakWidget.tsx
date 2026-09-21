@@ -1,158 +1,120 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
-import Svg, { Circle } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedProps,
-  withTiming,
-  withDelay,
-  Easing,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-} from 'react-native-reanimated';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withDelay, withSpring } from 'react-native-reanimated';
 import { useTheme } from '@/context';
-import { colors, shadows } from '@/theme';
 import { Typography } from '@/components/common/Typography';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+import { Tactile } from '@/components/common/Tactile';
 
 interface StreakWidgetProps {
   currentStreak: number;
-  maxStreak?: number; // for the ring progress (default 30 days)
+  /** Retained for call-site compatibility; the ticket shows the raw count. */
+  maxStreak?: number;
+  onPress?: () => void;
+  /** Outer style, so a bento row can stretch this to match its sibling. */
+  style?: StyleProp<ViewStyle>;
 }
 
-/**
- * StreakWidget — compact glass card with animated circular progress ring + flame emoji
- */
-export const StreakWidget: React.FC<StreakWidgetProps> = ({
-  currentStreak,
-  maxStreak = 30,
-}) => {
-  const { colors, isDark } = useTheme();
-  const progress = useSharedValue(0);
-  const flameScale = useSharedValue(1);
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
-  const ringSize = 72;
-  const strokeWidth = 5;
-  const radius = (ringSize - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+/**
+ * StreakWidget — the Stitch "Atmosphere Streak" ticket stub: buttercup card
+ * with punched side notches and a validation stamp.
+ */
+export const StreakWidget: React.FC<StreakWidgetProps> = ({ currentStreak, onPress, style }) => {
+  const { colors } = useTheme();
+  const pop = useSharedValue(0.86);
 
   useEffect(() => {
-    const targetProgress = Math.min(currentStreak / maxStreak, 1);
-    progress.value = withDelay(
-      300,
-      withTiming(targetProgress, {
-        duration: 1200,
-        easing: Easing.out(Easing.cubic),
-      })
-    );
+    pop.value = withDelay(120, withSpring(1, { damping: 12, stiffness: 180 }));
+  }, [currentStreak]);
 
-    // Flame breathing animation
-    flameScale.value = withRepeat(
-      withSequence(
-        withTiming(1.18, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
-  }, [currentStreak, maxStreak]);
+  const countStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
 
-  const animatedCircleProps = useAnimatedProps(() => ({
-    strokeDashoffset: circumference * (1 - progress.value),
-  }));
-
-  const flameStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: flameScale.value }],
-  }));
-
-  // Warm glowing flame for mindful check-ins
-  const flameEmoji = currentStreak >= 14 ? '🔥' : currentStreak >= 7 ? '🔥' : '✨';
-  const flameSize = currentStreak >= 14 ? 28 : currentStreak >= 7 ? 24 : 20;
+  const today = new Date();
+  const stamp = `${MONTHS[today.getMonth()]} ${today.getDate()}`;
 
   return (
-    <View style={[styles.container, { borderColor: colors.glass.border }, shadows.glassGlow(colors.secondary, 0.16)]}>
-      <BlurView tint={isDark ? 'dark' : 'light'} intensity={25} style={styles.blur}>
-        <View style={[styles.content, { backgroundColor: colors.glass.surface }]}>
-          <View style={styles.ringContainer}>
-            <Svg width={ringSize} height={ringSize} style={styles.svg}>
-              {/* Background track */}
-              <Circle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={radius}
-                stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}
-                strokeWidth={strokeWidth}
-                fill="transparent"
-              />
-              {/* Animated progress in warm honey / sunset tone */}
-              <AnimatedCircle
-                cx={ringSize / 2}
-                cy={ringSize / 2}
-                r={radius}
-                stroke={colors.secondary}
-                strokeWidth={strokeWidth}
-                fill="transparent"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                animatedProps={animatedCircleProps}
-                rotation={-90}
-                origin={`${ringSize / 2}, ${ringSize / 2}`}
-              />
-            </Svg>
-            <View style={styles.ringContent}>
-              <Animated.View style={flameStyle}>
-                <Typography style={{ fontSize: flameSize, textAlign: 'center' }}>
-                  {flameEmoji}
-                </Typography>
-              </Animated.View>
-            </View>
-          </View>
-          <Typography variant="stat" style={{ color: colors.textPrimary, textAlign: 'center' }}>
-            {currentStreak}
-          </Typography>
-          <Typography variant="caption" weight="semibold" style={{ color: colors.textSecondary, textAlign: 'center' }}>
-            day streak
-          </Typography>
-          <Typography variant="caption" style={{ color: colors.accentInk, fontSize: 10, textAlign: 'center', marginTop: 2 }}>
-            glowing bright ✨
+    <Tactile
+      offset={4}
+      radius={20}
+      backgroundColor={colors.secondary}
+      style={style}
+      fill
+      contentStyle={[styles.ticket, styles.fill]}
+      onPress={onPress}
+      accessibilityLabel={`Atmosphere streak, ${currentStreak} consecutive days`}
+    >
+      {/* punched notches — the canvas colour reads through as a cut-out */}
+      <View style={[styles.notch, styles.notchLeft, { backgroundColor: colors.background, borderColor: colors.ink }]} />
+      <View style={[styles.notch, styles.notchRight, { backgroundColor: colors.background, borderColor: colors.ink }]} />
+
+      <Typography variant="overline" style={{ color: '#1E1E1E' }}>
+        ATMOSPHERE STREAK
+      </Typography>
+
+      <Animated.View style={countStyle}>
+        <Typography variant="display" style={styles.count}>
+          {String(currentStreak).padStart(2, '0')}
+        </Typography>
+      </Animated.View>
+
+      <Typography variant="overline" style={{ color: '#1E1E1E', opacity: 0.7 }}>
+        CONSECUTIVE DAYS
+      </Typography>
+
+      <View style={[styles.dashed, { borderColor: '#1E1E1E' }]} />
+
+      <View style={styles.stampRow}>
+        <Typography variant="overline" style={{ color: '#1E1E1E', opacity: 0.7 }}>
+          STAMP: {stamp}
+        </Typography>
+        <View style={[styles.validBadge, { backgroundColor: '#1E1E1E' }]}>
+          <Typography variant="overline" style={{ color: colors.secondary }}>
+            VALID
           </Typography>
         </View>
-      </BlurView>
-    </View>
+      </View>
+    </Tactile>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.glass.border,
-  },
-  blur: {
-    overflow: 'hidden',
-  },
-  content: {
+  ticket: {
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.glass.surface,
+    overflow: 'hidden',
   },
-  ringContainer: {
-    width: 72,
-    height: 72,
-    alignItems: 'center',
+  fill: {
+    flex: 1,
     justifyContent: 'center',
-    marginBottom: 8,
   },
-  svg: {
+  notch: {
     position: 'absolute',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    top: '42%',
   },
-  ringContent: {
+  notchLeft: { left: -13 },
+  notchRight: { right: -13 },
+  count: {
+    color: '#1E1E1E',
+    marginVertical: 2,
+  },
+  dashed: {
+    borderBottomWidth: 2,
+    borderStyle: 'dashed',
+    opacity: 0.45,
+    marginVertical: 10,
+  },
+  stampRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+  },
+  validBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
 });

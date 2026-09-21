@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -20,7 +21,7 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'EditProfile'>;
 const EMOTION_PRESETS = ['calm', 'joy', 'anxiety', 'love', 'sadness', 'excitement'];
 
 export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user } = useAuthStore();
   const [displayName, setDisplayName] = useState(user?.displayName || 'Elena Rostova');
   const [bio, setBio] = useState(user?.bio || 'Holding space for calm moments, deep ocean walks.');
@@ -96,7 +97,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                 onPress={() => setSelectedEmotion(emo)}
                 style={[
                   styles.presetChip,
-                  { borderColor: isSelected ? config.primary : 'rgba(255, 255, 255, 0.1)' },
+                  { borderColor: isSelected ? config.primary : colors.glass.border },
                   isSelected && { backgroundColor: config.background },
                 ]}
               >
@@ -104,7 +105,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Typography
                   variant="caption"
                   weight={isSelected ? 'bold' : 'medium'}
-                  color={isSelected ? config.primary : colors.textSecondary}
+                  color={isSelected ? emotionInk(config, isDark) : colors.textSecondary}
                 >
                   {config.label}
                 </Typography>
@@ -150,7 +151,6 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',

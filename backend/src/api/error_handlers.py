@@ -1,7 +1,7 @@
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError
 from src.api.exceptions import MoodLensException
 from src.utils.logger import logger
 import uuid
@@ -58,6 +58,34 @@ def register_error_handlers(app: FastAPI):
                     "message": "Validation failed",
                     "details": details,
                     "help_url": "https://docs.moodlens.app/errors/VALIDATION_ERROR"
+                },
+                "meta": {
+                    "request_id": req_id,
+                    "timestamp": __import__('datetime').datetime.utcnow().isoformat() + "Z"
+                }
+            }
+        )
+
+    # Unreachable DB: answer 503 fast so clients fall back instead of treating it as a crash.
+    @app.exception_handler(OperationalError)
+    async def database_unavailable_handler(request: Request, exc: OperationalError):
+        req_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+
+        logger.error(
+            "Database unavailable",
+            exc_info=True,
+            extra={"request_id": req_id, "status_code": 503}
+        )
+
+        return JSONResponse(
+            status_code=503,
+            content={
+                "success": False,
+                "error": {
+                    "code": "DATABASE_UNAVAILABLE",
+                    "status": 503,
+                    "message": "We can't reach our database right now. Please try again in a moment.",
+                    "details": []
                 },
                 "meta": {
                     "request_id": req_id,

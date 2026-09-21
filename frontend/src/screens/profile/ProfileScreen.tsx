@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme, shadows } from '@/theme';
 import { useTheme } from '@/context';
+import { inkFor, inkOnPastel } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { IconButton } from '@/components/common/IconButton';
@@ -17,7 +23,11 @@ import {
   MoodHistoryHeatmap,
   AuraScoreCard,
   EditProfileModal,
+  MoodPassport,
+  PinnedAnchors,
 } from '@/components/profile';
+import { MoodPulseCard } from '@/components/home';
+import { Tactile } from '@/components/common/Tactile';
 import { storage } from '@/utils/storage';
 import { getUserPostedBubbles, deleteUserPostedBubble, UserPostBubble } from '@/utils/userPosts';
 
@@ -36,11 +46,24 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { StreakBadge } from '@/api/types';
 import { haptics } from '@/theme/haptics';
+import { showAlert } from '@/components/common/AppDialog';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'MyProfile'>;
 
+const KNOWN_EMOTIONS = new Set([
+  'joy',
+  'calm',
+  'love',
+  'sadness',
+  'anxiety',
+  'anger',
+  'excitement',
+  'loneliness',
+  'neutral',
+]);
+
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user: storeUser } = useAuthStore();
   const { data: apiUser } = useCurrentUser();
   const { data: moodHistory } = useMoodHistory(10, 0);
@@ -86,6 +109,32 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const [myPosts, setMyPosts] = useState<UserPostBubble[]>([]);
 
+  /**
+   * 30-day spectrum built from this person's own logged days — the heatmap when
+   * the API has it, else their local drops. Empty means the section is hidden
+   * rather than padded with sample percentages.
+   */
+  const spectrum = useMemo(() => {
+    const tally = new Map<string, number>();
+    const add = (emotion?: string) => {
+      if (!emotion) return;
+      // Unknown names all resolve to the neutral pigment, so normalise first —
+      // otherwise the legend repeats "Cozy" once per unrecognised label.
+      const key = KNOWN_EMOTIONS.has(emotion.toLowerCase().trim())
+        ? emotion.toLowerCase().trim()
+        : 'neutral';
+      tally.set(key, (tally.get(key) || 0) + 1);
+    };
+    heatmap.forEach((d) => add(d.dominant_emotion));
+    if (tally.size === 0) myPosts.forEach((p) => add(p.emotion));
+    const total = [...tally.values()].reduce((a, b) => a + b, 0);
+    if (!total) return [];
+    return [...tally.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([emotion, count]) => ({ emotion, percentage: (count / total) * 100 }));
+  }, [heatmap, myPosts]);
+
   const loadMyPosts = useCallback(async () => {
     const posts = await getUserPostedBubbles();
     setMyPosts(posts);
@@ -98,7 +147,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const handleDeletePost = (id: string) => {
-    Alert.alert(
+    showAlert(
       'Delete Echo',
       'Are you sure you want to remove this reflection from your profile?',
       [
@@ -124,7 +173,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleBadgePress = (badge: StreakBadge) => {
     haptics.light();
-    Alert.alert(
+    showAlert(
       badge.title,
       `${badge.description}\n\nStatus: ${badge.unlocked ? '✨ Unlocked' : `🔒 Reach a ${badge.days_required}-day streak`}`
     );
@@ -132,17 +181,20 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScreenWrapper scrollable contentContainerStyle={styles.container}>
-      {/* ── Top Bar: Title & Settings ── */}
+      {/* ── Masthead ── */}
       <View style={styles.topBar}>
         <View style={styles.topBarTitleRow}>
-          <Typography variant="h2" weight="bold" style={{ color: colors.textPrimary }}>
-            Your Space & Memories
+          <Typography variant="overline" style={{ color: colors.textMuted }}>
+            MOODSPACE
+          </Typography>
+          <Typography variant="h2" style={{ color: colors.textPrimary }}>
+            Profile
           </Typography>
         </View>
 
         <View style={styles.topBarActions}>
           <TouchableOpacity
-            style={[styles.settingsPill, { backgroundColor: colors.surfaceElevated, borderColor: colors.glass.border }]}
+            style={[styles.settingsPill, { backgroundColor: colors.surface, borderColor: colors.ink }]}
             onPress={() => {
               navigation.navigate('Settings');
               haptics.light();
@@ -150,120 +202,126 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
             accessibilityLabel="Open Settings"
           >
-            <Ionicons name="settings-outline" size={16} color={colors.primary} />
-            <Typography variant="caption" weight="bold" color={colors.textPrimary} style={{ marginLeft: 6 }}>
-              Settings
+            <Ionicons name="settings-outline" size={16} color={colors.textPrimary} />
+            <Typography variant="overline" style={{ color: colors.textPrimary, marginLeft: 6 }}>
+              SETTINGS
             </Typography>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── Wandering Spirit Quick-Cloak Glass Banner ── */}
-      <GlassCard
-        variant="default"
-        style={[styles.cloakBanner, isIncognito && styles.cloakBannerActive]}
-      >
-        <View style={styles.cloakInfo}>
-          <Ionicons
-            name={isIncognito ? 'eye-off' : 'eye-outline'}
-            size={18}
-            color={isIncognito ? colors.secondary : colors.textMuted}
-          />
-          <View style={styles.cloakTexts}>
-            <Typography variant="bodySmall" weight="semibold" color={isIncognito ? colors.secondary : colors.textPrimary}>
-              {isIncognito ? 'Ghost / Incognito Mode' : 'Public Profile'}
+      {/* ── Identity card ── */}
+      <Tactile offset={4} radius={24} contentStyle={styles.identityCard}>
+        <View style={styles.identityTop}>
+          <View style={[styles.memberBadge, { backgroundColor: colors.secondary, borderColor: colors.ink }]}>
+            <Ionicons name="flame" size={12} color={inkOnPastel} />
+            <Typography variant="overline" style={{ color: inkOnPastel, marginLeft: 4 }}>
+              {streak.current_streak}-DAY STREAK
             </Typography>
-            <Typography variant="caption" color={colors.textMuted}>
-              {isIncognito ? 'Your name is hidden on map & posts' : 'Your name and avatar are visible'}
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              setShowEditModal(true);
+              haptics.light();
+            }}
+            style={[styles.editPill, { borderColor: colors.ink, backgroundColor: colors.surfaceWarm }]}
+            accessibilityLabel="Edit Profile"
+          >
+            <Ionicons name="pencil" size={12} color={colors.textPrimary} />
+            <Typography variant="overline" style={{ color: colors.textPrimary, marginLeft: 5 }}>
+              EDIT PROFILE
+            </Typography>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.identityRow}>
+          <Avatar
+            name={displayName}
+            source={avatarUrl}
+            size="lg"
+            emotion={isIncognito ? undefined : 'calm'}
+            isOnline
+          />
+          <View style={{ flex: 1, marginLeft: 14 }}>
+            <Typography variant="h3" numberOfLines={1} style={{ color: colors.textPrimary }}>
+              {isIncognito ? 'Wandering Spirit' : displayName}
+            </Typography>
+            <Typography variant="caption" style={{ color: colors.textMuted }}>
+              {isIncognito ? 'Cloaked on the map and in posts' : `@${displayName.toLowerCase().replace(/\s+/g, '_')}`}
             </Typography>
           </View>
         </View>
 
-        <Switch
-          value={isIncognito}
-          onValueChange={handleToggleIncognito}
-          trackColor={{ false: colors.glass.border, true: colors.secondary }}
-        />
-      </GlassCard>
-
-      {/* ── Profile Header ── */}
-      <View style={styles.profileHeader}>
-        <Avatar
-          name={displayName}
-          source={avatarUrl}
-          size="xl"
-          emotion={isIncognito ? undefined : 'calm'}
-          isOnline
-        />
-
-        <Typography variant="h2" weight="bold" style={[styles.name, { color: colors.textPrimary }]}>
-          {isIncognito ? '👻 Anonymous User' : displayName}
-        </Typography>
-
-        <Typography variant="bodySmall" color={colors.textSecondary} style={styles.bio}>
+        <Typography variant="bodySmall" style={{ color: colors.textSecondary, marginTop: 10 }}>
           {bio}
         </Typography>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => {
-            setShowEditModal(true);
-            haptics.light();
-          }}
-          style={styles.editProfileBtn}
-        >
-          <Ionicons name="pencil" size={13} color={colors.accentInk} />
-          <Typography variant="caption" weight="bold" color={colors.accentInk} style={{ marginLeft: 6 }}>
-            Edit Profile
-          </Typography>
-        </TouchableOpacity>
-
-        {/* Glass Bento Stats Row */}
-        <GlassCard variant="default" style={styles.statsCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Typography variant="stat" style={{ color: colors.accentInk }}>
-                {streak.total_checkins || moodHistory?.length || 24}
-              </Typography>
-              <Typography variant="caption" color={colors.textMuted}>
-                Check-ins
-              </Typography>
-            </View>
-
-            <TouchableOpacity
-              style={styles.statBox}
-              activeOpacity={0.7}
-              onPress={() => {
-                navigation.navigate('FollowersList', { type: 'followers' });
-                haptics.light();
-              }}
-            >
-              <Typography variant="stat" style={{ color: colors.textPrimary }}>
-                148
-              </Typography>
-              <Typography variant="caption" color={colors.textMuted}>
-                Followers
-              </Typography>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.statBox}
-              activeOpacity={0.7}
-              onPress={() => {
-                navigation.navigate('FollowersList', { type: 'following' });
-                haptics.light();
-              }}
-            >
-              <Typography variant="stat" style={{ color: colors.textPrimary }}>
-                92
-              </Typography>
-              <Typography variant="caption" color={colors.textMuted}>
-                Following
-              </Typography>
-            </TouchableOpacity>
+        {/* Stats */}
+        <View style={[styles.statsRow, { borderTopColor: colors.border }]}>
+          <View style={styles.statBox}>
+            <Typography variant="stat" style={{ color: colors.textPrimary }}>
+              {streak.total_checkins || moodHistory?.length || 0}
+            </Typography>
+            <Typography variant="overline" style={{ color: colors.textMuted }}>
+              CHECK-INS
+            </Typography>
           </View>
-        </GlassCard>
-      </View>
+
+          <TouchableOpacity
+            style={styles.statBox}
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.navigate('FollowersList', { type: 'followers' });
+              haptics.light();
+            }}
+          >
+            <Typography variant="stat" style={{ color: colors.textPrimary }}>
+              148
+            </Typography>
+            <Typography variant="overline" style={{ color: colors.textMuted }}>
+              FOLLOWERS
+            </Typography>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statBox}
+            activeOpacity={0.7}
+            onPress={() => {
+              navigation.navigate('FollowersList', { type: 'following' });
+              haptics.light();
+            }}
+          >
+            <Typography variant="stat" style={{ color: colors.textPrimary }}>
+              92
+            </Typography>
+            <Typography variant="overline" style={{ color: colors.textMuted }}>
+              FOLLOWING
+            </Typography>
+          </TouchableOpacity>
+        </View>
+
+        {/* Cloak toggle */}
+        <View style={[styles.cloakRow, { borderTopColor: colors.border }]}>
+          <Ionicons
+            name={isIncognito ? 'eye-off' : 'eye-outline'}
+            size={18}
+            color={isIncognito ? colors.secondaryInk : colors.textMuted}
+          />
+          <View style={styles.cloakTexts}>
+            <Typography variant="label" style={{ color: colors.textPrimary }}>
+              {isIncognito ? 'Ghost / Incognito Mode' : 'Public Profile'}
+            </Typography>
+            <Typography variant="caption" style={{ color: colors.textMuted }}>
+              {isIncognito ? 'Your name is hidden on map & posts' : 'Your name and avatar are visible'}
+            </Typography>
+          </View>
+          <Switch
+            value={isIncognito}
+            onValueChange={handleToggleIncognito}
+            trackColor={{ false: colors.border, true: colors.accent }}
+          />
+        </View>
+      </Tactile>
 
       {/* ── Mood Streak Tracker ── */}
       <MoodStreakTracker
@@ -276,6 +334,25 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* ── Mood History Heatmap ── */}
       <MoodHistoryHeatmap days={heatmap} />
+
+      {/* ── Mood Passport ── */}
+      <MoodPassport streak={streak} onBadgePress={handleBadgePress} />
+
+      {/* ── 30-day spectrum (only when there is real history) ── */}
+      {spectrum.length > 0 && (
+        <View style={{ marginTop: 18 }}>
+          <MoodPulseCard data={spectrum} title="30-Day Spectrum" updatedAgo="today" />
+        </View>
+      )}
+
+      {/* ── Pinned anchors from the places they actually drop bubbles ── */}
+      <PinnedAnchors
+        posts={myPosts}
+        onViewMap={() => {
+          haptics.light();
+          (navigation as any).navigate('MapTab');
+        }}
+      />
 
       {/* ── My Shared Echoes (What I Posted) ── */}
       <View style={styles.section}>
@@ -303,7 +380,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     />
                     {post.isAnonymous && (
                       <View style={[styles.anonBadge, { borderColor: colors.glass.border }]}>
-                        <Typography variant="caption" style={{ fontSize: 11, color: colors.secondary }}>
+                        <Typography variant="caption" style={{ fontSize: 11, color: colors.secondaryInk }}>
                           👻 Ghost
                         </Typography>
                       </View>
@@ -342,7 +419,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                   </View>
 
                   <View style={styles.postLikesRow}>
-                    <Ionicons name="heart" size={13} color="#FD79A8" />
+                    <Ionicons name="heart" size={13} color={inkFor('#F87171', isDark)} />
                     <Typography variant="caption" color={colors.textSecondary} style={{ marginLeft: 4 }}>
                       {post.likesCount || 0}
                     </Typography>
@@ -467,6 +544,42 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  identityCard: {
+    padding: 16,
+  },
+  identityTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  memberBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  editPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  identityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cloakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 2,
+    marginTop: 14,
+    paddingTop: 14,
+  },
   container: {
     padding: 16,
     paddingBottom: 110,
@@ -493,7 +606,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cloakBannerActive: {
-    borderColor: 'rgba(253, 121, 168, 0.35)',
+    borderColor: 'rgba(248, 113, 113, 0.35)',
   },
   cloakInfo: {
     flexDirection: 'row',
@@ -525,9 +638,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.25)',
+    borderColor: 'rgba(255, 92, 56, 0.25)',
     marginTop: 10,
     marginBottom: 4,
   },

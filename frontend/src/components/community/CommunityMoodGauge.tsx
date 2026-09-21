@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 
 export interface MoodDistributionItem {
@@ -29,11 +30,11 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
   distribution = DEFAULT_DISTRIBUTION,
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const config = theme.getEmotionConfig(dominantEmotion);
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.ink }, style]}>
       {/* Header: Dominant Atmosphere & Resonance Rating */}
       <View style={styles.headerRow}>
         <View style={styles.dominantPill}>
@@ -41,7 +42,7 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
           <Typography
             variant="caption"
             weight="bold"
-            color={config.primary}
+            color={emotionInk(config, isDark)}
             style={styles.dominantText}
           >
             Atmosphere: {config.label}
@@ -94,11 +95,9 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
     borderRadius: theme.radius.lg,
     padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 2,
   },
   headerRow: {
     flexDirection: 'row',

@@ -4,7 +4,15 @@ import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 export const authApi = {
   async login(payload: LoginPayload): Promise<AuthToken> {
-    const { data } = await apiClient.post<AuthToken>('/auth/login', payload);
+    // The token endpoint is an OAuth2 password flow: form-encoded, and the
+    // email travels as `username`. Posting JSON here fails validation.
+    const form = new URLSearchParams();
+    form.append('username', payload.email);
+    form.append('password', payload.password);
+
+    const { data } = await apiClient.post<AuthToken>('/auth/login', form.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
     if (data.access_token) {
       await storage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.access_token);
       if (data.refresh_token) {

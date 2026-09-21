@@ -10,8 +10,8 @@ export const MapContainer = forwardRef<MapView, any>((props, ref) => {
       ref={ref}
       provider={PROVIDER_GOOGLE}
       loadingEnabled
-      loadingIndicatorColor="#FF8A65"
-      loadingBackgroundColor="#FAF7F2"
+      loadingIndicatorColor="#FF5C38"
+      loadingBackgroundColor="#FFFDF9"
       rotateEnabled={false}
       pitchEnabled={false}
       toolbarEnabled={false}

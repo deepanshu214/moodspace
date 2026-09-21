@@ -1,4 +1,4 @@
-import { colors, getEmotionConfig, getAuroraColors, EmotionColorConfig } from './colors';
+import { colors, getEmotionConfig, getAuroraColors, emotionInk, inkFor, inkOnPastel, EmotionColorConfig } from './colors';
 import { typography, TypographyVariant } from './typography';
 import { spacing, radius, layout } from './spacing';
 import { shadows } from './shadows';
@@ -23,6 +23,9 @@ export const theme = {
   getEmotionGradient,
   getAuroraColors,
   getAuroraBlobColors,
+  emotionInk,
+  inkFor,
+  inkOnPastel,
   staggerDelay,
   staggerChildren,
   floatConfig,
@@ -47,6 +50,9 @@ export {
   getEmotionGradient,
   getAuroraColors,
   getAuroraBlobColors,
+  emotionInk,
+  inkFor,
+  inkOnPastel,
   staggerDelay,
   staggerChildren,
   floatConfig,

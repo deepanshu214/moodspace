@@ -60,32 +60,34 @@ export const Card: React.FC<CardProps> = ({
 
   const getCardStyle = (): ViewStyle => {
     let base: ViewStyle = {
-      borderRadius: theme.radius.lg,
+      borderRadius: 20,
       padding: theme.spacing[padding],
       position: 'relative',
       overflow: 'hidden',
     };
 
     switch (variant) {
+      // Neo-Editorial: every card is a 2px ink contour on a paper surface.
       case 'flat':
         base.backgroundColor = colors.surface;
+        base.borderWidth = 2;
+        base.borderColor = colors.border;
         break;
       case 'outlined':
         base.backgroundColor = 'transparent';
-        base.borderWidth = 1;
-        base.borderColor = colors.border;
+        base.borderWidth = 2;
+        base.borderColor = colors.ink;
         break;
       case 'glass':
-        base.backgroundColor = 'rgba(23, 24, 34, 0.75)';
-        base.borderWidth = 1;
-        base.borderColor = 'rgba(255, 255, 255, 0.08)';
+        base.backgroundColor = colors.surface;
+        base.borderWidth = 2;
+        base.borderColor = colors.border;
         break;
       case 'elevated':
       default:
-        base.backgroundColor = colors.surfaceElevated;
-        base.borderWidth = 1;
-        base.borderColor = colors.border;
-        Object.assign(base, theme.shadows.card);
+        base.backgroundColor = colors.surface;
+        base.borderWidth = 2;
+        base.borderColor = colors.ink;
         break;
     }
 

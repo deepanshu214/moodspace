@@ -39,7 +39,7 @@ const SLIDES: WalkthroughSlide[] = [
     description:
       'Explore live emotion bubbles placed on the map. Tap any bubble to read thoughts from people in your city or across the globe.',
     badgeText: 'Explore',
-    color: '#00CEC9',
+    color: '#5CD694',
     iconName: 'map-outline',
     features: [
       'Interactive bubbles showing current feelings',
@@ -55,7 +55,7 @@ const SLIDES: WalkthroughSlide[] = [
     description:
       'Tap the center (+) button anytime to drop a mood bubble. Pick how you feel, adjust the intensity, and add a quick thought.',
     badgeText: 'Check-In',
-    color: '#6C5CE7',
+    color: '#FF5C38',
     iconName: 'add-circle-outline',
     features: [
       'Choose from 6 core emotions with clear intensity',
@@ -71,7 +71,7 @@ const SLIDES: WalkthroughSlide[] = [
     description:
       'Be part of communities centered around mindfulness, campus life, late-night thoughts, or creative hobbies.',
     badgeText: 'Communities',
-    color: '#A29BFE',
+    color: '#C084FC',
     iconName: 'people-outline',
     features: [
       'See group mood summaries and discussions',
@@ -87,7 +87,7 @@ const SLIDES: WalkthroughSlide[] = [
     description:
       'Feeling down, excited, or stressed? Match with someone who understands what you are going through and start a supportive conversation.',
     badgeText: 'Connections',
-    color: '#FD79A8',
+    color: '#F87171',
     iconName: 'chatbubbles-outline',
     features: [
       'Resonance matching based on similar feelings',
@@ -103,7 +103,7 @@ const SLIDES: WalkthroughSlide[] = [
     description:
       'Track your emotional check-ins on a calendar heatmap, maintain your daily streak, and unlock wellness milestones.',
     badgeText: 'Wellness',
-    color: '#FFD166',
+    color: '#FF5C38',
     iconName: 'sparkles-outline',
     features: [
       'Daily mood streak tracker with fun milestones',
@@ -273,7 +273,7 @@ export const AppWalkthroughModal: React.FC<AppWalkthroughModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 15, 0.75)',
+    backgroundColor: 'rgba(18, 19, 22, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.lg,
@@ -281,12 +281,12 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: 'rgba(20, 22, 35, 0.90)',
+    backgroundColor: 'rgba(28, 30, 36, 0.90)',
     borderRadius: 24,
     padding: theme.spacing.xl,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
-    shadowColor: '#6C5CE7',
+    shadowColor: '#FF5C38',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.3,
     shadowRadius: 28,

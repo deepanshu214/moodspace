@@ -3,13 +3,16 @@
  * React-spring-inspired physics presets translated to Reanimated WithSpringConfig
  */
 
-import { WithSpringConfig } from 'react-native-reanimated';
+import { WithSpringConfig, FadeInDown } from 'react-native-reanimated';
 
 // ─── Spring Presets (react-spring philosophy, Reanimated execution) ───
 
 export const springs = {
   /** Default comfortable spring */
   default: { damping: 15, stiffness: 150, mass: 1 } as WithSpringConfig,
+
+  /** Soft, weighted press/selection response used across the pastel UI */
+  pillowy: { damping: 15, stiffness: 150, mass: 0.8 } as WithSpringConfig,
 
   /** Playful overshoot — notifications, badges, emotion bubbles */
   bouncy: { damping: 8, stiffness: 180, mass: 0.8 } as WithSpringConfig,
@@ -69,6 +72,10 @@ export const easings = {
 export const staggerDelay = (index: number, baseMs: number = 60): number => {
   return index * baseMs;
 };
+
+/** Staggered springy entrance on the pillowy spring (damping 15, stiffness 150, mass 0.8). */
+export const staggeredEntrance = (index: number, baseMs: number = 60) =>
+  FadeInDown.delay(staggerDelay(index, baseMs)).springify().damping(15).stiffness(150).mass(0.8);
 
 /**
  * Returns an array of delay values for N children

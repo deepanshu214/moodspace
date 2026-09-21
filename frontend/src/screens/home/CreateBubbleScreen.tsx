@@ -7,35 +7,44 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BlurView } from 'expo-blur';
+import * as ImagePicker from 'expo-image-picker';
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+} from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 
 import { RootStackParamList } from '@/navigation/types';
-import { theme, getEmotionConfig, shadows } from '@/theme';
+import { getEmotionConfig, emotionInk, inkOnPastel } from '@/theme';
 import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
-import { Button } from '@/components/common/Button';
-import { IconButton } from '@/components/common/IconButton';
-import { MoodTag } from '@/components/mood/MoodTag';
+import { Tactile } from '@/components/common/Tactile';
+import { PingDot } from '@/components/common/PingDot';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
-import { AuroraBackground } from '@/components/effects/AuroraBackground';
+import { MoodGlyph, toMoodKey } from '@/components/mood/MoodGlyph';
 import { LocationPickerModal, LocationData } from '@/components/location';
 import { useMoodCheckin } from '@/hooks/useMood';
 import { useAuthStore } from '@/stores/authStore';
-import { saveUserPostedBubble } from '@/utils/userPosts';
+import { saveUserPostedBubble, expiryFromNow } from '@/utils/userPosts';
+import { moodApi } from '@/api/mood';
 import { haptics } from '@/theme/haptics';
+import { showAlert } from '@/components/common/AppDialog';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateBubbleModal'>;
 
 const EMOTIONS = [
   'joy',
   'calm',
-  'anxiety',
   'love',
   'sadness',
+  'anxiety',
   'anger',
+  'loneliness',
   'excitement',
   'neutral',
 ];
@@ -53,8 +62,17 @@ const INTENSITY_DESCRIPTORS: Record<number, string> = {
   10: 'Overwhelming (10/10)',
 };
 
+/** mm:ss for the recorder chip. */
+const formatDuration = (ms: number) => {
+  const total = Math.floor(ms / 1000);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+};
+
+const MAX_NOTE = 280;
+const MAX_TAGS = 4;
+
 export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [content, setContent] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState('calm');
   const [intensity, setIntensity] = useState(7);
@@ -65,9 +83,19 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [weatherCondition] = useState('Clear Sky');
   const [weatherTemp] = useState(24);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [voiceUri, setVoiceUri] = useState<string | null>(null);
+  const [voiceDurationMs, setVoiceDurationMs] = useState<number>(0);
+
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder);
+  const isRecording = recorderState.isRecording;
 
   const { user } = useAuthStore();
   const emotionConfig = getEmotionConfig(selectedEmotion);
+  const moodInk = emotionInk(emotionConfig, isDark);
   const { mutate: submitCheckin, isPending } = useMoodCheckin();
 
   // Smart sentiment suggestion based on content
@@ -92,6 +120,87 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
     return null;
   }, [content]);
 
+  const addTag = () => {
+    const clean = tagDraft.trim().replace(/^#+/, '').slice(0, 24);
+    if (!clean || tags.includes(clean) || tags.length >= MAX_TAGS) return;
+    setTags([...tags, clean]);
+    setTagDraft('');
+    haptics.light();
+  };
+
+  const attachPhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showAlert('Photo Access Needed', 'Allow photo access to attach a keepsake to your bubble.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 5],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        setPhotoUri(result.assets[0].uri);
+        haptics.success();
+      }
+    } catch (e) {
+      console.warn('[CreateBubble] Photo attach failed:', e);
+    }
+  };
+
+  const toggleRecording = async () => {
+    try {
+      if (isRecording) {
+        await recorder.stop();
+        // `recorder.uri` is the finished file; duration comes from the last status.
+        if (recorder.uri) {
+          setVoiceUri(recorder.uri);
+          setVoiceDurationMs(recorderState.durationMillis ?? 0);
+          haptics.success();
+        }
+        return;
+      }
+
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) {
+        showAlert('Microphone Needed', 'Allow microphone access to attach a voice note.');
+        return;
+      }
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+      haptics.medium();
+    } catch (e) {
+      console.warn('[CreateBubble] Voice note failed:', e);
+      showAlert('Recording Failed', 'That voice note could not be captured. Please try again.');
+    }
+  };
+
+  /**
+   * Keepsakes upload after the bubble exists, so a failed upload never costs
+   * the person their post — the bubble stands, minus the attachment.
+   */
+  const uploadKeepsakes = async (bubbleId: string) => {
+    try {
+      if (photoUri) {
+        const ext = photoUri.split('.').pop()?.toLowerCase();
+        const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+        await moodApi.attachKeepsake(bubbleId, { uri: photoUri, name: `keepsake.${ext || 'jpg'}`, type }, 'photo');
+      }
+      if (voiceUri) {
+        await moodApi.attachKeepsake(
+          bubbleId,
+          { uri: voiceUri, name: 'voice-note.m4a', type: 'audio/m4a' },
+          'voice',
+          voiceDurationMs,
+        );
+      }
+    } catch (e) {
+      console.warn('[CreateBubble] Keepsake upload failed:', e);
+    }
+  };
+
   const handlePublish = async () => {
     if (!content.trim()) return;
 
@@ -114,11 +223,16 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
       weatherTemp,
       timestamp: 'Just now',
       createdAt: new Date().toISOString(),
+      expiresAt: expiryFromNow(),
       likesCount: 0,
       commentsCount: 0,
       isAnonymous,
       latitude: newLat,
       longitude: newLng,
+      tags,
+      photoUri: photoUri ?? undefined,
+      voiceUri: voiceUri ?? undefined,
+      voiceDurationMs: voiceDurationMs || undefined,
     };
 
     try {
@@ -138,9 +252,13 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
         weather_temp: weatherTemp,
         latitude: newLat,
         longitude: newLng,
+        tags,
       },
       {
-        onSuccess: () => {
+        onSuccess: async (created: any) => {
+          if (created?.id && (photoUri || voiceUri)) {
+            await uploadKeepsakes(created.id);
+          }
           haptics.success();
           navigation.goBack();
         },
@@ -158,415 +276,631 @@ export const CreateBubbleScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={[styles.outerWrapper, { backgroundColor: colors.background }]}>
-      {/* Emotion-reactive Aurora Background */}
-      <AuroraBackground emotion={selectedEmotion} />
-
-      <ScreenWrapper scrollable contentContainerStyle={styles.container}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardView}
+    <ScreenWrapper backgroundColor={colors.background} style={styles.container}>
+      {/* ── Masthead ── */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.iconBtn, { borderColor: colors.ink, backgroundColor: colors.surface }]}
+          accessibilityLabel="Go back"
         >
-          {/* Header Bar */}
-          <View style={styles.header}>
-            <IconButton
-              icon={<Ionicons name="close" size={24} color={colors.textPrimary} />}
-              variant="ghost"
-              onPress={() => navigation.goBack()}
-            />
-            <View style={styles.headerTitleBox}>
-              <Typography variant="h3" weight="bold">
-                Share Your Mood
-              </Typography>
-              <Typography variant="caption" color={colors.textMuted}>
-                Pick your feeling and drop a bubble on the map
-              </Typography>
-            </View>
-            <Button
-              title="Post Mood"
-              variant="aurora"
-              size="sm"
-              loading={isPending}
-              disabled={!content.trim()}
-              onPress={handlePublish}
-            />
+          <Ionicons name="arrow-back" size={18} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Typography variant="h4" style={{ color: colors.textPrimary, flex: 1, marginLeft: 12 }}>
+          Share Your Mood
+        </Typography>
+        <View style={[styles.syncBadge, { borderColor: colors.ink, backgroundColor: colors.surfaceWarm }]}>
+          <PingDot size={7} />
+          <Typography variant="overline" style={{ color: colors.textPrimary, marginLeft: 6 }}>
+            LIVE SYNC
+          </Typography>
+        </View>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+          <Typography variant="h2" style={{ color: colors.textPrimary }}>
+            How are you feeling right now?
+          </Typography>
+          <Typography variant="bodySmall" style={{ color: colors.textSecondary, marginTop: 6 }}>
+            Pick a frequency. Your bubble floats onto the shared world canvas for nearby wanderers.
+          </Typography>
+
+          {/* ① Frequency grid */}
+          <View style={styles.sectionHeader}>
+            <Typography variant="overline" style={{ color: colors.textMuted }}>
+              SELECT FREQUENCY
+            </Typography>
+            <Typography variant="caption" style={{ color: colors.textMuted }}>
+              {emotionConfig.label}
+            </Typography>
           </View>
 
-          {/* Ambient Context Capsule (Location & Climate) */}
-          <View style={styles.contextPillRow}>
-            <TouchableOpacity
-              style={[
-                styles.contextPill,
-                { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
-                styles.locationPillInteractive,
-              ]}
-              onPress={() => {
-                setShowLocationPicker(true);
-                haptics.light();
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="location-outline" size={13} color={emotionConfig.primary} />
-              <Typography variant="caption" weight="semibold" color={colors.textPrimary}>
-                {locationName} ▾
-              </Typography>
-            </TouchableOpacity>
-            <View style={[styles.contextPill, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
-              <Ionicons name="cloudy-night-outline" size={13} color={colors.accent} />
-              <Typography variant="caption" color={colors.textSecondary}>
-                {weatherCondition} • {weatherTemp}°C
-              </Typography>
-            </View>
-          </View>
-
-          {/* Reflection Glass Input Card */}
-          <View
-            style={[
-              styles.inputCard,
-              { backgroundColor: colors.glass.surface },
-              shadows.glassGlow(emotionConfig.primary, 0.15),
-              { borderColor: emotionConfig.border },
-            ]}
-          >
-            <TextInput
-              placeholder="How are you feeling right now? Share your thoughts..."
-              placeholderTextColor={colors.textMuted}
-              value={content}
-              onChangeText={setContent}
-              multiline
-              style={[styles.textArea, { color: colors.textPrimary }]}
-              maxLength={350}
-            />
-            <View style={styles.inputFooter}>
-              <Typography variant="caption" color={colors.textMuted}>
-                {350 - content.length} characters remaining
-              </Typography>
-            </View>
-          </View>
-
-          {/* AI Emotion Detection Suggestion */}
-          {detectedSentiment && detectedSentiment.emotion !== selectedEmotion && (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setSelectedEmotion(detectedSentiment.emotion);
-                haptics.selection();
-              }}
-              style={styles.aiSuggestionBox}
-            >
-              <Ionicons name="sparkles" size={16} color={colors.accentInk} />
-              <View style={styles.aiSuggestionContent}>
-                <Typography variant="caption" color={colors.textSecondary}>
-                  Detected vibe:{' '}
-                  <Typography variant="caption" weight="bold" color={colors.accentInk}>
-                    {getEmotionConfig(detectedSentiment.emotion).label}
-                  </Typography>
-                </Typography>
-                <Typography variant="caption" color={colors.textMuted} style={styles.aiReason}>
-                  {detectedSentiment.reason} • Tap to switch
-                </Typography>
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* Primary Emotion Selection Carousel */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Typography variant="overline" color={colors.textMuted}>
-                HOW DOES IT FEEL?
-              </Typography>
-              <Typography variant="caption" color={emotionConfig.primary} weight="bold">
-                {emotionConfig.label} {emotionConfig.emoji}
-              </Typography>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.emotionScroll}
-            >
-              {EMOTIONS.map((emo) => (
-                <MoodTag
+          <View style={styles.grid}>
+            {EMOTIONS.map((emo) => {
+              const cfg = getEmotionConfig(emo);
+              const isSelected = selectedEmotion === emo;
+              return (
+                <Tactile
                   key={emo}
-                  emotion={emo}
-                  selected={selectedEmotion === emo}
+                  offset={isSelected ? 4 : 2}
+                  radius={16}
+                  backgroundColor={isSelected ? cfg.primary : colors.surface}
+                  style={styles.gridCell}
+                  contentStyle={styles.gridTile}
                   onPress={() => {
                     setSelectedEmotion(emo);
                     haptics.selection();
                   }}
-                  style={styles.emotionTag}
-                />
-              ))}
-            </ScrollView>
+                  accessibilityLabel={`Select ${cfg.label}`}
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  <MoodGlyph
+                    mood={toMoodKey(emo)}
+                    size={26}
+                    color={isSelected ? inkOnPastel : emotionInk(cfg, isDark)}
+                  />
+                  <Typography
+                    variant="label"
+                    style={{ color: isSelected ? inkOnPastel : colors.textSecondary, marginTop: 6 }}
+                  >
+                    {cfg.label}
+                  </Typography>
+                </Tactile>
+              );
+            })}
           </View>
 
-          {/* Tactile Intensity Gauge */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Typography variant="overline" color={colors.textMuted}>
-                INTENSITY LEVEL
+          {/* Sentiment nudge */}
+          {detectedSentiment && detectedSentiment.emotion !== selectedEmotion && (
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedEmotion(detectedSentiment.emotion);
+                haptics.light();
+              }}
+              style={[styles.nudge, { borderColor: colors.ink, backgroundColor: colors.surfaceWarm }]}
+              accessibilityRole="button"
+              accessibilityLabel={`Switch to ${getEmotionConfig(detectedSentiment.emotion).label}`}
+            >
+              <MoodGlyph
+                mood={toMoodKey(detectedSentiment.emotion)}
+                size={16}
+                color={emotionInk(getEmotionConfig(detectedSentiment.emotion), isDark)}
+              />
+              <Typography variant="caption" style={{ color: colors.textSecondary, marginLeft: 8, flex: 1 }}>
+                {detectedSentiment.reason} • Tap to switch to{' '}
+                {getEmotionConfig(detectedSentiment.emotion).label}
               </Typography>
-              <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
+            </TouchableOpacity>
+          )}
+
+          {/* ② Vibe dial */}
+          <Tactile offset={4} radius={20} style={styles.block} contentStyle={styles.card}>
+            <View style={styles.rowBetween}>
+              <Typography variant="h4" style={{ color: colors.textPrimary }}>
+                Vibe Dial
+              </Typography>
+              <Typography variant="caption" weight="bold" style={{ color: moodInk }}>
                 {intensity}/10 — {INTENSITY_DESCRIPTORS[intensity]}
               </Typography>
             </View>
 
-            <View style={[styles.intensitySelectorRow, { backgroundColor: colors.glass.surface, borderColor: colors.glass.border }]}>
+            <View style={styles.dialRow}>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => {
-                const isActive = intensity === val;
+                const isOn = val <= intensity;
                 return (
                   <TouchableOpacity
                     key={val}
-                    activeOpacity={0.7}
                     onPress={() => {
                       setIntensity(val);
                       haptics.selection();
                     }}
+                    accessibilityRole="adjustable"
+                    accessibilityLabel={`Intensity ${val} of 10`}
                     style={[
-                      styles.intensityPill,
-                      isActive && {
-                        backgroundColor: emotionConfig.primary,
-                        borderColor: '#FFFFFF',
-                        transform: [{ scale: 1.15 }],
-                        shadowColor: emotionConfig.primary,
-                        shadowOpacity: 0.6,
-                        shadowRadius: 8,
+                      styles.dialBar,
+                      {
+                        backgroundColor: isOn ? emotionConfig.primary : colors.surfaceElevated,
+                        borderColor: colors.ink,
+                        height: 18 + val * 2.6,
                       },
                     ]}
-                  >
-                    <Typography
-                      variant="caption"
-                      weight="bold"
-                      color={isActive ? '#FFFFFF' : colors.textMuted}
-                    >
-                      {val}
-                    </Typography>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
-          </View>
 
-          {/* Privacy & Incognito Cloak */}
-          <View style={styles.section}>
-            <Typography variant="overline" color={colors.textMuted} style={styles.sectionLabel}>
-              VISIBILITY
-            </Typography>
+            <View style={styles.rowBetween}>
+              <Typography variant="overline" style={{ color: colors.textMuted }}>
+                SOFT
+              </Typography>
+              <Typography variant="overline" style={{ color: colors.textMuted }}>
+                BALANCED
+              </Typography>
+              <Typography variant="overline" style={{ color: colors.textMuted }}>
+                ULTRA
+              </Typography>
+            </View>
+          </Tactile>
 
-            <View style={styles.privacyOptionGrid}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  setIsAnonymous(false);
-                  haptics.light();
-                }}
-                style={[
-                  styles.privacyCard,
-                  { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
-                  !isAnonymous && styles.privacyCardActive,
-                ]}
-              >
-                <View style={styles.privacyHeader}>
-                  <Ionicons
-                    name="earth"
-                    size={18}
-                    color={!isAnonymous ? colors.primaryLight : colors.textMuted}
-                  />
-                  <Typography
-                    variant="bodySmall"
-                    weight="semibold"
-                    color={!isAnonymous ? '#FFFFFF' : colors.textSecondary}
-                  >
-                    Public (With your name)
+          {/* ③ Candid whisper */}
+          <Tactile offset={4} radius={20} style={styles.block} contentStyle={styles.card}>
+            <View style={styles.rowBetween}>
+              <Typography variant="h4" style={{ color: colors.textPrimary }}>
+                Candid Whisper
+              </Typography>
+              <Typography variant="overline" style={{ color: content.length > MAX_NOTE - 20 ? colors.errorInk : colors.textMuted }}>
+                {content.length} / {MAX_NOTE}
+              </Typography>
+            </View>
+            <TextInput
+              value={content}
+              onChangeText={(t) => setContent(t.slice(0, MAX_NOTE))}
+              placeholder="What does this moment feel like?"
+              placeholderTextColor={colors.textMuted}
+              multiline
+              style={[styles.input, { color: colors.textPrimary, borderColor: colors.border }]}
+              accessibilityLabel="Your mood note"
+            />
+
+            {/* tags */}
+            <View style={styles.tagRow}>
+              {tags.map((t) => (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setTags(tags.filter((x) => x !== t))}
+                  style={[styles.tagChip, { borderColor: colors.ink, backgroundColor: emotionConfig.background }]}
+                  accessibilityLabel={`Remove tag ${t}`}
+                >
+                  <Typography variant="overline" style={{ color: moodInk }}>
+                    #{t.toUpperCase()} ✕
                   </Typography>
+                </TouchableOpacity>
+              ))}
+              {tags.length < MAX_TAGS && (
+                <View style={[styles.tagInputWrap, { borderColor: colors.border }]}>
+                  <TextInput
+                    value={tagDraft}
+                    onChangeText={setTagDraft}
+                    onSubmitEditing={addTag}
+                    placeholder="add tag"
+                    placeholderTextColor={colors.textMuted}
+                    style={[styles.tagInput, { color: colors.textPrimary }]}
+                    returnKeyType="done"
+                    accessibilityLabel="Add a tag"
+                  />
+                  <TouchableOpacity onPress={addTag} accessibilityLabel="Add tag">
+                    <Ionicons name="add" size={16} color={colors.textSecondary} />
+                  </TouchableOpacity>
                 </View>
-                <Typography variant="caption" color={colors.textMuted}>
-                  Your name and avatar are visible to the community.
-                </Typography>
+              )}
+            </View>
+          </Tactile>
+
+          {/* ④ Sensory keepsakes */}
+          <Tactile offset={4} radius={20} style={styles.block} contentStyle={styles.card}>
+            <View style={styles.rowBetween}>
+              <Typography variant="h4" style={{ color: colors.textPrimary }}>
+                Sensory Keepsakes
+              </Typography>
+              <Typography variant="overline" style={{ color: colors.textMuted }}>
+                {(photoUri ? 1 : 0) + (voiceUri ? 1 : 0) > 0
+                  ? `${(photoUri ? 1 : 0) + (voiceUri ? 1 : 0)} ATTACHED`
+                  : 'OPTIONAL'}
+              </Typography>
+            </View>
+
+            <View style={styles.keepsakeRow}>
+              <TouchableOpacity
+                onPress={attachPhoto}
+                style={[styles.polaroid, { borderColor: colors.ink, backgroundColor: colors.surfaceWarm }]}
+                accessibilityLabel={photoUri ? 'Replace attached photo' : 'Attach a photo'}
+              >
+                {photoUri ? (
+                  <Image source={{ uri: photoUri }} style={styles.polaroidImage} resizeMode="cover" />
+                ) : (
+                  <>
+                    <Ionicons name="image-outline" size={22} color={colors.textSecondary} />
+                    <Typography variant="overline" style={{ color: colors.textSecondary, marginTop: 4 }}>
+                      POLAROID
+                    </Typography>
+                  </>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  setIsAnonymous(true);
-                  haptics.light();
-                }}
+                onPress={toggleRecording}
                 style={[
-                  styles.privacyCard,
-                  { backgroundColor: colors.glass.surface, borderColor: colors.glass.border },
-                  isAnonymous && styles.privacyCardActiveGhost,
+                  styles.polaroid,
+                  !voiceUri && styles.soonTile,
+                  {
+                    borderColor: isRecording ? colors.error : voiceUri ? colors.ink : colors.border,
+                    backgroundColor: voiceUri ? colors.surfaceWarm : 'transparent',
+                  },
                 ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isRecording }}
+                accessibilityLabel={
+                  isRecording ? 'Stop recording' : voiceUri ? 'Re-record voice note' : 'Record a voice note'
+                }
               >
-                <View style={styles.privacyHeader}>
-                  <Ionicons
-                    name="eye-off"
-                    size={18}
-                    color={isAnonymous ? colors.accent : colors.textMuted}
-                  />
-                  <Typography
-                    variant="bodySmall"
-                    weight="semibold"
-                    color={isAnonymous ? '#FFFFFF' : colors.textSecondary}
-                  >
-                    Incognito (Anonymous)
+                <Ionicons
+                  name={isRecording ? 'stop-circle' : voiceUri ? 'mic' : 'mic-outline'}
+                  size={22}
+                  color={isRecording ? colors.error : voiceUri ? moodInk : colors.textMuted}
+                />
+                <Typography
+                  variant="overline"
+                  style={{ color: isRecording ? colors.error : colors.textSecondary, marginTop: 4 }}
+                >
+                  {isRecording
+                    ? formatDuration(recorderState.durationMillis ?? 0)
+                    : voiceUri
+                      ? formatDuration(voiceDurationMs)
+                      : 'VOICE'}
+                </Typography>
+                {isRecording && (
+                  <View style={[styles.soonBadge, { backgroundColor: colors.error }]}>
+                    <Typography variant="overline" style={{ color: '#FFFFFF' }}>
+                      REC
+                    </Typography>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {voiceUri && !isRecording && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setVoiceUri(null);
+                    setVoiceDurationMs(0);
+                    haptics.light();
+                  }}
+                  style={[styles.removePhoto, { borderColor: colors.ink, backgroundColor: colors.surface }]}
+                  accessibilityLabel="Remove voice note"
+                >
+                  <Ionicons name="close" size={16} color={colors.errorInk} />
+                </TouchableOpacity>
+              )}
+
+              {photoUri && (
+                <TouchableOpacity
+                  onPress={() => setPhotoUri(null)}
+                  style={[styles.removePhoto, { borderColor: colors.ink, backgroundColor: colors.surface }]}
+                  accessibilityLabel="Remove attached photo"
+                >
+                  <Ionicons name="trash-outline" size={16} color={colors.errorInk} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </Tactile>
+
+          {/* ⑤ Location */}
+          <Tactile offset={4} radius={20} style={styles.block} contentStyle={styles.card}>
+            <View style={styles.rowBetween}>
+              <View style={styles.locationLeft}>
+                <Ionicons name="location-outline" size={18} color={moodInk} />
+                <View style={{ marginLeft: 8, flex: 1 }}>
+                  <Typography variant="label" numberOfLines={1} style={{ color: colors.textPrimary }}>
+                    {locationName}
+                  </Typography>
+                  <Typography variant="caption" style={{ color: colors.textMuted }}>
+                    Approximate area • Privacy protected
                   </Typography>
                 </View>
-                <Typography variant="caption" color={colors.textMuted}>
-                  Posted as a mystery traveler. Only your emotion is shown.
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowLocationPicker(true)}
+                style={[styles.editPill, { borderColor: colors.ink, backgroundColor: colors.surfaceWarm }]}
+                accessibilityLabel="Change location"
+              >
+                <Typography variant="overline" style={{ color: colors.textPrimary }}>
+                  EDIT
                 </Typography>
               </TouchableOpacity>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </ScreenWrapper>
+          </Tactile>
 
-      {/* Worldwide Location Picker Modal */}
+          {/* ⑥ Auto-dissolve */}
+          <Tactile
+            offset={4}
+            radius={20}
+            style={styles.block}
+            backgroundColor={colors.surfaceWarm}
+            contentStyle={styles.card}
+          >
+            <View style={styles.rowBetween}>
+              <Typography variant="overline" style={{ color: colors.textPrimary }}>
+                AUTO-DISSOLVE
+              </Typography>
+              <View style={[styles.burnBadge, { backgroundColor: colors.primary, borderColor: colors.ink }]}>
+                <Typography variant="overline" style={{ color: inkOnPastel }}>
+                  BURNS IN 24H
+                </Typography>
+              </View>
+            </View>
+            <Typography variant="body" style={{ color: colors.textPrimary, marginTop: 8 }}>
+              Floats for 24 hours
+            </Typography>
+            <Typography variant="caption" style={{ color: colors.textSecondary, marginTop: 2 }}>
+              Then softly fades, leaving zero trace on your device.
+            </Typography>
+          </Tactile>
+
+          {/* ⑦ Anonymity */}
+          <Tactile offset={4} radius={20} style={styles.block} contentStyle={styles.card}>
+            <View style={styles.rowBetween}>
+              <View style={styles.locationLeft}>
+                <Ionicons name="eye-off-outline" size={18} color={colors.textSecondary} />
+                <View style={{ marginLeft: 8, flex: 1 }}>
+                  <Typography variant="label" style={{ color: colors.textPrimary }}>
+                    Float Anonymously
+                  </Typography>
+                  <Typography variant="caption" style={{ color: colors.textMuted }}>
+                    Hide your avatar and profile handle
+                  </Typography>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setIsAnonymous(!isAnonymous);
+                  haptics.selection();
+                }}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: isAnonymous }}
+                accessibilityLabel="Float anonymously"
+                style={[
+                  styles.switchTrack,
+                  {
+                    borderColor: colors.ink,
+                    backgroundColor: isAnonymous ? colors.accent : colors.surfaceElevated,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.switchThumb,
+                    { backgroundColor: colors.surface, borderColor: colors.ink },
+                    isAnonymous && styles.switchThumbOn,
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
+          </Tactile>
+
+          {/* ⑧ Publish */}
+          <Tactile
+            offset={4}
+            radius={16}
+            backgroundColor={content.trim() && !isPending ? colors.primary : colors.surfaceElevated}
+            style={styles.block}
+            contentStyle={styles.publishBtn}
+            onPress={handlePublish}
+            disabled={!content.trim() || isPending}
+            accessibilityLabel="Drop my bubble"
+          >
+            <Typography
+              variant="button"
+              style={{ color: content.trim() && !isPending ? inkOnPastel : colors.textMuted }}
+            >
+              {isPending ? 'Dropping…' : 'Drop my bubble'}
+            </Typography>
+          </Tactile>
+
+          <Typography variant="caption" align="center" style={{ color: colors.textMuted, marginTop: 10 }}>
+            Instantly visible to wanderers nearby • Floats for 24 hours
+          </Typography>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
       <LocationPickerModal
         visible={showLocationPicker}
         currentLocationName={locationName}
-        onSelectLocation={handleLocationSelect}
         onClose={() => setShowLocationPicker(false)}
+        onSelectLocation={handleLocationSelect}
       />
-    </View>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  outerWrapper: {
-    flex: 1,
-  },
   container: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-  keyboardView: {
     flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 2,
   },
-  headerTitleBox: {
-    flex: 1,
-    marginHorizontal: 12,
-  },
-  contextPillRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  contextPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
-    borderWidth: 1,
-  },
-  locationPillInteractive: {
-    borderColor: 'rgba(108, 92, 231, 0.4)',
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
-  },
-  inputCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 18,
-    minHeight: 140,
-    marginBottom: 12,
-  },
-  textArea: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 24,
-    textAlignVertical: 'top',
-    minHeight: 90,
-  },
-  inputFooter: {
-    alignItems: 'flex-end',
-    marginTop: 8,
-  },
-  aiSuggestionBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.35)',
-    marginBottom: 20,
-    gap: 10,
-  },
-  aiSuggestionContent: {
-    flex: 1,
-  },
-  aiReason: {
-    marginTop: 2,
-    fontSize: 11,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  sectionLabel: {
-    marginBottom: 10,
-  },
-  emotionScroll: {
-    flexDirection: 'row',
-    paddingVertical: 4,
-    gap: 8,
-  },
-  emotionTag: {
-    marginRight: 4,
-  },
-  intensitySelectorRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 24,
-    borderWidth: 1,
-  },
-  intensityPill: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  iconBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
-  privacyOptionGrid: {
-    gap: 10,
-  },
-  privacyCard: {
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  privacyCardActive: {
-    borderColor: theme.colors.primaryLight,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
-  },
-  privacyCardActiveGhost: {
-    borderColor: theme.colors.accent,
-    backgroundColor: 'rgba(0, 206, 201, 0.12)',
-  },
-  privacyHeader: {
+  syncBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 60,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  gridCell: {
+    width: '31%',
+    marginBottom: 10,
+  },
+  gridTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+  },
+  nudge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    padding: 10,
+    marginTop: 4,
+  },
+  block: {
+    marginTop: 14,
+  },
+  card: {
+    padding: 14,
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dialRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginVertical: 14,
+  },
+  dialBar: {
+    width: '8%',
+    borderWidth: 2,
+    borderRadius: 6,
+  },
+  input: {
+    minHeight: 90,
+    borderWidth: 2,
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 10,
+    textAlignVertical: 'top',
+    fontSize: 15,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  tagChip: {
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginRight: 6,
+    marginTop: 6,
+  },
+  tagInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginTop: 6,
+  },
+  tagInput: {
+    minWidth: 70,
+    paddingVertical: 4,
+    fontSize: 12,
+  },
+  keepsakeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  polaroid: {
+    width: 84,
+    height: 96,
+    borderWidth: 2,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    overflow: 'hidden',
+  },
+  polaroidImage: {
+    width: '100%',
+    height: '100%',
+  },
+  soonTile: {
+    borderStyle: 'dashed',
+  },
+  soonBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    marginTop: 6,
+  },
+  removePhoto: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  editPill: {
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  burnBadge: {
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  switchTrack: {
+    width: 52,
+    height: 30,
+    borderRadius: 999,
+    borderWidth: 2,
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  switchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+  },
+  switchThumbOn: {
+    alignSelf: 'flex-end',
+  },
+  publishBtn: {
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

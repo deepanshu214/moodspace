@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 
 export interface AuraDisplayProps {
@@ -15,9 +16,9 @@ export const AuraDisplay: React.FC<AuraDisplayProps> = ({
   variant = 'compact',
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const getTier = (pts: number) => {
-    if (pts >= 1000) return { title: 'Luminary', color: '#FFD700', emoji: '🌟' };
+    if (pts >= 1000) return { title: 'Luminary', color: '#FF5C38', emoji: '🌟' };
     if (pts >= 500) return { title: 'Empath', color: colors.accentInk, emoji: '💜' };
     if (pts >= 200) return { title: 'Guide', color: colors.accent, emoji: '✨' };
     if (pts >= 50) return { title: 'Seeker', color: colors.success, emoji: '🌱' };
@@ -32,7 +33,7 @@ export const AuraDisplay: React.FC<AuraDisplayProps> = ({
         <Typography variant="bodySmall" style={styles.emoji}>
           {tier.emoji}
         </Typography>
-        <Typography variant="caption" weight="bold" color={tier.color}>
+        <Typography variant="caption" weight="bold" color={inkFor(tier.color, isDark)}>
           {score} Aura
         </Typography>
       </View>
@@ -54,7 +55,7 @@ export const AuraDisplay: React.FC<AuraDisplayProps> = ({
         <Typography variant="caption" weight="bold" color={colors.textPrimary}>
           {score}
         </Typography>
-        <Typography variant="caption" color={tier.color} style={styles.tierName}>
+        <Typography variant="caption" color={inkFor(tier.color, isDark)} style={styles.tierName}>
           {tier.title}
         </Typography>
       </View>
@@ -65,7 +66,7 @@ export const AuraDisplay: React.FC<AuraDisplayProps> = ({
   return (
     <View style={[styles.cardContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }, style]}>
       <View style={[styles.glowRing, { backgroundColor: colors.surface, borderColor: tier.color }]}>
-        <Typography variant="h2" weight="bold" color={tier.color}>
+        <Typography variant="h2" weight="bold" color={inkFor(tier.color, isDark)}>
           {score}
         </Typography>
         <Typography variant="caption" color={colors.textSecondary}>
@@ -75,7 +76,7 @@ export const AuraDisplay: React.FC<AuraDisplayProps> = ({
 
       <View style={styles.cardMeta}>
         <View style={styles.tierPill}>
-          <Typography variant="caption" weight="bold" color={tier.color}>
+          <Typography variant="caption" weight="bold" color={inkFor(tier.color, isDark)}>
             {tier.emoji} {tier.title}
           </Typography>
         </View>
