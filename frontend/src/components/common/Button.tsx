@@ -23,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkOnPastel } from '@/theme/colors';
 import { Typography } from './Typography';
 import { haptics } from '@/theme/haptics';
 import { BlurView } from 'expo-blur';
@@ -204,8 +205,8 @@ export const Button: React.FC<ButtonProps> = ({
         return isDark ? colors.primaryLight : colors.primaryDark;
       case 'aurora':
       case 'primary':
-        // Pastel coral / pastel aurora fills always want espresso ink, never white.
-        return '#2D241E';
+        // Citrus / aurora fills always carry navy ink, never white (6:1+).
+        return inkOnPastel;
       case 'danger':
       default:
         return '#FFFFFF';

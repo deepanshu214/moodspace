@@ -10,59 +10,59 @@ export interface GradientPreset {
   end: { x: number; y: number };
 }
 
-// ─── Named Aurora Gradient Presets — soft pastel aura washes ───
+// ─── Named Aurora Gradient Presets — Neo-Editorial pigment washes ───
 export const gradients = {
-  /** Default aurora — peach blush / buttercream / rose */
+  /** Default aurora — tangerine / buttercup / petal */
   auroraDefault: {
-    colors: ['#FFCDB2', '#FFE082', '#F8BBD0', '#FFCDB2'],
+    colors: ['#FF5C38', '#FFD15C', '#FF80B0', '#FF5C38'],
     locations: [0, 0.35, 0.7, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
   } as GradientPreset,
 
-  /** Calm mood — mint / seafoam / pale aqua */
+  /** Calm — mint / drop sky / buttercup */
   auroraCalm: {
-    colors: ['#A7D7C5', '#80CBC4', '#C7EAE0', '#A7D7C5'],
+    colors: ['#5CD694', '#60A5FA', '#FFD15C', '#5CD694'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0, y: 0.2 },
     end: { x: 1, y: 0.8 },
   } as GradientPreset,
 
-  /** Joy mood — buttercream / buttercup / peach */
+  /** Joy — buttercup / spark / tangerine */
   auroraJoy: {
-    colors: ['#FFE082', '#FFD54F', '#FFCDB2', '#FFE082'],
+    colors: ['#FFD15C', '#FB923C', '#FF5C38', '#FFD15C'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.2, y: 0 },
     end: { x: 0.8, y: 1 },
   } as GradientPreset,
 
-  /** Anxiety mood — lilac / lavender / rose */
+  /** Heavy — violet / drop sky / petal */
   auroraAnxiety: {
-    colors: ['#E1BEE7', '#D1C4E9', '#F8BBD0', '#E1BEE7'],
+    colors: ['#C084FC', '#60A5FA', '#FF80B0', '#C084FC'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.1, y: 0.1 },
     end: { x: 0.9, y: 0.9 },
   } as GradientPreset,
 
-  /** Anger mood — soft terracotta / apricot */
+  /** Fiery — flare / tangerine / spark */
   auroraAnger: {
-    colors: ['#FFCCBC', '#FFAB91', '#FFCDB2', '#FFCCBC'],
+    colors: ['#F87171', '#FF5C38', '#FB923C', '#F87171'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
   } as GradientPreset,
 
-  /** Sadness mood — periwinkle / lavender / mint */
+  /** Sadness — drop sky / violet / mint */
   auroraSadness: {
-    colors: ['#C5CAE9', '#D1C4E9', '#A7D7C5', '#C5CAE9'],
+    colors: ['#60A5FA', '#C084FC', '#5CD694', '#60A5FA'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0, y: 0.3 },
     end: { x: 1, y: 0.7 },
   } as GradientPreset,
 
-  /** Love mood — rose blush / peach */
+  /** Love — petal / tangerine / buttercup */
   auroraLove: {
-    colors: ['#F8BBD0', '#FFCDB2', '#F48FB1', '#F8BBD0'],
+    colors: ['#FF80B0', '#FF5C38', '#FFD15C', '#FF80B0'],
     locations: [0, 0.33, 0.66, 1],
     start: { x: 0.3, y: 0 },
     end: { x: 0.7, y: 1 },
@@ -70,9 +70,9 @@ export const gradients = {
 
   // ─── UI Gradients ───
 
-  /** Primary brand gradient for buttons/FABs — pastel coral into buttercup */
+  /** Primary brand gradient for buttons/FABs — tangerine into spark (ink text on top) */
   primaryButton: {
-    colors: ['#FF8A65', '#FFD54F'],
+    colors: ['#FF5C38', '#FB923C'],
     locations: [0, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
@@ -86,17 +86,17 @@ export const gradients = {
     end: { x: 0.5, y: 1 },
   } as GradientPreset,
 
-  /** Fade-out mask for hero sections — uses warm almond background */
+  /** Fade-out mask for hero sections — newsprint canvas */
   heroFade: {
-    colors: ['transparent', '#FAF7F2'],
+    colors: ['transparent', '#FFFDF9'],
     locations: [0, 1],
     start: { x: 0.5, y: 0 },
     end: { x: 0.5, y: 1 },
   } as GradientPreset,
 
-  /** Frosted pastel header wash — peach → buttercream → mint */
-  pastelHeader: {
-    colors: ['#FFE3D3', '#FFF2DC', '#E4F3EC'],
+  /** Header band — Neo-Editorial headers sit on the page canvas */
+  headerBand: {
+    colors: ['#FFFDF9', '#FFFDF9', '#FFFDF9'],
     locations: [0, 0.55, 1],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },

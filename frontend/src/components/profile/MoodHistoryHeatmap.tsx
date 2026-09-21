@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
-// This card is an intentionally always-dark "constellation" surface regardless
-// of the app's light/dark theme, so it pulls text colors from the dark palette.
-import { darkColors as colors } from '@/theme/colors';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 import { MoodHeatmapDay } from '@/api/types';
 import { haptics } from '@/theme/haptics';
@@ -17,7 +15,26 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
   days,
   onSelectDay,
 }) => {
+  const { colors, isDark } = useTheme();
   const [selectedDay, setSelectedDay] = useState<MoodHeatmapDay | null>(null);
+
+  // Surfaces that were hardcoded for a dark card; light mode gets warm cream tones.
+  const tone = useMemo(
+    () => ({
+      card: {
+        backgroundColor: isDark ? colors.glass.surface : colors.surface,
+        borderColor: colors.glass.border,
+      },
+      subtle: isDark ? 'rgba(255, 255, 255, 0.05)' : colors.backgroundSecondary,
+      quietPebble: isDark ? 'rgba(255, 255, 255, 0.03)' : colors.backgroundSecondary,
+      quietBorder: isDark ? 'rgba(255, 255, 255, 0.06)' : colors.border,
+      track: isDark ? 'rgba(255, 255, 255, 0.08)' : colors.border,
+      badge: isDark ? 'rgba(255, 92, 56, 0.18)' : colors.surfaceHighlight,
+      // Pastel fills are pale: light mode needs more of them to read as a pebble.
+      pebbleFillAlpha: isDark ? '33' : '8C',
+    }),
+    [colors, isDark]
+  );
 
   // Group into weeks of 7 days
   const weeks: MoodHeatmapDay[][] = useMemo(() => {
@@ -62,10 +79,10 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
     : null;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, tone.card, !isDark && styles.cardLift]}>
       {/* ── Header: Title & Monthly Highlights ── */}
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerText}>
           <Typography variant="caption" weight="bold" color={colors.accentInk} style={styles.headerLabel}>
             MONTHLY MOOD CONSTELLATION
           </Typography>
@@ -77,7 +94,13 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
         {/* Emotion Distribution Pills */}
         <View style={styles.summaryPills}>
           {monthlyStats.slice(0, 3).map((item) => (
-            <View key={item.emotion} style={[styles.statPill, { borderColor: `${item.cfg.primary}40` }]}>
+            <View
+              key={item.emotion}
+              style={[
+                styles.statPill,
+                { backgroundColor: tone.subtle, borderColor: `${item.cfg.primary}${isDark ? '40' : 'CC'}` },
+              ]}
+            >
               <Typography style={{ fontSize: 12 }}>{item.cfg.emoji}</Typography>
               <Typography variant="caption" weight="bold" color={colors.textPrimary} style={{ marginLeft: 3 }}>
                 {item.count}
@@ -110,13 +133,13 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
               const isSelected = selectedDay?.date === day.date;
 
               const cellBg = hasCheckin && emotionCfg
-                ? `${emotionCfg.primary}25`
-                : 'rgba(255, 255, 255, 0.03)';
+                ? `${emotionCfg.primary}${tone.pebbleFillAlpha}`
+                : tone.quietPebble;
               const cellBorder = isSelected
-                ? colors.primaryLight
+                ? colors.accentInk
                 : hasCheckin && emotionCfg
-                ? `${emotionCfg.primary}60`
-                : 'rgba(255, 255, 255, 0.06)';
+                ? isDark ? `${emotionCfg.primary}60` : emotionCfg.primary
+                : tone.quietBorder;
 
               // Extract day of month number (1-31)
               const dayNumber = new Date(day.date + 'T00:00:00').getDate();
@@ -126,6 +149,13 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
                   key={day.date}
                   activeOpacity={0.7}
                   onPress={() => handleDayPress(day)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={
+                    hasCheckin && emotionCfg
+                      ? `Day ${dayNumber}, ${emotionCfg.label}`
+                      : `Day ${dayNumber}, no check-ins`
+                  }
                   style={[
                     styles.pebble,
                     {
@@ -133,14 +163,14 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
                       borderColor: cellBorder,
                       borderWidth: isSelected ? 2 : 1,
                     },
-                    isSelected && styles.pebbleSelected,
+                    isSelected && [styles.pebbleSelected, { shadowColor: colors.accentInk }],
                   ]}
                 >
                   <Typography
                     variant="caption"
                     style={[
                       styles.dayNumberText,
-                      { color: isSelected ? colors.primaryLight : colors.textMuted },
+                      { color: isSelected ? colors.accentInk : colors.textSecondary },
                     ]}
                   >
                     {dayNumber}
@@ -149,7 +179,7 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
                   {hasCheckin && emotionCfg ? (
                     <Typography style={styles.pebbleEmoji}>{emotionCfg.emoji}</Typography>
                   ) : (
-                    <Typography style={styles.emptyPebbleDot}>·</Typography>
+                    <Typography style={[styles.emptyPebbleDot, { color: colors.textMuted }]}>·</Typography>
                   )}
                 </TouchableOpacity>
               );
@@ -160,7 +190,7 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
 
       {/* ── Interactive Day Detail Card ── */}
       {selectedDay ? (
-        <View style={styles.detailBanner}>
+        <View style={[styles.detailBanner, { backgroundColor: tone.subtle, borderColor: colors.glass.border }]}>
           <View style={styles.detailCardContent}>
             <View style={styles.detailDateRow}>
               <Typography variant="body" weight="bold" color={colors.textPrimary}>
@@ -172,7 +202,7 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
               </Typography>
 
               {selectedDay.count > 0 ? (
-                <View style={styles.checkinCountBadge}>
+                <View style={[styles.checkinCountBadge, { backgroundColor: tone.badge }]}>
                   <Typography variant="caption" weight="bold" color={colors.accentInk}>
                     {selectedDay.count} check-in{selectedDay.count > 1 ? 's' : ''}
                   </Typography>
@@ -186,7 +216,11 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
                   <Typography style={{ fontSize: 16, marginRight: 6 }}>
                     {selectedEmotionCfg.emoji}
                   </Typography>
-                  <Typography variant="caption" color={selectedEmotionCfg.primary} weight="bold">
+                  <Typography
+                    variant="caption"
+                    color={isDark ? selectedEmotionCfg.primary : selectedEmotionCfg.deep}
+                    weight="bold"
+                  >
                     {selectedEmotionCfg.label}
                   </Typography>
                   {selectedDay.intensity_average != null && (
@@ -197,7 +231,7 @@ export const MoodHistoryHeatmap: React.FC<MoodHistoryHeatmapProps> = ({
                 </View>
 
                 {/* Intensity meter bar */}
-                <View style={styles.intensityTrack}>
+                <View style={[styles.intensityTrack, { backgroundColor: tone.track }]}>
                   <View
                     style={[
                       styles.intensityFill,
@@ -229,16 +263,27 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     borderRadius: 24,
-    backgroundColor: 'rgba(20, 24, 38, 0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1.5,
     marginBottom: 16,
+  },
+  cardLift: {
+    shadowColor: '#1E1E1E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    rowGap: 8,
+    columnGap: 8,
     marginBottom: 12,
+  },
+  headerText: {
+    flexShrink: 1,
   },
   headerLabel: {
     letterSpacing: 1.2,
@@ -254,7 +299,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
   },
   dayOfWeekRow: {
@@ -284,9 +328,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   pebbleSelected: {
-    shadowColor: colors.primaryLight,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.45,
     shadowRadius: 8,
     elevation: 6,
   },
@@ -300,16 +343,13 @@ const styles = StyleSheet.create({
   },
   emptyPebbleDot: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.2)',
     marginTop: -2,
   },
   detailBanner: {
     marginTop: 14,
     padding: 14,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   detailCardContent: {
     width: '100%',
@@ -323,7 +363,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
   },
   reflectionBody: {
     marginTop: 8,
@@ -339,7 +378,6 @@ const styles = StyleSheet.create({
   intensityTrack: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
   },
   intensityFill: {

@@ -11,3 +11,4 @@ export * from './notification';
 export * from './community';
 export * from './messaging';
 export * from './matching';
+export * from './anchors';

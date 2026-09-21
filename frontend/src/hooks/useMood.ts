@@ -6,7 +6,7 @@ export const useMoodCheckin = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: MoodCheckinPayload) => moodApi.checkin(payload),
+    mutationFn: (payload: MoodCheckinPayload & { tags?: string[] }) => moodApi.checkin(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mood', 'history'] });
       queryClient.invalidateQueries({ queryKey: ['mood', 'nearby'] });

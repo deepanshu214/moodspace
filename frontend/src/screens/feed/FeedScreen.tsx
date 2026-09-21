@@ -319,7 +319,6 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07080D',
   },
   header: {
     paddingHorizontal: 16,
@@ -359,7 +358,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
+    backgroundColor: 'rgba(28, 30, 36, 0.85)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: theme.radius.pill,
@@ -368,7 +367,7 @@ const styles = StyleSheet.create({
   },
   filterPillActive: {
     borderColor: theme.colors.primaryLight,
-    backgroundColor: 'rgba(108, 92, 231, 0.25)',
+    backgroundColor: 'rgba(255, 92, 56, 0.25)',
   },
   feedScroll: {
     paddingHorizontal: 16,

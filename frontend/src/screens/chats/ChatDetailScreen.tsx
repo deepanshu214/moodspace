@@ -9,7 +9,6 @@ import {
   Platform,
   Modal,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatStackParamList } from '@/navigation/types';
@@ -27,6 +26,7 @@ import { useMessages, useSendMessage, useMarkRead, useDeleteMessage, useReactToM
 import { useIcebreakers } from '@/hooks/useMatching';
 import { useAuthStore } from '@/stores/authStore';
 import { DirectMessage, Icebreaker, MessageType } from '@/api/types';
+import { showAlert } from '@/components/common/AppDialog';
 
 type Props = NativeStackScreenProps<ChatStackParamList, 'ChatDetail'>;
 
@@ -36,6 +36,14 @@ const EMOJI_REACTIONS = ['❤️', '😊', '🤗', '✨', '💙', '🙏', '😮'
 interface LocalMessage extends DirectMessage {
   _isLocal?: boolean;
 }
+
+/**
+ * Server conversations are UUIDs; the sample threads use ids like "conv-1".
+ * Treating those as local is what keeps send/react working offline instead of
+ * firing a request that can only 404.
+ */
+const isDemoThread = (id?: string) =>
+  !id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
 const MOCK_MESSAGES: LocalMessage[] = [
   {
@@ -96,7 +104,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
 
   // API hooks
   const { data: infiniteData, isLoading, refetch } = useMessages(
-    chatId !== 'conv-local' ? chatId : undefined,
+    !isDemoThread(chatId) ? chatId : undefined,
   );
   const sendMutation = useSendMessage(chatId);
   const deleteMutation = useDeleteMessage(chatId);
@@ -118,7 +126,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
 
   // Mark as read on mount
   useEffect(() => {
-    if (chatId && chatId !== 'conv-local') {
+    if (chatId && !isDemoThread(chatId)) {
       markReadMutation.mutate({ conversation_id: chatId });
     }
   }, [chatId]);
@@ -134,7 +142,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
     const text = inputText.trim();
     if (!text) return;
 
-    if (chatId === 'conv-local') {
+    if (isDemoThread(chatId)) {
       // Local-only mode (demo fallback)
       const newMsg: LocalMessage = {
         id: `local-${Date.now()}`,
@@ -166,6 +174,14 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
           setInputText('');
           setMessageType('text');
         },
+        onError: (err: any) => {
+          // Silence here is what made this look broken: the text stayed in the
+          // box with no explanation. Keep the draft, say what happened.
+          showAlert(
+            'Message not sent',
+            err?.message || 'That message could not be delivered. Your draft is still here — try again.',
+          );
+        },
       },
     );
   }, [inputText, chatId, currentUserId, messageType, sendMutation]);
@@ -178,8 +194,14 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
   const handleReaction = useCallback(
     (emoji: string) => {
       if (!selectedMessage) return;
-      if (chatId !== 'conv-local') {
-        reactionMutation.mutate({ message_id: selectedMessage.id, emoji });
+      if (!isDemoThread(chatId)) {
+        reactionMutation.mutate(
+          { message_id: selectedMessage.id, emoji },
+          {
+            onError: (err: any) =>
+              showAlert('Reaction not saved', err?.message || 'That reaction could not be saved.'),
+          },
+        );
       } else {
         // Local mode: append reaction optimistically
         setLocalMessages((prev) =>
@@ -204,7 +226,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
 
   const handleDeleteMessage = useCallback(() => {
     if (!selectedMessage) return;
-    Alert.alert(
+    showAlert(
       'Delete Message',
       'Are you sure you want to delete this message?',
       [
@@ -213,7 +235,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            if (chatId !== 'conv-local') {
+            if (!isDemoThread(chatId)) {
               deleteMutation.mutate(selectedMessage.id);
             } else {
               setLocalMessages((prev) =>
@@ -244,7 +266,9 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
       <MessageBubble
         message={item}
         isMe={item.sender_id === currentUserId || item.sender_id === 'me'}
+        onPress={handleLongPress}
         onLongPress={handleLongPress}
+        onReactionPress={handleLongPress}
         currentUserId={currentUserId}
       />
     ),
@@ -415,7 +439,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={20}
-                color={showIcebreakerPanel ? colors.primary : colors.textMuted}
+                color={showIcebreakerPanel ? colors.accentInk : colors.textMuted}
               />
             </TouchableOpacity>
 

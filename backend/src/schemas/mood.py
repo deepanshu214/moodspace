@@ -19,8 +19,46 @@ class MoodCreate(BaseModel):
     journal_note: Optional[str] = Field(default=None, max_length=2000)
     privacy_level: str = Field(default="private", pattern="^(private|friends|community|public)$")
     location: Optional[Location] = None
+    city: Optional[str] = Field(default=None, max_length=100)
     weather_condition: Optional[str] = None
     weather_temp_celsius: Optional[int] = None
+    is_incognito: bool = False
+    # Bubbles dissolve after this many hours. 0 or None keeps it forever
+    # (journal entries); the map defaults to a 24 hour float.
+    expires_in_hours: Optional[int] = Field(default=24, ge=0, le=720)
+
+
+class AttachmentResponse(BaseModel):
+    id: UUID
+    kind: str
+    url: str
+    mime_type: Optional[str] = None
+    duration_ms: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AnchorCreate(BaseModel):
+    label: str = Field(min_length=1, max_length=80)
+    city: Optional[str] = Field(default=None, max_length=120)
+    note: Optional[str] = Field(default=None, max_length=400)
+    emotion: Optional[str] = Field(default=None, max_length=30)
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+
+
+class AnchorResponse(BaseModel):
+    id: UUID
+    label: str
+    city: Optional[str] = None
+    note: Optional[str] = None
+    emotion: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    drops_count: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class EmotionResponse(BaseModel):
     primary: str

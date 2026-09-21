@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
+    backgroundColor: 'rgba(28, 30, 36, 0.85)',
     borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',

@@ -8,12 +8,17 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { theme } from '@/theme';
+import { theme, getEmotionConfig } from '@/theme';
 import { useTheme } from '@/context';
 import { Typography } from '@/components/common/Typography';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton } from '@/components/common/Skeleton';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
+import { Tactile } from '@/components/common/Tactile';
+import { PingDot } from '@/components/common/PingDot';
+import { inkOnPastel } from '@/theme/colors';
+import { useAtmosphericPulse } from '@/hooks/useMap';
+import { useHotspots } from '@/hooks/useAnchors';
 import { NotificationTile } from '@/components/social/NotificationTile';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -199,6 +204,11 @@ export const NotificationsScreen: React.FC = () => {
     [allNotifications],
   );
 
+  const { data: pulseData } = useAtmosphericPulse();
+  // Live emotional clusters straight from the server's PostGIS grouping.
+  const { data: hotspots } = useHotspots(2, 2);
+  const topHotspot = hotspots && hotspots.length > 0 ? hotspots[0] : null;
+
   const filteredNotifications = useMemo(() => {
     return allNotifications.filter((item) => {
       if (activeTab === 'unread') return !item.is_read;
@@ -330,42 +340,75 @@ export const NotificationsScreen: React.FC = () => {
 
   return (
     <ScreenWrapper style={styles.container}>
-      {/* ── Top Header ── */}
-      <View style={styles.header}>
+      {/* ── Masthead ── */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerTitles}>
+          <Typography variant="overline" style={{ color: colors.textMuted }}>
+            MOODSPACE
+          </Typography>
           <View style={styles.titleRow}>
-            <Typography variant="h1" weight="bold">
-              Echo Signals
+            <Typography variant="h2" style={{ color: colors.textPrimary }}>
+              Alerts
             </Typography>
             {unreadCount > 0 && (
-              <View style={styles.unreadCountBadge}>
-                <Typography variant="caption" color="#FFFFFF" weight="bold">
-                  {unreadCount} new
+              <View style={[styles.unreadCountBadge, { backgroundColor: colors.primary, borderColor: colors.ink }]}>
+                <Typography variant="overline" style={{ color: inkOnPastel }}>
+                  {unreadCount} NEW
                 </Typography>
               </View>
             )}
           </View>
-          <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
-            Empathy echoes, resonance matches, and sanctuary pulses.
-          </Typography>
         </View>
 
         {unreadCount > 0 && (
           <TouchableOpacity
             onPress={handleMarkAllRead}
             activeOpacity={0.75}
-            style={styles.markReadBtn}
+            style={[styles.markReadBtn, { borderColor: colors.ink, backgroundColor: colors.surface }]}
+            accessibilityLabel="Mark all as read"
           >
-            <Ionicons name="checkmark-done-outline" size={15} color={colors.accentInk} />
-            <Typography variant="bodySmall" color={colors.accentInk} weight="semibold">
-              Read all
+            <Ionicons name="checkmark-done-outline" size={14} color={colors.textPrimary} />
+            <Typography variant="overline" style={{ color: colors.textPrimary, marginLeft: 5 }}>
+              READ ALL
             </Typography>
           </TouchableOpacity>
         )}
       </View>
 
+      {/* ── Vibe radar scan ── */}
+      <Tactile offset={4} radius={20} style={styles.radarCard} contentStyle={styles.radarInner}>
+        <View style={styles.radarLeft}>
+          <PingDot size={8} />
+          <View style={{ marginLeft: 10, flex: 1 }}>
+            <Typography variant="label" style={{ color: colors.textPrimary }}>
+              Vibe Radar Scan
+            </Typography>
+            <Typography variant="caption" numberOfLines={1} style={{ color: colors.textMuted }}>
+              {topHotspot
+                ? `${topHotspot.bubble_count} bubbles clustering${topHotspot.city ? ` in ${topHotspot.city.split(',')[0]}` : ''}`
+                : typeof pulseData?.active_bubbles_count === 'number'
+                  ? `Listening to ${pulseData.active_bubbles_count.toLocaleString()} live pulses`
+                  : 'Listening for live pulses nearby'}
+            </Typography>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.radarBadge,
+            {
+              backgroundColor: topHotspot ? getEmotionConfig(topHotspot.dominant_emotion).primary : colors.secondary,
+              borderColor: colors.ink,
+            },
+          ]}
+        >
+          <Typography variant="overline" style={{ color: inkOnPastel }}>
+            {topHotspot ? getEmotionConfig(topHotspot.dominant_emotion).label.toUpperCase() : 'LIVE'}
+          </Typography>
+        </View>
+      </Tactile>
+
       {/* ── Filter Tabs ── */}
-      <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
+      <View style={styles.tabContainer}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -378,21 +421,24 @@ export const NotificationsScreen: React.FC = () => {
                 key={tab.value}
                 activeOpacity={0.75}
                 onPress={() => setActiveTab(tab.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
                 style={[
                   styles.tabChip,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                  isActive && styles.tabChipActive,
+                  {
+                    backgroundColor: isActive ? colors.primary : colors.surface,
+                    borderColor: colors.ink,
+                  },
                 ]}
               >
                 <Ionicons
                   name={tab.icon as any}
                   size={12}
-                  color={isActive ? '#FFFFFF' : colors.textSecondary}
+                  color={isActive ? inkOnPastel : colors.textSecondary}
                 />
                 <Typography
-                  variant="caption"
-                  weight={isActive ? 'bold' : 'medium'}
-                  color={isActive ? '#FFFFFF' : colors.textSecondary}
+                  variant="label"
+                  style={{ color: isActive ? inkOnPastel : colors.textSecondary, marginLeft: 5 }}
                 >
                   {tab.label}
                   {tab.value === 'unread' && unreadCount > 0 ? ` (${unreadCount})` : ''}
@@ -445,6 +491,28 @@ export const NotificationsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  radarCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+  },
+  radarInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+  },
+  radarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  radarBadge: {
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
   container: {
     flex: 1,
   },
@@ -453,8 +521,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.xl,
+    paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.md,
+    borderBottomWidth: 2,
   },
   headerTitles: {
     flex: 1,
@@ -466,7 +535,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   unreadCountBadge: {
-    backgroundColor: theme.colors.secondary,
+    borderWidth: 2,
     borderRadius: theme.radius.round,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -477,16 +546,15 @@ const styles = StyleSheet.create({
   markReadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(108, 92, 231, 0.1)',
+    borderWidth: 2,
     borderRadius: theme.radius.round,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginTop: 4,
   },
   tabContainer: {
+    paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
   },
   tabScroll: {
     paddingHorizontal: theme.spacing.lg,
@@ -496,14 +564,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: theme.radius.round,
-    borderWidth: 1,
-    gap: 5,
-  },
-  tabChipActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    borderWidth: 2,
   },
   list: {
     paddingHorizontal: theme.spacing.lg,

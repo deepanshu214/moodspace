@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { emotionInk, inkOnPastel } from '@/theme/colors';
+import { useTheme } from '@/context';
 import { Typography } from '../common/Typography';
 
 export interface MoodTagProps {
@@ -22,7 +24,10 @@ export const MoodTag: React.FC<MoodTagProps> = ({
   onPress,
   style,
 }) => {
+  const { isDark } = useTheme();
   const config = theme.getEmotionConfig(emotion);
+  // A selected tag is filled with the solid pastel, where only espresso stays legible.
+  const ink = selected ? inkOnPastel : emotionInk(config, isDark);
 
   const getPadding = () => {
     switch (size) {
@@ -55,7 +60,7 @@ export const MoodTag: React.FC<MoodTagProps> = ({
       <Typography
         variant={size === 'sm' ? 'caption' : size === 'lg' ? 'title' : 'bodySmall'}
         weight="semibold"
-        color={selected ? '#FFFFFF' : config.primary}
+        color={ink}
       >
         {config.label}
         {secondaryEmotion ? ` • ${secondaryEmotion}` : ''}
@@ -73,7 +78,7 @@ export const MoodTag: React.FC<MoodTagProps> = ({
           <Typography
             variant="caption"
             weight="bold"
-            color={selected ? '#FFFFFF' : config.primary}
+            color={ink}
             style={styles.intensityText}
           >
             {intensity}

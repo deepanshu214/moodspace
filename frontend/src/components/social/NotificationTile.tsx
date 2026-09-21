@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkOnPastel } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Button } from '../common/Button';
@@ -66,7 +67,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         return {
           icon: 'heart',
           color: colors.error,
-          bg: 'rgba(255, 118, 117, 0.15)',
+          bg: 'rgba(248, 113, 113, 0.15)',
           label: 'Empathy',
         };
       case 'comment_echo':
@@ -74,15 +75,15 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         return {
           icon: 'chatbubble',
           color: colors.accent,
-          bg: 'rgba(0, 206, 201, 0.15)',
+          bg: 'rgba(92, 214, 148, 0.15)',
           label: 'Echo',
         };
       case 'echo_match':
       case 'match':
         return {
           icon: 'sparkles',
-          color: '#FFB800',
-          bg: 'rgba(255, 184, 0, 0.15)',
+          color: '#FF5C38',
+          bg: 'rgba(255, 92, 56, 0.15)',
           label: 'Resonance',
         };
       case 'connection_request':
@@ -90,7 +91,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         return {
           icon: 'person-add',
           color: colors.accentInk,
-          bg: 'rgba(108, 92, 231, 0.15)',
+          bg: 'rgba(255, 92, 56, 0.15)',
           label: 'Connection',
         };
       case 'connection_accepted':
@@ -98,31 +99,31 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         return {
           icon: 'people',
           color: colors.success,
-          bg: 'rgba(0, 184, 148, 0.15)',
+          bg: 'rgba(92, 214, 148, 0.15)',
           label: 'Connected',
         };
       case 'community_activity':
       case 'community':
         return {
           icon: 'planet',
-          color: '#A29BFE',
-          bg: 'rgba(162, 155, 254, 0.15)',
+          color: '#C084FC',
+          bg: 'rgba(192, 132, 252, 0.15)',
           label: 'Sanctuary',
         };
       case 'streak_milestone':
       case 'milestone':
         return {
           icon: 'flame',
-          color: '#FD79A8',
-          bg: 'rgba(253, 121, 168, 0.15)',
+          color: '#F87171',
+          bg: 'rgba(248, 113, 113, 0.15)',
           label: 'Milestone',
         };
       case 'mindful_reminder':
       case 'reminder':
         return {
           icon: 'leaf',
-          color: '#86EFAC',
-          bg: 'rgba(134, 239, 172, 0.15)',
+          color: '#5CD694',
+          bg: 'rgba(92, 214, 148, 0.15)',
           label: 'Mindfulness',
         };
       case 'system':
@@ -130,7 +131,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
         return {
           icon: 'notifications',
           color: colors.info,
-          bg: 'rgba(9, 132, 227, 0.15)',
+          bg: 'rgba(96, 165, 250, 0.15)',
           label: 'Signal',
         };
     }
@@ -163,7 +164,7 @@ export const NotificationTile: React.FC<NotificationTileProps> = ({
           emotion={emotion}
         />
         <View style={[styles.typeBadge, { backgroundColor: config.color, borderColor: colors.background }]}>
-          <Ionicons name={config.icon as any} size={10} color="#FFFFFF" />
+          <Ionicons name={config.icon as any} size={10} color={inkOnPastel} />
         </View>
       </View>
 
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(253, 121, 168, 0.1)',
+    backgroundColor: 'rgba(248, 113, 113, 0.1)',
     borderRadius: theme.radius.round,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(108, 92, 231, 0.1)',
+    backgroundColor: 'rgba(255, 92, 56, 0.1)',
     borderRadius: theme.radius.round,
     paddingHorizontal: 8,
     paddingVertical: 2,

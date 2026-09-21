@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Share, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk, inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Card } from '../common/Card';
@@ -36,10 +37,10 @@ export interface FeedCardProps {
 }
 
 const REACTIONS = [
-  { type: 'heart' as const, label: 'Support', icon: 'heart', emoji: '❤️', color: '#FD79A8' },
-  { type: 'hug' as const, label: 'Hug', icon: 'hand-left', emoji: '🤗', color: '#6C5CE7' },
-  { type: 'empathy' as const, label: 'With You', icon: 'water', emoji: '🌊', color: '#4ECCE8' },
-  { type: 'celebrate' as const, label: 'Joy', icon: 'sparkles', emoji: '✨', color: '#FFD93D' },
+  { type: 'heart' as const, label: 'Support', icon: 'heart', emoji: '❤️', color: '#F87171' },
+  { type: 'hug' as const, label: 'Hug', icon: 'hand-left', emoji: '🤗', color: '#FF5C38' },
+  { type: 'empathy' as const, label: 'With You', icon: 'water', emoji: '🌊', color: '#60A5FA' },
+  { type: 'celebrate' as const, label: 'Joy', icon: 'sparkles', emoji: '✨', color: '#FF5C38' },
 ];
 
 export const FeedCard: React.FC<FeedCardProps> = ({
@@ -64,7 +65,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   onCommentPress,
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [totalReactions, setTotalReactions] = useState(reactionsCount);
   const [floaterKey, setFloaterKey] = useState(0);
@@ -130,7 +131,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
               </Typography>
               {isAnonymous && (
                 <View style={styles.incognitoBadge}>
-                  <Typography variant="caption" color="#A29BFE">
+                  <Typography variant="caption" color={inkFor('#C084FC', isDark)}>
                     Private
                   </Typography>
                 </View>
@@ -158,7 +159,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       {/* Weather Capsule (if available) */}
       {(weatherCondition || weatherTemp !== undefined) && (
         <View style={styles.weatherCapsule}>
-          <Ionicons name="cloud-outline" size={13} color={emotionConfig.primary} />
+          <Ionicons name="cloud-outline" size={13} color={emotionInk(emotionConfig, isDark)} />
           <Typography variant="caption" color={colors.textSecondary}>
             {weatherCondition || 'Calm skies'}
             {weatherTemp !== undefined ? ` • ${weatherTemp}°C` : ''}
@@ -215,7 +216,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
               <Typography
                 variant="caption"
                 weight={isSelected ? 'bold' : 'medium'}
-                color={isSelected ? rx.color : colors.textSecondary}
+                color={isSelected ? inkFor(rx.color, isDark) : colors.textSecondary}
               >
                 {rx.label}
               </Typography>
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
   card: {
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.md,
-    backgroundColor: 'rgba(17, 20, 34, 0.92)',
+    backgroundColor: 'rgba(28, 30, 36, 0.92)',
     borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -285,9 +286,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(162, 155, 254, 0.2)',
+    backgroundColor: 'rgba(192, 132, 252, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(162, 155, 254, 0.5)',
+    borderColor: 'rgba(192, 132, 252, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(162, 155, 254, 0.15)',
+    backgroundColor: 'rgba(192, 132, 252, 0.15)',
   },
   subMeta: {
     flexDirection: 'row',

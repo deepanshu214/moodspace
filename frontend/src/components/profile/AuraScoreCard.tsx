@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { AuraScoreBreakdown } from '@/api/types';
@@ -15,7 +16,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
   aura,
   onExploreAuraHelp,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   const {
@@ -30,11 +31,11 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
   } = aura;
 
   const METRICS = [
-    { label: 'Check-in Consistency', value: breakdown.checkin_consistency, icon: 'calendar-outline', color: '#7FB5FF' },
-    { label: 'Empathy Shared', value: breakdown.empathy_reactions_given, icon: 'heart-outline', color: '#FF6B8A' },
-    { label: 'Supportive Echoes', value: breakdown.supportive_comments, icon: 'chatbubble-outline', color: '#FFD166' },
-    { label: 'Sanctuary Presence', value: breakdown.sanctuary_participation, icon: 'planet-outline', color: '#86EFAC' },
-    { label: 'Resonance Matches', value: breakdown.resonance_connections, icon: 'sparkles-outline', color: '#A29BFE' },
+    { label: 'Check-in Consistency', value: breakdown.checkin_consistency, icon: 'calendar-outline', color: '#60A5FA' },
+    { label: 'Empathy Shared', value: breakdown.empathy_reactions_given, icon: 'heart-outline', color: '#F87171' },
+    { label: 'Supportive Echoes', value: breakdown.supportive_comments, icon: 'chatbubble-outline', color: '#FF5C38' },
+    { label: 'Sanctuary Presence', value: breakdown.sanctuary_participation, icon: 'planet-outline', color: '#5CD694' },
+    { label: 'Resonance Matches', value: breakdown.resonance_connections, icon: 'sparkles-outline', color: '#C084FC' },
   ];
 
   return (
@@ -43,7 +44,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
       <View style={styles.header}>
         <View style={styles.tierInfo}>
           <View style={[styles.glowRing, { backgroundColor: colors.surfaceElevated, borderColor: tier_color }]}>
-            <Typography variant="h2" weight="bold" color={tier_color}>
+            <Typography variant="h2" weight="bold" color={inkFor(tier_color, isDark)}>
               {total_score}
             </Typography>
             <Typography variant="caption" color={colors.textMuted} style={styles.auraLabel}>
@@ -53,7 +54,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
 
           <View style={styles.tierMeta}>
             <View style={[styles.tierBadge, { backgroundColor: tier_color + '20' }]}>
-              <Typography variant="caption" weight="bold" color={tier_color}>
+              <Typography variant="caption" weight="bold" color={inkFor(tier_color, isDark)}>
                 {tier_emoji} {tier}
               </Typography>
             </View>
@@ -101,7 +102,7 @@ export const AuraScoreCard: React.FC<AuraScoreCardProps> = ({
           {METRICS.map((metric) => (
             <View key={metric.label} style={styles.metricRow}>
               <View style={styles.metricLabelCol}>
-                <Ionicons name={metric.icon as any} size={14} color={metric.color} style={styles.metricIcon} />
+                <Ionicons name={metric.icon as any} size={14} color={inkFor(metric.color, isDark)} style={styles.metricIcon} />
                 <Typography variant="caption" color={colors.textSecondary}>
                   {metric.label}
                 </Typography>

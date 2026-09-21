@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -46,7 +47,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
   onCirclesPress,
   onTourPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const emotionConfig = theme.getEmotionConfig(dominantEmotion);
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.4);
@@ -101,7 +102,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
                 Today's Mood: {emotionConfig.label}
               </Typography>
               <View style={styles.badgePill}>
-                <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
+                <Typography variant="caption" weight="bold" color={emotionInk(emotionConfig, isDark)}>
                   {intensityAverage} / 10
                 </Typography>
               </View>
@@ -170,7 +171,7 @@ export const AtmosphericPulseRibbon: React.FC<AtmosphericPulseRibbonProps> = ({
           const isSelected = selectedFilter === item.id;
           const itemConfig = item.id ? theme.getEmotionConfig(item.id) : null;
           const activeBorder = itemConfig ? itemConfig.primary : colors.primaryLight;
-          const activeBg = itemConfig ? itemConfig.background : 'rgba(108, 92, 231, 0.2)';
+          const activeBg = itemConfig ? itemConfig.background : 'rgba(255, 92, 56, 0.2)';
 
           return (
             <TouchableOpacity
@@ -219,12 +220,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(17, 20, 34, 0.88)',
+    backgroundColor: 'rgba(28, 30, 36, 0.88)',
     borderRadius: theme.radius.xl,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: 'rgba(50, 54, 77, 0.8)',
+    borderColor: 'rgba(51, 56, 66, 0.8)',
     ...theme.shadows.elevated,
   },
   leftMeta: {
@@ -291,12 +292,12 @@ const styles = StyleSheet.create({
   filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(17, 20, 34, 0.85)',
+    backgroundColor: 'rgba(28, 30, 36, 0.85)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(50, 54, 77, 0.8)',
+    borderColor: 'rgba(51, 56, 66, 0.8)',
   },
   filterEmoji: {
     marginRight: 5,

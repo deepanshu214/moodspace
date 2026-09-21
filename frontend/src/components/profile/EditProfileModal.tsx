@@ -5,7 +5,6 @@ import {
   Modal,
   TouchableOpacity,
   TextInput,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +21,7 @@ import { Typography } from '../common/Typography';
 import { Button } from '../common/Button';
 import { Avatar } from '../common/Avatar';
 import { haptics } from '@/theme/haptics';
+import { showAlert } from '@/components/common/AppDialog';
 
 export interface EditProfileModalProps {
   visible: boolean;
@@ -62,7 +62,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        Alert.alert(
+        showAlert(
           'Photo Access Needed',
           'MoodSpace needs permission to access your photo library so you can pick a personal profile picture. Please enable Photos access in your device Settings.',
           [{ text: 'OK' }]
@@ -84,7 +84,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         haptics.light();
       }
     } catch (e) {
-      Alert.alert('Unable to pick photo', 'Please try selecting your picture again.');
+      showAlert('Unable to pick photo', 'Please try selecting your picture again.');
     } finally {
       setIsPicking(false);
     }
@@ -92,7 +92,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert('Name Required', 'Please enter your display name.');
+      showAlert('Name Required', 'Please enter your display name.');
       return;
     }
     haptics.medium();
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(5, 7, 14, 0.75)',
+    backgroundColor: 'rgba(18, 19, 22, 0.75)',
   },
   backdrop: {
     flex: 1,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
-    backgroundColor: 'rgba(18, 20, 32, 0.92)',
+    backgroundColor: 'rgba(28, 30, 36, 0.92)',
   },
   header: {
     flexDirection: 'row',
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: colors.primary,
     borderWidth: 2,
-    borderColor: '#0F1019',
+    borderColor: '#1E1E1E',
     alignItems: 'center',
     justifyContent: 'center',
   },

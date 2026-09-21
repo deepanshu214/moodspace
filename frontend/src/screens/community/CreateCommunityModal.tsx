@@ -8,7 +8,6 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommunityStackParamList } from '@/navigation/types';
@@ -18,6 +17,7 @@ import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { ScreenWrapper } from '@/components/common/ScreenWrapper';
 import { useCreateCommunity } from '@/hooks/useCommunity';
+import { showAlert } from '@/components/common/AppDialog';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<CommunityStackParamList, 'CreateCommunity'>;
@@ -66,11 +66,11 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
 
   const handleCreate = () => {
     if (name.trim().length < 2) {
-      Alert.alert('Sanctuary Name Required', 'Please provide a name of at least 2 characters.');
+      showAlert('Sanctuary Name Required', 'Please provide a name of at least 2 characters.');
       return;
     }
     if (description.trim().length < 10) {
-      Alert.alert('Intention Needed', 'Please describe the intention of this sanctuary in at least 10 characters.');
+      showAlert('Intention Needed', 'Please describe the intention of this sanctuary in at least 10 characters.');
       return;
     }
 
@@ -88,7 +88,7 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
           navigation.goBack();
         },
         onError: (err: any) => {
-          Alert.alert('Unable to form circle', err?.message || 'Please verify your network and try again.');
+          showAlert('Unable to form circle', err?.message || 'Please verify your network and try again.');
         },
       }
     );
@@ -244,7 +244,7 @@ export const CreateCommunityModal: React.FC<Props> = ({ navigation }) => {
                     <Ionicons
                       name={opt.icon as any}
                       size={20}
-                      color={isSelected ? colors.primaryLight : colors.textMuted}
+                      color={isSelected ? colors.accentInk : colors.textMuted}
                     />
                   </View>
                   <View style={styles.privacyTextWrap}>
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   },
   privacyCardSelected: {
     borderColor: theme.colors.primaryLight,
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
   },
   privacyIconWrap: {
     marginRight: 12,

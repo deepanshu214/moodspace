@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/types';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkOnPastel } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Button } from '@/components/common/Button';
 import { IconButton } from '@/components/common/IconButton';
@@ -84,7 +85,7 @@ export const UserProfileScreen: React.FC<Props> = ({ route, navigation }) => {
               <Ionicons
                 name={isFollowing ? 'checkmark' : 'person-add'}
                 size={16}
-                color={isFollowing ? colors.primaryLight : '#FFFFFF'}
+                color={isFollowing ? colors.accentInk : inkOnPastel}
               />
             }
             style={styles.actionBtn}
@@ -131,7 +132,6 @@ export const UserProfileScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    backgroundColor: '#07080D',
   },
   topBar: {
     flexDirection: 'row',

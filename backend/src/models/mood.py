@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, SmallInteger, DateTime, Text, text, ForeignKey
+from sqlalchemy import Column, String, Boolean, SmallInteger, Integer, DateTime, Text, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
@@ -22,6 +22,9 @@ class MoodEntry(Base):
     weather_temp_celsius = Column(SmallInteger, nullable=True)
     device_platform = Column(String(20), nullable=True)
     is_edited = Column(Boolean, nullable=False, default=False)
+    # Bubbles float for a fixed window and then dissolve; NULL means it never expires.
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    is_incognito = Column(Boolean, nullable=False, default=False)
     embedding = Column(Vector(1536), nullable=True) # vector feature for AI
     edited_at = Column(DateTime(timezone=True), nullable=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
@@ -31,6 +34,7 @@ class MoodEntry(Base):
     # Relationships
     emotions = relationship("MoodEmotion", back_populates="entry", cascade="all, delete-orphan")
     context_tags = relationship("MoodContextTag", back_populates="entry", cascade="all, delete-orphan")
+    attachments = relationship("MoodAttachment", back_populates="entry", cascade="all, delete-orphan")
 
 class MoodEmotion(Base):
     __tablename__ = "mood_emotions"
@@ -52,3 +56,35 @@ class MoodContextTag(Base):
     is_custom = Column(Boolean, nullable=False, default=False)
     
     entry = relationship("MoodEntry", back_populates="context_tags")
+
+
+class MoodAttachment(Base):
+    """A photo or voice keepsake attached to a bubble."""
+    __tablename__ = "mood_attachments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
+    mood_entry_id = Column(UUID(as_uuid=True), ForeignKey("mood_entries.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    kind = Column(String(10), nullable=False)  # photo | voice
+    storage_path = Column(String(300), nullable=False)
+    mime_type = Column(String(80), nullable=True)
+    byte_size = Column(Integer, nullable=True)
+    duration_ms = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    entry = relationship("MoodEntry", back_populates="attachments")
+
+
+class PinnedAnchor(Base):
+    """A place someone keeps returning to, pinned to their profile."""
+    __tablename__ = "pinned_anchors"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    label = Column(String(80), nullable=False)
+    city = Column(String(120), nullable=True)
+    note = Column(String(400), nullable=True)
+    emotion = Column(String(30), nullable=True)
+    location_geom = Column(Geometry('POINT', srid=4326), nullable=True)
+    drops_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

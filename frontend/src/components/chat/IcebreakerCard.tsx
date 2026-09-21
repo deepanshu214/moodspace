@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk, inkFor } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { Icebreaker, IcebreakerCategory } from '@/api/types';
@@ -14,12 +15,12 @@ interface IcebreakerCardProps {
 }
 
 const CATEGORY_META: Record<IcebreakerCategory, { icon: string; color: string }> = {
-  curiosity:  { icon: 'telescope-outline',     color: '#A29BFE' },
-  gratitude:  { icon: 'leaf-outline',          color: '#86EFAC' },
-  empathy:    { icon: 'heart-half-outline',     color: '#FF6B8A' },
-  growth:     { icon: 'trending-up-outline',    color: '#FFD166' },
-  presence:   { icon: 'eye-outline',           color: '#7FB5FF' },
-  reflection: { icon: 'water-outline',         color: '#C4B5D4' },
+  curiosity:  { icon: 'telescope-outline',     color: '#C084FC' },
+  gratitude:  { icon: 'leaf-outline',          color: '#5CD694' },
+  empathy:    { icon: 'heart-half-outline',     color: '#F87171' },
+  growth:     { icon: 'trending-up-outline',    color: '#FF5C38' },
+  presence:   { icon: 'eye-outline',           color: '#60A5FA' },
+  reflection: { icon: 'water-outline',         color: '#CBD5E1' },
 };
 
 export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
@@ -28,7 +29,7 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
   onRefresh,
   isSelected,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const meta = CATEGORY_META[icebreaker.category] ?? {
     icon: 'chatbubble-outline',
     color: colors.accentInk,
@@ -41,15 +42,15 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
       style={[
         styles.card,
         { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
-        isSelected && { borderColor: colors.success, backgroundColor: 'rgba(0, 184, 148, 0.06)' },
+        isSelected && { borderColor: colors.success, backgroundColor: 'rgba(92, 214, 148, 0.06)' },
       ]}
     >
       {/* Category pill */}
       <View style={[styles.categoryPill, { backgroundColor: meta.color + '20' }]}>
-        <Ionicons name={meta.icon as any} size={12} color={meta.color} />
+        <Ionicons name={meta.icon as any} size={12} color={inkFor(meta.color, isDark)} />
         <Typography
           variant="caption"
-          color={meta.color}
+          color={inkFor(meta.color, isDark)}
           style={styles.categoryText}
         >
           {icebreaker.category}
@@ -86,7 +87,7 @@ export const IcebreakerCard: React.FC<IcebreakerCardProps> = ({
                 key={tag}
                 style={[styles.emotionTag, { backgroundColor: cfg.background }]}
               >
-                <Typography variant="caption" color={cfg.primary} style={styles.tagText}>
+                <Typography variant="caption" color={emotionInk(cfg, isDark)} style={styles.tagText}>
                   {cfg.emoji} {cfg.label}
                 </Typography>
               </View>

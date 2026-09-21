@@ -6,7 +6,7 @@ from src.schemas.matching import UserMatchResponse, MoodReplayResponse
 from src.services.matching_service import find_emotional_matches, get_mood_replay
 from src.models.user import User
 
-router = APIRouter(prefix="/matching", tags=["AI Matching & Journeys"])
+router = APIRouter(tags=["AI Matching & Journeys"])
 
 @router.get("/people-like-you", response_model=UserMatchResponse)
 def get_people_like_you(

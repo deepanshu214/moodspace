@@ -54,12 +54,11 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   // onPressIn/onPressOut math, so it never competes with onPress.
   const { tiltStyle, onLayout, onPressIn: tiltPressIn, onPressOut: tiltPressOut } = useTilt3D(6, 1);
 
-  const startBorder = useMemo(
-    () => (glowColor ? parseColorToRgba(glowColor, 0.22) : colors.glass.border),
-    [glowColor, colors]
-  );
+  // Neo-Editorial: a card is an ink contour, and a mood tint only deepens it
+  // on press rather than replacing the outline with a wash.
+  const startBorder = useMemo(() => colors.ink, [colors]);
   const endBorder = useMemo(
-    () => (glowColor ? parseColorToRgba(glowColor, 0.50) : colors.glass.borderGlow),
+    () => (glowColor ? parseColorToRgba(glowColor, 0.85) : colors.ink),
     [glowColor, colors]
   );
 
@@ -93,14 +92,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
   // Light mode: pure white cards with warm shadow — always visible on cream bg
   // Dark mode: translucent indigo cards
-  const cardBg = isDark ? colors.glass.surface : colors.surface;
-  const shadowStyle: ViewStyle = isDark ? {} : {
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 8,
-    elevation: 3,
-  };
+  const cardBg = colors.surface;
+  // The hard offset block is drawn by <Tactile/> where it is wanted; cards that
+  // still use GlassCard keep a flat contour so the two never fight each other.
+  const shadowStyle: ViewStyle = {};
 
   return (
     <Animated.View
@@ -124,7 +119,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         <View style={[styles.inner, { backgroundColor: cardBg }]}>
           {variant === 'hero' && (
             <LinearGradient
-              colors={['rgba(255,107,53,0.06)', 'rgba(255,159,28,0.03)']}
+              colors={['rgba(255, 92, 56,0.07)', 'rgba(92, 214, 148,0.05)']}
               style={StyleSheet.absoluteFill}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -141,9 +136,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: theme.radius.xl,
+    borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 1.5,
+    borderWidth: 2,
   },
   pressable: {
     flex: 1,

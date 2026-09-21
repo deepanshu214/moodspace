@@ -51,7 +51,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isDark = useMemo(() => {
     if (themeMode === 'system') {
-      return systemColorScheme !== 'light';
+      // useColorScheme() can be null (no OS preference); light is the default then.
+      return systemColorScheme === 'dark';
     }
     return themeMode === 'dark';
   }, [themeMode, systemColorScheme]);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { staggerDelay } from '@/theme';
+import Animated from 'react-native-reanimated';
+import { staggeredEntrance } from '@/theme/animations';
 
 interface BentoGridProps {
   /** Number of columns (default 2) */
@@ -40,10 +40,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     const wrappedChild = animated ? (
       <Animated.View
         key={`bento-${index}`}
-        entering={FadeInDown.delay(staggerDelay(index, staggerMs))
-          .springify()
-          .damping(18)
-          .stiffness(140)}
+        entering={staggeredEntrance(index, staggerMs)}
         style={{ marginBottom: gap }}
       >
         {child}

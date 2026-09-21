@@ -66,7 +66,7 @@ export const MOCK_STREAK_INFO: MoodStreakInfo = {
 export const MOCK_AURA_BREAKDOWN: AuraScoreBreakdown = {
   total_score: 480,
   tier: 'Harmonic Empath',
-  tier_color: '#A29BFE',
+  tier_color: '#C084FC',
   tier_emoji: '💜',
   next_tier: 'Radiant Luminary',
   points_to_next_tier: 20,

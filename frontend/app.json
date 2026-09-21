@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "moodspace",
     "ios": {
       "supportsTablet": true,
@@ -47,6 +47,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "MoodSpace uses your location to show nearby mood bubbles on the map and tag where you're feeling this way."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "MoodSpace needs your microphone so you can attach a short voice note to a mood bubble."
         }
       ]
     ]

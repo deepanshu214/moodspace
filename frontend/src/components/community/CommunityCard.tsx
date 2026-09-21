@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk, inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
@@ -33,7 +34,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
   onPress,
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [joined, setJoined] = useState(isJoined);
   const { mutate: joinCommunity, isPending: isJoining } = useJoinCommunity();
   const { mutate: leaveCommunity, isPending: isLeaving } = useLeaveCommunity();
@@ -56,8 +57,8 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
         {/* Top Header Row: Category Badge & Member Count */}
         <View style={styles.topRow}>
           <View style={styles.categoryPill}>
-            <Ionicons name="sparkles" size={12} color={emotionConfig.primary} />
-            <Typography variant="caption" weight="bold" color={emotionConfig.primary}>
+            <Ionicons name="sparkles" size={12} color={emotionInk(emotionConfig, isDark)} />
+            <Typography variant="caption" weight="bold" color={emotionInk(emotionConfig, isDark)}>
               {category}
             </Typography>
           </View>
@@ -72,7 +73,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
 
             {privacy === 'private' && (
               <View style={styles.privatePill}>
-                <Ionicons name="lock-closed" size={11} color="#A29BFE" />
+                <Ionicons name="lock-closed" size={11} color={inkFor('#C084FC', isDark)} />
               </View>
             )}
           </View>
@@ -93,7 +94,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
             <Typography
               variant="caption"
               weight="bold"
-              color={emotionConfig.primary}
+              color={emotionInk(emotionConfig, isDark)}
               style={styles.emotionLabel}
             >
               {emotionConfig.label}
@@ -134,10 +135,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     padding: theme.spacing.lg,
-    backgroundColor: 'rgba(17, 20, 34, 0.9)',
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     marginBottom: 12,
   },
   topRow: {
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
   privatePill: {
     padding: 3,
     borderRadius: 4,
-    backgroundColor: 'rgba(162, 155, 254, 0.15)',
+    backgroundColor: 'rgba(192, 132, 252, 0.15)',
   },
   titleRow: {
     flexDirection: 'row',

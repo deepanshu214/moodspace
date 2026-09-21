@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { Card } from '../common/Card';
@@ -43,7 +44,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
   onLikePress,
   style,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [revealed, setRevealed] = useState(!hasContentWarning);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(likesCount);
@@ -59,7 +60,9 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
     }
   };
 
-  const displayName = isAnonymous ? 'Anonymous Member' : authorName;
+  // The compose sheet promises cloaked posters appear as a "Wandering Spirit";
+  // this card is where that promise is kept.
+  const displayName = isAnonymous ? 'Wandering Spirit' : authorName;
   const emotionConfig = theme.getEmotionConfig(emotion);
 
   return (
@@ -92,7 +95,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
               </Typography>
               {isAnonymous && (
                 <View style={styles.incognitoBadge}>
-                  <Typography variant="caption" color="#A29BFE">
+                  <Typography variant="caption" color={inkFor('#C084FC', isDark)}>
                     Private
                   </Typography>
                 </View>
@@ -147,18 +150,18 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
           onPress={handleToggleLike}
           style={[
             styles.reactionBtn,
-            liked && { backgroundColor: 'rgba(253, 121, 168, 0.15)', borderColor: '#FD79A8' },
+            liked && { backgroundColor: 'rgba(248, 113, 113, 0.15)', borderColor: '#F87171' },
           ]}
         >
           <Ionicons
             name={liked ? 'heart' : 'heart-outline'}
             size={16}
-            color={liked ? '#FD79A8' : colors.textMuted}
+            color={liked ? inkFor('#F87171', isDark) : colors.textMuted}
           />
           <Typography
             variant="caption"
             weight={liked ? 'bold' : 'medium'}
-            color={liked ? '#FD79A8' : colors.textSecondary}
+            color={liked ? inkFor('#F87171', isDark) : colors.textSecondary}
           >
             {likes} Support
           </Typography>
@@ -182,10 +185,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     padding: theme.spacing.md,
-    backgroundColor: 'rgba(17, 20, 34, 0.88)',
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
     marginBottom: 10,
   },
   pinnedBanner: {
@@ -213,9 +213,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(162, 155, 254, 0.15)',
+    backgroundColor: 'rgba(192, 132, 252, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(162, 155, 254, 0.4)',
+    borderColor: 'rgba(192, 132, 252, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
-    backgroundColor: 'rgba(162, 155, 254, 0.15)',
+    backgroundColor: 'rgba(192, 132, 252, 0.15)',
   },
   title: {
     marginBottom: 6,
@@ -244,11 +244,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255, 234, 167, 0.08)',
+    backgroundColor: 'rgba(255, 92, 56, 0.08)',
     padding: 10,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255, 234, 167, 0.25)',
+    borderColor: 'rgba(255, 92, 56, 0.25)',
     marginBottom: 10,
   },
   warningTexts: {

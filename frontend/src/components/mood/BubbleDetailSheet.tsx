@@ -17,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk, inkFor } from '@/theme/colors';
 import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { AuraDisplay } from '../social/AuraDisplay';
@@ -27,10 +28,10 @@ import { Ionicons } from '@expo/vector-icons';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const EMPATHY_REACTIONS = [
-  { type: 'heart', label: 'Support', emoji: '❤️', icon: 'heart', color: '#FD79A8' },
-  { type: 'hug', label: 'Hug', emoji: '🤗', icon: 'hand-left', color: '#A29BFE' },
-  { type: 'empathy', label: 'With You', emoji: '🌊', icon: 'water', color: '#00CEC9' },
-  { type: 'celebrate', label: 'Celebrate', emoji: '✨', icon: 'sparkles', color: '#FFB800' },
+  { type: 'heart', label: 'Support', emoji: '❤️', icon: 'heart', color: '#F87171' },
+  { type: 'hug', label: 'Hug', emoji: '🤗', icon: 'hand-left', color: '#C084FC' },
+  { type: 'empathy', label: 'With You', emoji: '🌊', icon: 'water', color: '#5CD694' },
+  { type: 'celebrate', label: 'Celebrate', emoji: '✨', icon: 'sparkles', color: '#FF5C38' },
 ];
 
 export interface BubbleDetailSheetProps {
@@ -64,7 +65,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   onSendEcho,
   onNavigateDetails,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   if (!bubble) return null;
 
   const [echoText, setEchoText] = useState('');
@@ -187,7 +188,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                   <Typography
                     variant="bodySmall"
                     weight="bold"
-                    color={config.primary}
+                    color={emotionInk(config, isDark)}
                     style={styles.emotionName}
                   >
                     {config.label}
@@ -263,7 +264,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                       <Typography
                         variant="caption"
                         weight={isSelected ? 'bold' : 'semibold'}
-                        color={isSelected ? rx.color : colors.textSecondary}
+                        color={isSelected ? inkFor(rx.color, isDark) : colors.textSecondary}
                       >
                         {rx.label}
                       </Typography>
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
   },
   sheetContainer: {
-    backgroundColor: '#0F121C',
+    backgroundColor: '#1E1E1E',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderWidth: 1,
@@ -367,11 +368,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(162, 155, 254, 0.2)',
+    backgroundColor: 'rgba(192, 132, 252, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(162, 155, 254, 0.5)',
+    borderColor: 'rgba(192, 132, 252, 0.5)',
   },
   authorTexts: {
     gap: 2,

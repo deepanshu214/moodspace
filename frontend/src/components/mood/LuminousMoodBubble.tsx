@@ -37,7 +37,7 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
   showAuthor = true,
   onPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const config = theme.getEmotionConfig(emotion);
 
   // Reanimated shared values
@@ -199,8 +199,8 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
               width: currentSize.core,
               height: currentSize.core,
               borderRadius: currentSize.core / 2,
-              backgroundColor: isAnonymous ? '#2A1B4E' : config.primary,
-              borderColor: isAnonymous ? '#A29BFE' : '#FFFFFF',
+              backgroundColor: isAnonymous ? '#252830' : config.primary,
+              borderColor: isAnonymous ? '#C084FC' : '#FFFFFF',
               shadowColor: config.primary,
               shadowOpacity: 0.75,
               shadowRadius: 14 * intensityFactor,
@@ -220,7 +220,7 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
             <View
               style={[
                 styles.intensityBadge,
-                { backgroundColor: 'rgba(17, 20, 34, 0.9)' },
+                { backgroundColor: 'rgba(28, 30, 36, 0.9)' },
               ]}
             >
               <Typography
@@ -237,11 +237,18 @@ export const LuminousMoodBubble: React.FC<LuminousMoodBubbleProps> = ({
 
         {/* Author Starlight Caption Label */}
         {showAuthor && (
-          <View style={styles.authorBadge}>
+          <View
+            style={[
+              styles.authorBadge,
+              isDark
+                ? { backgroundColor: 'rgba(28, 30, 36, 0.94)', borderColor: 'rgba(255, 255, 255, 0.16)' }
+                : { backgroundColor: 'rgba(255, 255, 255, 0.95)', borderColor: colors.glass.border },
+            ]}
+          >
             <View
               style={[
                 styles.miniDot,
-                { backgroundColor: isAnonymous ? '#A29BFE' : config.primary },
+                { backgroundColor: isAnonymous ? '#C084FC' : config.primary },
               ]}
             />
             <Typography
@@ -311,12 +318,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 6,
-    backgroundColor: 'rgba(17, 20, 34, 0.88)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
     ...theme.shadows.card,
   },
   miniDot: {

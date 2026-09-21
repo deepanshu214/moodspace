@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/theme';
 import { useTheme } from '@/context';
+import { emotionInk } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { Avatar } from '@/components/common/Avatar';
 import { Badge } from '@/components/common/Badge';
@@ -30,7 +31,7 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
   conversation,
   onPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { other_participant, last_message, unread_count, is_echo_match, resonance_score } =
     conversation;
 
@@ -123,7 +124,7 @@ export const ConversationTile: React.FC<ConversationTileProps> = ({
             <View style={[styles.resonancePill, emotionCfg && { backgroundColor: emotionCfg.background }]}>
               <Typography
                 variant="caption"
-                color={emotionCfg?.primary ?? colors.primaryLight}
+                color={emotionCfg ? emotionInk(emotionCfg, isDark) : colors.accentInk}
                 style={styles.resonanceText}
               >
                 {resonance_score}% ✦
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
   echoBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(253, 121, 168, 0.12)',
+    backgroundColor: 'rgba(248, 113, 113, 0.12)',
     borderRadius: theme.radius.round,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.round,
     paddingHorizontal: 7,
     paddingVertical: 2,
-    backgroundColor: 'rgba(108, 92, 231, 0.12)',
+    backgroundColor: 'rgba(255, 92, 56, 0.12)',
   },
   resonanceText: {
     fontSize: 10,
