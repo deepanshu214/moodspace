@@ -16,6 +16,22 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=500)
     avatar_url: Optional[str] = None
 
+class PublicUserResponse(BaseModel):
+    """
+    Another person as you are allowed to see them.
+
+    Deliberately NOT a subclass of UserBase: inheriting it is what put `email`
+    on every match result. Anything describing a user other than the caller
+    must use this, so adding a field to UserBase can never leak it sideways.
+    """
+    id: UUID
+    display_name: str
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserResponse(UserBase):
     id: UUID
     bio: Optional[str] = None

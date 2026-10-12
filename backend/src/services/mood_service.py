@@ -106,6 +106,32 @@ def live_bubbles_filter():
     return or_(MoodEntry.expires_at.is_(None), MoodEntry.expires_at > datetime.now(timezone.utc))
 
 
+def delete_media_files(storage_paths) -> int:
+    """
+    Remove stored keepsakes from disk. Returns the number unlinked.
+
+    Paths come from the database rather than a request, but they are still
+    joined onto MEDIA_ROOT and re-checked for containment: a bad row must not
+    be able to reach outside the media directory.
+    """
+    root = MEDIA_ROOT.resolve()
+    removed = 0
+    for relative in storage_paths:
+        if not relative:
+            continue
+        try:
+            target = (MEDIA_ROOT / relative).resolve()
+            if not target.is_relative_to(root):
+                logger.warning("Refusing to unlink outside MEDIA_ROOT: %s", relative)
+                continue
+            target.unlink(missing_ok=True)
+            removed += 1
+        except Exception:
+            # One unreadable file must not strand the rest of the sweep.
+            logger.exception("Could not unlink media file %s", relative)
+    return removed
+
+
 def purge_dissolved_bubbles(db: Session) -> int:
     """
     Hard-delete bubbles past their dissolve time. Returns rows removed.
@@ -113,17 +139,38 @@ def purge_dissolved_bubbles(db: Session) -> int:
     Child rows go via ON DELETE CASCADE. A failure here is logged rather than
     swallowed: silently returning 0 once made expired bubbles look purged while
     they were still on disk.
+
+    The attachment paths are read BEFORE the delete, because the cascade takes
+    the only pointer to each file with it. Deleting rows alone left photos and
+    voice notes served from /media forever, which makes "dissolves without a
+    trace" untrue.
     """
-    from src.models.mood import MoodEntry
+    from src.models.mood import MoodEntry, MoodAttachment
 
     try:
-        result = db.execute(
-            delete(MoodEntry).where(
-                MoodEntry.expires_at.isnot(None),
-                MoodEntry.expires_at <= datetime.now(timezone.utc),
-            )
+        expired = (
+            MoodEntry.expires_at.isnot(None),
+            MoodEntry.expires_at <= datetime.now(timezone.utc),
         )
+
+        doomed_ids = [row[0] for row in db.query(MoodEntry.id).filter(*expired).all()]
+        storage_paths = []
+        if doomed_ids:
+            storage_paths = [
+                row[0]
+                for row in db.query(MoodAttachment.storage_path)
+                .filter(MoodAttachment.mood_entry_id.in_(doomed_ids))
+                .all()
+            ]
+
+        result = db.execute(delete(MoodEntry).where(*expired))
         db.commit()
+
+        # Only after the rows are committed gone: a file removed for a row that
+        # then failed to delete would leave a bubble pointing at nothing.
+        if storage_paths:
+            delete_media_files(storage_paths)
+
         return result.rowcount or 0
     except Exception:
         db.rollback()

@@ -36,7 +36,10 @@ def get_feed(
             "type": "shared_mood",
             "id": entry.id,
             "author": {
-                "id": entry.user_id,
+                # Withhold the id for cloaked posts: the display name here is a
+                # placeholder for everyone, so the id was the only thing that
+                # actually identified an incognito author.
+                "id": None if entry.is_incognito else entry.user_id,
                 "display_name": "Anonymous User", # Mock for privacy unless explicitly shared
             },
             "content": {

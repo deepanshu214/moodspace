@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, Date, DateTime, Text, text, Time
+from sqlalchemy import Column, String, Boolean, Date, DateTime, Integer, Text, text, Time
 from sqlalchemy.dialects.postgresql import UUID, INET, JSONB
 from sqlalchemy.sql import func
 from src.models.base import Base
@@ -29,6 +29,9 @@ class User(Base):
     suspended_until = Column(DateTime(timezone=True), nullable=True)
     suspension_reason = Column(Text, nullable=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
+    # Bumped to invalidate every token already issued to this user. JWTs are
+    # stateless, so without this there is no way to revoke one.
+    token_version = Column(Integer, nullable=False, server_default=text("0"), default=0)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 

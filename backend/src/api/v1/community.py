@@ -30,7 +30,7 @@ def read_community_posts(
     db: Session = Depends(get_db)
 ):
     """Get the feed of posts for a specific community."""
-    return get_community_posts(db, community_id, skip=skip, limit=limit)
+    return get_community_posts(db, current_user.id, community_id, skip=skip, limit=limit)
 
 @router.post("/{community_id}/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 def create_post(

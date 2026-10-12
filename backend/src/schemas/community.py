@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -50,7 +50,8 @@ class PostCreate(BaseModel):
 class PostResponse(BaseModel):
     id: UUID
     community_id: UUID
-    user_id: UUID
+    # Optional because an anonymous post has no author to report.
+    user_id: Optional[UUID] = None
     post_type: str
     content: str
     is_anonymous: bool
@@ -63,3 +64,16 @@ class PostResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode="after")
+    def redact_anonymous_author(self):
+        """
+        An anonymous post must not carry its author's id.
+
+        The UI already renders these as "Wandering Spirit", so shipping the id
+        made the anonymity cosmetic: it links straight back to the same
+        person's signed posts.
+        """
+        if self.is_anonymous:
+            self.user_id = None
+        return self

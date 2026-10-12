@@ -118,6 +118,8 @@ def create_mood_checkin(
     payload = response.model_dump()
     payload.update({
         "id": str(entry.id),
+        # The author's own id, echoed straight back to them. Unlike /nearby,
+        # this response never reaches a third party, so it is not cloaked.
         "user_id": str(entry.user_id),
         "primary_emotion": primary_emotion,
         "secondary_emotion": mood_in.emotions[0].secondary,
@@ -228,7 +230,8 @@ def get_nearby_moods(
         # unknown author falls back to the same anonymous persona rather than
         # exposing a raw user id.
         author = authors.get(entry.user_id)
-        if entry.is_incognito or not author:
+        cloaked = entry.is_incognito or not author
+        if cloaked:
             author_name = "Wandering Spirit"
             author_avatar = None
         else:
@@ -253,7 +256,11 @@ def get_nearby_moods(
         emotion = entry.emotions[0] if entry.emotions else None
         results.append({
             "id": str(entry.id),
-            "user_id": str(entry.user_id),
+            # The id is the identity. Emitting it next to is_incognito handed
+            # out exactly what the cloak promised to withhold: it resolves to a
+            # real name through the DM endpoint, and links a cloaked bubble to
+            # the same author's named ones.
+            "user_id": None if cloaked else str(entry.user_id),
             "author_name": author_name,
             "author_avatar": author_avatar,
             "primary_emotion": emotion.primary_emotion if emotion else "neutral",

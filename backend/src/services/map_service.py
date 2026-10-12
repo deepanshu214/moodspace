@@ -2,7 +2,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from src.models.mood import MoodEntry, MoodEmotion
 from src.schemas.map import BoundingBox, HeatmapDataPoint, HeatmapResponse, GlobalPulseResponse
+from src.services.mood_service import live_bubbles_filter
 from datetime import datetime, timedelta
+
+# Only these two levels are shareable. `!= 'private'` reads equivalent but is
+# not: privacy_level also accepts 'friends', which a blacklist silently lets
+# through to strangers.
+SHAREABLE_PRIVACY = ['public', 'community']
+
+# Heatmap cells, in degrees (~1.1 km). Check-ins are snapped to this grid
+# before aggregation: a heatmap needs density, not somebody's front door, and
+# grouping on the raw point made every count-of-1 row an exact GPS fix.
+HEATMAP_GRID_DEGREES = 0.01
 
 def get_emotional_heatmap(db: Session, bbox: BoundingBox, days: int = 7) -> HeatmapResponse:
     # Query to fetch aggregated emotions within the bounding box
@@ -16,16 +27,21 @@ def get_emotional_heatmap(db: Session, bbox: BoundingBox, days: int = 7) -> Heat
     # We need to get the dominant emotion per location or just aggregate points
     # For a heatmap, we want points with their dominant emotion
     
+    cell = func.ST_SnapToGrid(MoodEntry.location_geom, HEATMAP_GRID_DEGREES)
+
     query = db.query(
-        func.ST_Y(MoodEntry.location_geom).label('lat'),
-        func.ST_X(MoodEntry.location_geom).label('lon'),
+        func.ST_Y(cell).label('lat'),
+        func.ST_X(cell).label('lon'),
         MoodEmotion.primary_emotion,
         func.avg(MoodEmotion.intensity).label('avg_intensity'),
         func.count(MoodEntry.id).label('count')
     ).join(
         MoodEmotion, MoodEntry.id == MoodEmotion.mood_entry_id
     ).filter(
-        MoodEntry.privacy_level != 'private',
+        MoodEntry.privacy_level.in_(SHAREABLE_PRIVACY),
+        MoodEntry.is_incognito.is_(False),
+        MoodEntry.deleted_at.is_(None),
+        live_bubbles_filter(),
         MoodEntry.created_at >= time_threshold,
         MoodEntry.location_geom.isnot(None),
         func.ST_Intersects(
@@ -33,8 +49,8 @@ def get_emotional_heatmap(db: Session, bbox: BoundingBox, days: int = 7) -> Heat
             func.ST_MakeEnvelope(bbox.min_lon, bbox.min_lat, bbox.max_lon, bbox.max_lat, 4326)
         )
     ).group_by(
-        func.ST_Y(MoodEntry.location_geom),
-        func.ST_X(MoodEntry.location_geom),
+        func.ST_Y(cell),
+        func.ST_X(cell),
         MoodEmotion.primary_emotion
     ).all()
 
@@ -62,7 +78,8 @@ def get_global_pulse(db: Session) -> GlobalPulseResponse:
     ).join(
         MoodEntry, MoodEntry.id == MoodEmotion.mood_entry_id
     ).filter(
-        MoodEntry.privacy_level != 'private',
+        MoodEntry.privacy_level.in_(SHAREABLE_PRIVACY),
+        MoodEntry.deleted_at.is_(None),
         MoodEntry.created_at >= time_threshold
     ).group_by(
         MoodEmotion.primary_emotion
@@ -83,7 +100,8 @@ def get_global_pulse(db: Session) -> GlobalPulseResponse:
         MoodEntry.location_city,
         func.count(MoodEntry.id).label('count')
     ).filter(
-        MoodEntry.privacy_level != 'private',
+        MoodEntry.privacy_level.in_(SHAREABLE_PRIVACY),
+        MoodEntry.deleted_at.is_(None),
         MoodEntry.created_at >= time_threshold,
         MoodEntry.location_city.isnot(None)
     ).group_by(
