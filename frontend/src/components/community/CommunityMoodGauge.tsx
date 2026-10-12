@@ -49,7 +49,7 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
           </Typography>
         </View>
 
-        <View style={styles.scorePill}>
+        <View style={[styles.scorePill, { backgroundColor: colors.surfaceWarm }]}>
           <Typography variant="caption" weight="bold" color="#FFFFFF">
             Resonance: {resonanceScore}%
           </Typography>
@@ -57,7 +57,7 @@ export const CommunityMoodGauge: React.FC<CommunityMoodGaugeProps> = ({
       </View>
 
       {/* Multi-segment Emotional Climate Bar */}
-      <View style={styles.gaugeTrack}>
+      <View style={[styles.gaugeTrack, { backgroundColor: colors.border }]}>
         {distribution.map((item, idx) => {
           const itemConfig = theme.getEmotionConfig(item.emotion);
           return (
@@ -117,14 +117,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   gaugeTrack: {
     height: 6,
     borderRadius: 3,
     flexDirection: 'row',
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     marginBottom: 10,
   },
   gaugeSegment: {

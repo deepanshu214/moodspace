@@ -56,7 +56,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
       <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
         {/* Top Header Row: Category Badge & Member Count */}
         <View style={styles.topRow}>
-          <View style={styles.categoryPill}>
+          <View style={[styles.categoryPill, { backgroundColor: colors.surfaceWarm }]}>
             <Ionicons name="sparkles" size={12} color={emotionInk(emotionConfig, isDark)} />
             <Typography variant="caption" weight="bold" color={emotionInk(emotionConfig, isDark)}>
               {category}
@@ -113,7 +113,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({
         </Typography>
 
         {/* Footer Action Row */}
-        <View style={styles.footerRow}>
+        <View style={[styles.footerRow, { borderTopColor: colors.border }]}>
           <Typography variant="caption" color={colors.accentInk} weight="semibold">
             Explore Sanctuary →
           </Typography>
@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: theme.radius.pill,
@@ -196,7 +195,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
     paddingTop: 10,
   },
   joinBtn: {

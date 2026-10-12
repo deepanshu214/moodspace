@@ -50,7 +50,17 @@ def get_current_user(db: SessionDep, token: TokenDep) -> User:
         
     if user.status != "active":
         raise HTTPException(status_code=400, detail="Inactive user")
-        
+
+    # Tokens issued before a force-logout or suspension carry a stale version.
+    # Treat a missing claim as stale too, so tokens minted before this existed
+    # stop working rather than becoming permanently unrevocable.
+    if payload.get("tv") != user.token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has been revoked, please sign in again",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     return user
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

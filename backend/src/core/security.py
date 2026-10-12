@@ -13,23 +13,33 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-def create_access_token(subject: Union[str, Any], expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: Union[str, Any],
+    expires_delta: timedelta | None = None,
+    token_version: int = 0,
+) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode = {"exp": expire, "sub": str(subject)}
+
+    # `tv` lets a stateless token be revoked: get_current_user rejects it once
+    # the user's stored token_version moves past the one baked in here.
+    to_encode = {"exp": expire, "sub": str(subject), "tv": token_version}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-def create_refresh_token(subject: Union[str, Any], expires_delta: timedelta | None = None) -> str:
+def create_refresh_token(
+    subject: Union[str, Any],
+    expires_delta: timedelta | None = None,
+    token_version: int = 0,
+) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-        
-    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
+
+    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh", "tv": token_version}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 

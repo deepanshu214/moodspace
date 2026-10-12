@@ -328,7 +328,7 @@ export const ChatDetailScreen: React.FC<Props2> = ({ route, navigation }) => {
         <View style={[styles.encryptionNotice, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <Ionicons name="lock-closed" size={12} color={colors.textMuted} />
           <Typography variant="caption" color={colors.textMuted} style={styles.noticeText}>
-            End-to-end encrypted · Only you two can read these
+            Encrypted at rest · Only you two can open this thread
           </Typography>
         </View>
 

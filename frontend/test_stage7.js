@@ -86,7 +86,7 @@ test('Stage 7: Profile Screens Implementation', async (t) => {
 
     assert.ok(content.includes('useCurrentUser()'), 'Must call useCurrentUser');
     assert.ok(content.includes('useMoodHistory('), 'Must call useMoodHistory');
-    assert.ok(content.includes('AuraDisplay'), 'Must render Aura card');
+    assert.ok(content.includes('AuraScoreCard'), 'Must render the Aura score card');
     assert.ok(content.includes('FollowersList'), 'Must navigate to FollowersList');
     assert.ok(content.includes('EditProfile'), 'Must navigate to EditProfile');
   });

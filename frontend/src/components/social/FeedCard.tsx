@@ -9,6 +9,7 @@ import { Card } from '../common/Card';
 import { MoodTag } from '../mood/MoodTag';
 import { AuraDisplay } from './AuraDisplay';
 import { ReactionFloater } from '../mood/ReactionFloater';
+import { ReactionKey } from '../mood/MoodGlyph';
 import { haptics } from '@/theme/haptics';
 import { useReact } from '@/hooks/useSocial';
 import { Ionicons } from '@expo/vector-icons';
@@ -69,7 +70,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [totalReactions, setTotalReactions] = useState(reactionsCount);
   const [floaterKey, setFloaterKey] = useState(0);
-  const [floaterEmoji, setFloaterEmoji] = useState('❤️');
+  const [floaterReaction, setFloaterReaction] = useState<ReactionKey>('heart');
   const { mutate: sendReaction } = useReact();
 
   const handleReactionPress = (rx: typeof REACTIONS[0]) => {
@@ -79,7 +80,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
       setTotalReactions((prev) => Math.max(0, prev - 1));
     } else {
       setActiveReaction(rx.type);
-      setFloaterEmoji(rx.emoji);
+      setFloaterReaction(rx.type);
       setFloaterKey(Date.now());
       setTotalReactions((prev) => (activeReaction ? prev : prev + 1));
       sendReaction({
@@ -210,7 +211,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
               ]}
             >
               {isSelected && (
-                <ReactionFloater emoji={floaterEmoji} triggerKey={floaterKey} />
+                <ReactionFloater reaction={floaterReaction} color={rx.color} triggerKey={floaterKey} />
               )}
               <Typography style={{ fontSize: 13, marginRight: 4 }}>{rx.emoji}</Typography>
               <Typography

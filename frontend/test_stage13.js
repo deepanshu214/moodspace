@@ -151,11 +151,13 @@ test('Stage 13: Navigation & Virtualized List Motion Verification', async (t) =>
     assert.ok(content.includes('<FlashList'), 'Renders high-performance FlashList component');
   });
 
-  await t.test('MainTabNavigator integrates frosted BlurView and spring center button', () => {
+  await t.test('MainTabNavigator uses the solid Stitch bar and spring center button', () => {
     const tabPath = path.join(FRONTEND_DIR, 'src/navigation/MainTabNavigator.tsx');
     const content = fs.readFileSync(tabPath, 'utf8');
 
-    assert.ok(content.includes('BlurView'), 'Uses BlurView for frosted glass effect');
+    // The Stitch redesign replaced the frosted blur with a solid ink contour.
+    assert.ok(!content.includes('BlurView'), 'Stitch tab bar is solid, not frosted');
+    assert.ok(content.includes('colors.ink'), 'Tab bar draws the 2px ink contour');
     assert.ok(content.includes('CenterFabButton'), 'Uses animated spring CenterFabButton');
     assert.ok(content.includes('haptics.medium()'), 'Triggers haptics on FAB press');
   });

@@ -64,7 +64,7 @@ test('Stage 5: Auth & Onboarding Screens Implementation Verification', async (t)
     const content = fs.readFileSync(splashPath, 'utf8');
     assert.ok(content.includes('isInitializing'), 'SplashScreen must check isInitializing');
     assert.ok(content.includes('isAuthenticated'), 'SplashScreen must check isAuthenticated');
-    assert.ok(content.includes('Animated.View'), 'SplashScreen must use Reanimated');
+    assert.ok(content.includes('LoadingScreen'), 'SplashScreen must show the animated LoadingScreen while it waits');
   });
 
   await t.test('OnboardingProfileScreen provides aura preset chips and bio limit', () => {

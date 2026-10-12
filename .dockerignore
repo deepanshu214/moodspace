@@ -1,0 +1,21 @@
+# Secrets must never be baked into an image — they are injected at runtime.
+.env
+.env.*
+!.env.example
+
+# Local-only and rebuildable
+venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+frontend/
+media/
+.git/
+.gitignore
+.claude/
+dist/
+build/
+*.log
+SUPERVISOR_REPORT*.txt

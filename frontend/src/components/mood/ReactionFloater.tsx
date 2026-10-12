@@ -9,20 +9,23 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { Typography } from '../common/Typography';
+import { ReactionGlyph, ReactionKey } from './MoodGlyph';
 
 export interface ReactionFloaterProps {
-  emoji: string;
+  reaction: ReactionKey;
+  /** Tint for the drifting glyphs; defaults to the reaction pill's ink. */
+  color?: string;
   triggerKey: number;
 }
 
 interface ParticleProps {
-  emoji: string;
+  reaction: ReactionKey;
+  color?: string;
   index: number;
   triggerKey: number;
 }
 
-const Particle: React.FC<ParticleProps> = ({ emoji, index, triggerKey }) => {
+const Particle: React.FC<ParticleProps> = ({ reaction, color, index, triggerKey }) => {
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(0);
@@ -85,19 +88,19 @@ const Particle: React.FC<ParticleProps> = ({ emoji, index, triggerKey }) => {
 
   return (
     <Animated.View style={[styles.particle, animatedStyle]} pointerEvents="none">
-      <Typography style={{ fontSize: 20 }}>{emoji}</Typography>
+      <ReactionGlyph reaction={reaction} size={20} color={color} />
     </Animated.View>
   );
 };
 
-export const ReactionFloater: React.FC<ReactionFloaterProps> = ({ emoji, triggerKey }) => {
+export const ReactionFloater: React.FC<ReactionFloaterProps> = ({ reaction, color, triggerKey }) => {
   if (!triggerKey) return null;
 
   return (
     <View style={styles.container} pointerEvents="none">
-      <Particle emoji={emoji} index={0} triggerKey={triggerKey} />
-      <Particle emoji={emoji} index={1} triggerKey={triggerKey} />
-      <Particle emoji={emoji} index={2} triggerKey={triggerKey} />
+      {[0, 1, 2].map((index) => (
+        <Particle key={index} reaction={reaction} color={color} index={index} triggerKey={triggerKey} />
+      ))}
     </View>
   );
 };

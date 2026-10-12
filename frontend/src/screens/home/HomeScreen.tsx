@@ -48,7 +48,7 @@ import { ReactionFloater } from '@/components/mood/ReactionFloater';
 import { InteractiveFeatureTour, AppWalkthroughModal } from '@/components/tutorial';
 import { useAtmosphericPulse } from '@/hooks/useMap';
 import { useNearbyBubbles } from '@/hooks/useMood';
-import { MapContainer, Marker, PROVIDER_GOOGLE, WorldMoodCanvas } from '@/components/map';
+import { MapContainer, MapAttribution, Marker, WorldMoodCanvas } from '@/components/map';
 import { storage } from '@/utils/storage';
 import { haptics } from '@/theme/haptics';
 import { useTheme } from '@/context';
@@ -406,8 +406,50 @@ const FeedEchoCard: React.FC<{
 
   const countStyle = useAnimatedStyle(() => ({ transform: [{ scale: countScale.value }] }));
 
+  const reactionRow = (
+        <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+          {REACTIONS.map((rx) => {
+            const isOn = reacted === rx.key;
+            // Only two counts come back from the API; the rest stay blank until
+            // this reader reacts rather than showing an invented tally.
+            const base = rx.key === 'heart' ? bubble.likesCount : rx.key === 'empathy' ? bubble.commentsCount : 0;
+            const shown = base + (isOn ? 1 : 0);
+            return (
+              <TouchableOpacity
+                key={rx.key}
+                onPress={() => handleReact(rx.key)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isOn }}
+                accessibilityLabel={`${rx.label} this echo`}
+                style={[
+                  styles.reactionPill,
+                  { borderColor: colors.ink, backgroundColor: isOn ? config.background : colors.surface },
+                ]}
+              >
+                {isOn && <ReactionFloater reaction={rx.key} color={ink} triggerKey={floaterKey} />}
+                <ReactionGlyph reaction={rx.key} size={13} color={isOn ? ink : colors.textMuted} />
+                {shown > 0 && (
+                  <Animated.View style={isOn ? countStyle : undefined}>
+                    <Typography variant="overline" style={{ color: isOn ? ink : colors.textMuted, marginLeft: 4 }}>
+                      {shown}
+                    </Typography>
+                  </Animated.View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+  );
+
   return (
-    <Tactile offset={4} radius={24} contentStyle={styles.feedCard} onPress={onPress}>
+    <Tactile
+      offset={4}
+      radius={24}
+      contentStyle={styles.feedCard}
+      onPress={onPress}
+      accessibilityLabel={`Open ${bubble.authorName}'s echo`}
+      footer={reactionRow}
+    >
       <View style={styles.cardHeader}>
         <View style={[styles.avatarCircle, { backgroundColor: config.primary, borderColor: colors.ink }]}>
           <Typography variant="label" style={{ color: inkOnPastel }}>
@@ -467,38 +509,6 @@ const FeedEchoCard: React.FC<{
         <VoiceTape uri={bubble.voiceUrl} durationMs={bubble.voiceDurationMs} tint={config.primary} />
       )}
 
-      <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
-        {REACTIONS.map((rx) => {
-          const isOn = reacted === rx.key;
-          // Only two counts come back from the API; the rest stay blank until
-          // this reader reacts rather than showing an invented tally.
-          const base = rx.key === 'heart' ? bubble.likesCount : rx.key === 'empathy' ? bubble.commentsCount : 0;
-          const shown = base + (isOn ? 1 : 0);
-          return (
-            <TouchableOpacity
-              key={rx.key}
-              onPress={() => handleReact(rx.key)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isOn }}
-              accessibilityLabel={`${rx.label} this echo`}
-              style={[
-                styles.reactionPill,
-                { borderColor: colors.ink, backgroundColor: isOn ? config.background : colors.surface },
-              ]}
-            >
-              {isOn && rx.key === 'heart' && <ReactionFloater emoji="❤️" triggerKey={floaterKey} />}
-              <ReactionGlyph reaction={rx.key} size={13} color={isOn ? ink : colors.textMuted} />
-              {shown > 0 && (
-                <Animated.View style={isOn ? countStyle : undefined}>
-                  <Typography variant="overline" style={{ color: isOn ? ink : colors.textMuted, marginLeft: 4 }}>
-                    {shown}
-                  </Typography>
-                </Animated.View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
     </Tactile>
   );
 };
@@ -519,6 +529,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [currentRegion, setCurrentRegion] = useState(INITIAL_REGION);
   // The web atlas has no Google Maps camera, so it zooms about its own centre.
   const [webZoom, setWebZoom] = useState(1);
+  // Set if MapLibre can't get a WebGL context; the dot-grid atlas stands in.
+  const [mapUnsupported, setMapUnsupported] = useState(false);
 
 
   const handleZoom = (zoomIn: boolean) => {
@@ -752,40 +764,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             onTouchEnd={() => setIsScrollEnabled(true)}
             onTouchCancel={() => setIsScrollEnabled(true)}
           >
-            {Platform.OS !== 'web' ? (
-              <MapContainer
-                ref={mapRef}
-                style={StyleSheet.absoluteFill}
-                provider={PROVIDER_GOOGLE}
-                initialRegion={INITIAL_REGION}
-                customMapStyle={isDark ? darkMapStyle : lightMapStyle}
-                userInterfaceStyle={isDark ? 'dark' : 'light'}
-                showsCompass={false}
-                showsUserLocation
-                onRegionChangeComplete={(r: any) => setCurrentRegion(r)}
-              >
-                {filteredBubbles.map((bubble) => (
-                  <Marker
-                    key={bubble.id}
-                    coordinate={{
-                      latitude: bubble.latitude,
-                      longitude: bubble.longitude,
-                    }}
-                    onPress={() => handleBubblePress(bubble)}
-                  >
-                    <LuminousMoodBubble
-                      id={bubble.id}
-                      emotion={bubble.emotion}
-                      intensity={bubble.intensity}
-                      authorName={bubble.authorName}
-                      isAnonymous={bubble.isAnonymous}
-                      size="sm"
-                      isFloating
-                    />
-                  </Marker>
-                ))}
-              </MapContainer>
-            ) : (
+            {mapUnsupported ? (
               <WorldMoodCanvas
                 bubbles={filteredBubbles}
                 colors={colors}
@@ -793,6 +772,42 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 zoom={webZoom}
                 onBubblePress={handleBubblePress}
               />
+            ) : (
+              <>
+                <MapContainer
+                  ref={mapRef}
+                  style={StyleSheet.absoluteFill}
+                  initialRegion={INITIAL_REGION}
+                  isDark={isDark}
+                  customMapStyle={isDark ? darkMapStyle : lightMapStyle}
+                  showsCompass={false}
+                  showsUserLocation
+                  onRegionChangeComplete={(r: any) => setCurrentRegion(r)}
+                  onUnsupported={() => setMapUnsupported(true)}
+                >
+                  {filteredBubbles.map((bubble) => (
+                    <Marker
+                      key={bubble.id}
+                      coordinate={{
+                        latitude: bubble.latitude,
+                        longitude: bubble.longitude,
+                      }}
+                      onPress={() => handleBubblePress(bubble)}
+                    >
+                      <LuminousMoodBubble
+                        id={bubble.id}
+                        emotion={bubble.emotion}
+                        intensity={bubble.intensity}
+                        authorName={bubble.authorName}
+                        isAnonymous={bubble.isAnonymous}
+                        size="sm"
+                        isFloating
+                      />
+                    </Marker>
+                  ))}
+                </MapContainer>
+                <MapAttribution />
+              </>
             )}
 
             {/* Floating on-screen map zoom & action controls */}

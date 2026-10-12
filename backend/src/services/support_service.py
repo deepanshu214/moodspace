@@ -44,9 +44,12 @@ def suspend_user(db: Session, user_id: UUID, req: SuspendUserRequest, agent: Use
     else:
         user.status = "banned" # Permanent
         
-    # Invalidate all sessions immediately
+    # Invalidate every issued token immediately. The UserSession sweep below is
+    # kept for the table's own sake, but it is token_version that actually
+    # revokes access, since authentication is stateless JWT.
+    user.token_version = (user.token_version or 0) + 1
     db.query(UserSession).filter(UserSession.user_id == user_id).delete()
-    
+
     db.commit()
     return {"message": f"User successfully {user.status}"}
 
@@ -58,6 +61,10 @@ def force_logout_user(db: Session, user_id: UUID, agent: User):
     if not user:
         raise ResourceNotFoundError("User not found")
         
-    deleted = db.query(UserSession).filter(UserSession.user_id == user_id).delete()
+    # Nothing ever writes UserSession, so deleting from it always affected zero
+    # rows and reported success — an operator containment control that silently
+    # did nothing. Bumping token_version is what actually ends the sessions.
+    user.token_version = (user.token_version or 0) + 1
+    db.query(UserSession).filter(UserSession.user_id == user_id).delete()
     db.commit()
-    return {"message": f"User forcefully logged out of {deleted} session(s)."}
+    return {"message": "All sessions for this user have been revoked."}

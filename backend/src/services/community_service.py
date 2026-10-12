@@ -8,7 +8,21 @@ from src.services.notification_service import create_notification
 def get_communities(db: Session, skip: int = 0, limit: int = 20):
     return db.query(Community).filter(Community.privacy == "public").offset(skip).limit(limit).all()
 
-def get_community_posts(db: Session, community_id: UUID, skip: int = 0, limit: int = 20):
+def get_community_posts(db: Session, viewer_id: UUID, community_id: UUID, skip: int = 0, limit: int = 20):
+    comm = db.query(Community).filter(Community.id == community_id).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Mirrors create_community_post below. Without this, knowing a private
+    # circle's id was enough to read it, and a removed member kept access.
+    if comm.privacy != "public":
+        membership = db.query(CommunityMembership).filter(
+            CommunityMembership.community_id == community_id,
+            CommunityMembership.user_id == viewer_id
+        ).first()
+        if not membership:
+            raise HTTPException(status_code=403, detail="Must be a member to read this community")
+
     # Simply return posts by created_at desc (chronological) for now
     return db.query(Post).filter(Post.community_id == community_id, Post.deleted_at == None).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
 

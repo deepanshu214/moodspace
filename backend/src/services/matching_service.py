@@ -3,7 +3,7 @@ from sqlalchemy import func
 from src.models.mood import MoodEntry, MoodEmotion
 from src.models.user import User
 from src.schemas.matching import UserMatchResponse, MatchedUser, MoodReplayResponse, MoodReplayPoint
-from src.schemas.user import UserResponse
+from src.schemas.user import PublicUserResponse
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -36,7 +36,10 @@ def find_emotional_matches(db: Session, user_id: UUID) -> UserMatchResponse:
     ).filter(
         User.id != user_id,
         MoodEntry.created_at >= time_threshold,
-        MoodEntry.privacy_level != 'private',
+        # Whitelist, not `!= private`: a blacklist silently included
+        # friends-only entries. Incognito posters opted out of being seen.
+        MoodEntry.privacy_level.in_(['public', 'community']),
+        MoodEntry.is_incognito.is_(False),
         MoodEmotion.primary_emotion.in_(emotions_list)
     ).group_by(
         User.id, MoodEmotion.primary_emotion
@@ -47,14 +50,11 @@ def find_emotional_matches(db: Session, user_id: UUID) -> UserMatchResponse:
     matches = []
     for user, emotion, count in matched_query:
         matches.append(MatchedUser(
-            user=UserResponse(
+            user=PublicUserResponse(
                 id=user.id,
-                email=user.email,
                 display_name=user.display_name,
-                status=user.status,
-                role=user.role,
                 bio=user.bio,
-                created_at=user.created_at
+                avatar_url=user.avatar_url,
             ),
             shared_emotion=emotion,
             match_score=min(1.0, count * 0.2) # Simple heuristic for demo

@@ -264,7 +264,10 @@ def send_message(
         conversation_id=conv_id,
         sender_id=current_user.id,
         encrypted_content=ciphertext,
-        encryption_metadata={"iv": iv, "alg": "aes-256-cbc"},
+        # encrypt_note uses AES-GCM; "iv" here holds the GCM nonce. This said
+        # cbc, which would become a real decryption bug the moment anything
+        # branched on it.
+        encryption_metadata={"iv": iv, "alg": "aes-256-gcm"},
         message_type=payload.message_type,
         emotion_tag=payload.emotion_tag,
         icebreaker_id=payload.icebreaker_id,
