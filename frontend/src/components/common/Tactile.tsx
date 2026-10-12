@@ -25,6 +25,12 @@ export interface TactileProps {
   /** Stretch to the parent's height — for cards that must match a sibling. */
   fill?: boolean;
   testID?: string;
+  /**
+   * Content that sits inside the card surface but outside its press target.
+   * Use this for rows of their own controls: a button nested inside a button
+   * is invalid HTML on web and leaves both unreachable by keyboard.
+   */
+  footer?: React.ReactNode;
 }
 
 const STOMP_SPRING = { damping: 18, stiffness: 420, mass: 0.5 };
@@ -56,6 +62,7 @@ export const Tactile: React.FC<TactileProps> = ({
   accessibilityState,
   fill,
   testID,
+  footer,
 }) => {
   const { colors } = useTheme();
   const press = useSharedValue(0);
@@ -65,6 +72,31 @@ export const Tactile: React.FC<TactileProps> = ({
   const surfaceStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: press.value * travel }, { translateY: press.value * travel }],
   }));
+
+  const pressable = (content: React.ReactNode) => (
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      onPressIn={() => {
+        press.value = withSpring(1, STOMP_SPRING);
+        haptics.light();
+      }}
+      onPressOut={() => {
+        press.value = withSpring(0, STOMP_SPRING);
+      }}
+      accessibilityRole={accessibilityRole ?? 'button'}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={accessibilityState}
+      testID={testID}
+      style={fill ? styles.fill : undefined}
+    >
+      {content}
+    </Pressable>
+  );
+
+  // With a footer the press target wraps the body only, so the footer's own
+  // controls stay siblings of this card's button rather than children of it.
+  const footered = interactive && !!footer;
 
   const surface = (
     <Animated.View
@@ -80,7 +112,8 @@ export const Tactile: React.FC<TactileProps> = ({
         interactive && surfaceStyle,
       ]}
     >
-      {children}
+      {footered ? pressable(children) : children}
+      {footer}
     </Animated.View>
   );
 
@@ -102,28 +135,7 @@ export const Tactile: React.FC<TactileProps> = ({
           ]}
         />
       )}
-      {interactive ? (
-        <Pressable
-          onPress={onPress}
-          onLongPress={onLongPress}
-          onPressIn={() => {
-            press.value = withSpring(1, STOMP_SPRING);
-            haptics.light();
-          }}
-          onPressOut={() => {
-            press.value = withSpring(0, STOMP_SPRING);
-          }}
-          accessibilityRole={accessibilityRole ?? 'button'}
-          accessibilityLabel={accessibilityLabel}
-          accessibilityState={accessibilityState}
-          testID={testID}
-          style={fill ? styles.fill : undefined}
-        >
-          {surface}
-        </Pressable>
-      ) : (
-        surface
-      )}
+      {interactive && !footered ? pressable(surface) : surface}
     </View>
   );
 };

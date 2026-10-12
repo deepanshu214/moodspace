@@ -17,6 +17,7 @@ import { theme, shadows } from '@/theme';
 import { darkColors as colors, inkOnPastel } from '@/theme/colors';
 import { Typography } from '@/components/common/Typography';
 import { ReactionFloater } from '@/components/mood/ReactionFloater';
+import { ReactionGlyph, ReactionKey } from '@/components/mood/MoodGlyph';
 import { haptics } from '@/theme/haptics';
 import { storage } from '@/utils/storage';
 
@@ -202,7 +203,7 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
   // Interactive Demo Sandbox States
   const [demoSelectedEmotion, setDemoSelectedEmotion] = useState('calm');
   const [demoFloaterKey, setDemoFloaterKey] = useState(0);
-  const [demoFloaterEmoji, setDemoFloaterEmoji] = useState('❤️');
+  const [demoFloaterReaction, setDemoFloaterReaction] = useState<ReactionKey>('heart');
   const [demoJoinedCircle, setDemoJoinedCircle] = useState(false);
   const [demoStreakCount, setDemoStreakCount] = useState(7);
   const [demoMessageSent, setDemoMessageSent] = useState(false);
@@ -335,25 +336,25 @@ export const InteractiveFeatureTour: React.FC<InteractiveFeatureTourProps> = ({
             <Typography variant="caption" weight="bold" color={colors.textMuted} style={{ marginBottom: 6 }}>
               TRY IT: TAP TO SEND EMPATHY
             </Typography>
-            <ReactionFloater emoji={demoFloaterEmoji} triggerKey={demoFloaterKey} />
+            <ReactionFloater reaction={demoFloaterReaction} triggerKey={demoFloaterKey} />
             <View style={styles.demoRow}>
               {[
-                { label: 'Support', emoji: '❤️' },
-                { label: 'Hug', emoji: '🤗' },
-                { label: 'With You', emoji: '🌊' },
-                { label: 'Celebrate', emoji: '✨' },
+                { label: 'Support', reaction: 'heart' as ReactionKey },
+                { label: 'Hug', reaction: 'hug' as ReactionKey },
+                { label: 'With You', reaction: 'empathy' as ReactionKey },
+                { label: 'Celebrate', reaction: 'celebrate' as ReactionKey },
               ].map((rx) => (
                 <TouchableOpacity
                   key={rx.label}
                   activeOpacity={0.7}
                   onPress={() => {
-                    setDemoFloaterEmoji(rx.emoji);
+                    setDemoFloaterReaction(rx.reaction);
                     setDemoFloaterKey((k) => k + 1);
                     haptics.light();
                   }}
                   style={styles.demoRxPill}
                 >
-                  <Typography style={{ fontSize: 16 }}>{rx.emoji}</Typography>
+                  <ReactionGlyph reaction={rx.reaction} size={16} color={colors.textPrimary} />
                   <Typography variant="caption" color={colors.textPrimary} style={{ fontSize: 10, marginTop: 2 }}>
                     {rx.label}
                   </Typography>

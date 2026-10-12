@@ -69,7 +69,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
     <Card variant="elevated" style={[styles.card, style]}>
       {/* Pinned Indicator Header (if pinned) */}
       {isPinned && (
-        <View style={styles.pinnedBanner}>
+        <View style={[styles.pinnedBanner, { borderBottomColor: colors.border }]}>
           <Ionicons name="pin" size={12} color={colors.accent} />
           <Typography variant="caption" weight="bold" color={colors.accent}>
             Pinned Guideline
@@ -80,13 +80,13 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
       {/* Author Row */}
       <View style={styles.header}>
         <View style={styles.authorRow}>
-          {isAnonymous ? (
-            <View style={styles.anonAvatar}>
-              <Typography variant="caption">👻</Typography>
-            </View>
-          ) : (
-            <Avatar source={authorAvatar} name={displayName} size="sm" emotion={emotion} />
-          )}
+          <Avatar
+            source={isAnonymous ? null : authorAvatar}
+            name={displayName}
+            size="sm"
+            emotion={emotion}
+            isAnonymous={isAnonymous}
+          />
 
           <View style={styles.authorMeta}>
             <View style={styles.nameRow}>
@@ -144,12 +144,13 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
       )}
 
       {/* Footer Reaction Row */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleToggleLike}
           style={[
             styles.reactionBtn,
+            { backgroundColor: colors.surfaceWarm, borderColor: colors.border },
             liked && { backgroundColor: 'rgba(248, 113, 113, 0.15)', borderColor: '#F87171' },
           ]}
         >
@@ -195,7 +196,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   header: {
     flexDirection: 'row',
@@ -208,16 +208,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     flex: 1,
-  },
-  anonAvatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(192, 132, 252, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(192, 132, 252, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   authorMeta: {
     gap: 1,
@@ -259,7 +249,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
     paddingTop: 8,
   },
   reactionBtn: {
@@ -269,9 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   commentBtn: {
     flexDirection: 'row',

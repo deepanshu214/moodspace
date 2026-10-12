@@ -119,7 +119,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             width: dimension,
             height: dimension,
             borderRadius: radius,
-            backgroundColor: isAnonymous ? '#252830' : colors.surfaceElevated,
+            backgroundColor: isAnonymous ? colors.surfaceWarm : colors.surfaceElevated,
             borderWidth: emotionConfig ? 2 : 1,
             borderColor: emotionConfig ? colors.background : colors.border,
           },

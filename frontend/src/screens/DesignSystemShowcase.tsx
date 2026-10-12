@@ -293,7 +293,7 @@ export const DesignSystemShowcase: React.FC = () => {
           placeholder="How are you feeling in this moment?"
           value={inputText}
           onChangeText={setInputText}
-          helperText="Your notes are end-to-end encrypted"
+          helperText="Your notes are encrypted at rest"
           leftIcon={<Ionicons name="sparkles" size={18} color={colors.accentInk} />}
         />
 

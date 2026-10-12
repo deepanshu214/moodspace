@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -10,7 +10,7 @@ import { PingDot } from '@/components/common/PingDot';
 import { MoodGlyph, toMoodKey } from '@/components/mood/MoodGlyph';
 import { LuminousMoodBubble } from '@/components/mood/LuminousMoodBubble';
 import { BubbleDetailSheet } from '@/components/mood/BubbleDetailSheet';
-import { MapContainer, Marker, PROVIDER_GOOGLE, WorldMoodCanvas } from '@/components/map';
+import { MapContainer, MapAttribution, Marker, WorldMoodCanvas } from '@/components/map';
 import { darkMapStyle, lightMapStyle } from '@/theme/mapStyle';
 import { getEmotionConfig, emotionInk, inkOnPastel } from '@/theme';
 import { useTheme } from '@/context';
@@ -50,6 +50,8 @@ export const MapScreen: React.FC<any> = ({ navigation }) => {
   const [region, setRegion] = useState(ATLAS_REGION);
   const [webZoom, setWebZoom] = useState(1);
   const [myPosts, setMyPosts] = useState<UserPostBubble[]>([]);
+  // Set if MapLibre can't get a WebGL context; the dot-grid atlas stands in.
+  const [mapUnsupported, setMapUnsupported] = useState(false);
 
   const { data: pulseData } = useAtmosphericPulse();
   const { data: nearbyApiBubbles } = useNearbyBubbles(ATLAS_REGION.latitude, ATLAS_REGION.longitude, 25);
@@ -114,40 +116,7 @@ export const MapScreen: React.FC<any> = ({ navigation }) => {
       </View>
 
       <View style={[styles.mapWrap, { borderColor: colors.ink }]}>
-        {Platform.OS !== 'web' ? (
-          <MapContainer
-            ref={mapRef}
-            style={StyleSheet.absoluteFill}
-            provider={PROVIDER_GOOGLE}
-            initialRegion={ATLAS_REGION}
-            customMapStyle={isDark ? darkMapStyle : lightMapStyle}
-            userInterfaceStyle={isDark ? 'dark' : 'light'}
-            showsCompass={false}
-            showsUserLocation
-            onRegionChangeComplete={(r: any) => setRegion(r)}
-          >
-            {bubbles.map((bubble) => (
-              <Marker
-                key={bubble.id}
-                coordinate={{ latitude: bubble.latitude, longitude: bubble.longitude }}
-                onPress={() => {
-                  setActiveBubble(bubble);
-                  setIsDetailOpen(true);
-                }}
-              >
-                <LuminousMoodBubble
-                  id={bubble.id}
-                  emotion={bubble.emotion}
-                  intensity={bubble.intensity}
-                  authorName={bubble.authorName}
-                  isAnonymous={bubble.isAnonymous}
-                  size="sm"
-                  isFloating
-                />
-              </Marker>
-            ))}
-          </MapContainer>
-        ) : (
+        {mapUnsupported ? (
           <WorldMoodCanvas
             bubbles={bubbles}
             colors={colors}
@@ -158,6 +127,42 @@ export const MapScreen: React.FC<any> = ({ navigation }) => {
               setIsDetailOpen(true);
             }}
           />
+        ) : (
+          <>
+            <MapContainer
+              ref={mapRef}
+              style={StyleSheet.absoluteFill}
+              initialRegion={ATLAS_REGION}
+              isDark={isDark}
+              customMapStyle={isDark ? darkMapStyle : lightMapStyle}
+              showsCompass={false}
+              showsUserLocation
+              onRegionChangeComplete={(r: any) => setRegion(r)}
+              onUnsupported={() => setMapUnsupported(true)}
+            >
+              {bubbles.map((bubble) => (
+                <Marker
+                  key={bubble.id}
+                  coordinate={{ latitude: bubble.latitude, longitude: bubble.longitude }}
+                  onPress={() => {
+                    setActiveBubble(bubble);
+                    setIsDetailOpen(true);
+                  }}
+                >
+                  <LuminousMoodBubble
+                    id={bubble.id}
+                    emotion={bubble.emotion}
+                    intensity={bubble.intensity}
+                    authorName={bubble.authorName}
+                    isAnonymous={bubble.isAnonymous}
+                    size="sm"
+                    isFloating
+                  />
+                </Marker>
+              ))}
+            </MapContainer>
+            <MapAttribution />
+          </>
         )}
 
         <View style={styles.controls}>

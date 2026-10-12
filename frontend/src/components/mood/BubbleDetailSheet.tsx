@@ -22,6 +22,7 @@ import { Typography } from '../common/Typography';
 import { Avatar } from '../common/Avatar';
 import { AuraDisplay } from '../social/AuraDisplay';
 import { ReactionFloater } from './ReactionFloater';
+import { ReactionKey } from './MoodGlyph';
 import { haptics } from '@/theme/haptics';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -71,7 +72,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
   const [echoText, setEchoText] = useState('');
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [floaterKey, setFloaterKey] = useState(0);
-  const [floaterEmoji, setFloaterEmoji] = useState('❤️');
+  const [floaterReaction, setFloaterReaction] = useState<ReactionKey>('heart');
   const [resonanceCount, setResonanceCount] = useState(bubble.likesCount || 0);
 
   const config = theme.getEmotionConfig(bubble.emotion);
@@ -84,7 +85,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
       setResonanceCount((prev) => Math.max(0, prev - 1));
     } else {
       setSelectedReaction(rx.type);
-      setFloaterEmoji(rx.emoji);
+      setFloaterReaction(rx.type as ReactionKey);
       setFloaterKey(Date.now());
       setResonanceCount((prev) => (selectedReaction ? prev : prev + 1));
       heartScale.value = withSequence(
@@ -258,7 +259,7 @@ export const BubbleDetailSheet: React.FC<BubbleDetailSheetProps> = ({
                       ]}
                     >
                       {isSelected && (
-                        <ReactionFloater emoji={floaterEmoji} triggerKey={floaterKey} />
+                        <ReactionFloater reaction={floaterReaction} color={rx.color} triggerKey={floaterKey} />
                       )}
                       <Typography style={{ fontSize: 16, marginRight: 6 }}>{rx.emoji}</Typography>
                       <Typography
